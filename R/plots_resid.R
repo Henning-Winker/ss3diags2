@@ -9,7 +9,7 @@
 }
 
 # cohort tracks: von Bertalanffy length (or age) by year for birth years every 'by' years, per panel
-.cohort_lines <- function(d, quant, lh, by = 2, timing = 0.5){
+.cohort_lines <- function(d, quant, lh, by = 2, timing = 0.5, binw = 0){
   pan <- d[, .(unit = unit[1], ymin = min(year), ymax = max(year), qmin = min(q), qmax = max(q)), by = panel]
   rbindlist(lapply(seq_len(nrow(pan)), function(i){
     z <- pan[i]
@@ -26,8 +26,14 @@
         if(!all(is.finite(vb))) return(NULL)
         amin <- max(vb[["t0"]] - log(1 - min(z$qmin/vb[["linf"]], 0.99))/vb[["k"]], 0)
         amax <- vb[["t0"]] - log(1 - min(0.95, z$qmax/vb[["linf"]]))/vb[["k"]]
+        if(binw > 0){                    # year classes separable while the annual increment exceeds the bin width
+          inc0 <- vb[["linf"]]*(1 - exp(-vb[["k"]]))
+          asep <- vb[["t0"]] + log(inc0/binw)/vb[["k"]]
+          amax <- min(amax, max(asep, amin + 1))
+        }
         births <- seq(floor(z$ymin - amax), ceiling(z$ymax - amin), by = by)
         out <- CJ(birth = births, year = yy)[, q := vb[["linf"]]*(1 - exp(-vb[["k"]]*(year - birth + timing - vb[["t0"]])))]
+        out <- out[year - birth + timing <= amax]
       }
       out[year >= birth & q >= z$qmin & q <= z$qmax][, `:=`(panel = z$panel, lunit = u)]
     }))
