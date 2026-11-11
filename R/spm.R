@@ -110,4 +110,4 @@ print.ss3spm <- function(x, ...){
   invisible(x)
 }
 
-utils::globalVariables(c("rel.diff", "loop", "f0", "f1"))
+utils::globalVariables(c("rel.diff", "loop", "f0", "f1", "SPM", "SS3"))
