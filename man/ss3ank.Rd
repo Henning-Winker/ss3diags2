@@ -23,7 +23,7 @@ The SS3 input files (data.ss, control.ss, starter.ss, forecast.ss) are in
 }
 \details{
 The run was read without CoVar and its derived quantities are reported as 0 (no hessian / sdreport), and the
-equilibrium yield table is empty: \code{\link{ss3_FLStockR}()} then builds the trajectories from the time series
+equilibrium yield table is empty: \code{\link{ss3stk}()} then builds the trajectories from the time series
 (\code{source = "timeseries"}), MVLN draws, Kobe plots and production functions are not available.
 }
 \examples{

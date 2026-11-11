@@ -13,10 +13,10 @@ ss3plot_production(
 )
 }
 \arguments{
-\item{x}{FLStockR (MLE, or the median of iterations is used), e.g. \code{\link{ss3_FLStockR}()}}
+\item{x}{FLStockR (MLE, or the median of iterations is used), e.g. \code{\link{ss3stk}()}}
 
 \item{eq}{equilibrium curve: data.frame with columns \code{SSB} and \code{yield} (default
-\code{attr(x, "eqcurve")}, set by \code{ss3_FLStockR()} from \code{\link{ss3_eqcurve}()})}
+\code{attr(x, "eqcurve")}, set by \code{ss3stk()} from \code{\link{ss3_eqcurve}()})}
 
 \item{type}{\code{"phase"} (default) or \code{"dyn"}}
 
@@ -37,7 +37,7 @@ SP(t) = SSB(t+1) - SSB(t) + C(t) against SSB with the equilibrium curve (\code{t
 \examples{
 \dontrun{
 data(natl.sma, package = "ss3diags")
-stk <- ss3_FLStockR(ss3sma)
+stk <- ss3stk(ss3sma)
 ss3plot_production(stk)
 ss3plot_production(stk, type = "dyn")
 }

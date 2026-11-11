@@ -14,7 +14,7 @@ ss3plot_kobe(
 )
 }
 \arguments{
-\item{x}{FLStockR with iterations (e.g. \code{ss3_FLStockR(ss3rep, iters = 1000)}); with one iteration only the
+\item{x}{FLStockR with iterations (e.g. \code{ss3stk(ss3rep, iters = 1000)}); with one iteration only the
 trajectory is drawn}
 
 \item{year}{year of the uncertainty cloud (default last year)}
@@ -38,6 +38,6 @@ the iterations (MVLN or MCMC) with highest-density contours and the percentage o
 \examples{
 \dontrun{
 data(natl.sma, package = "ss3diags")
-ss3plot_kobe(ss3_FLStockR(ss3sma, iters = 1000))
+ss3plot_kobe(ss3stk(ss3sma, iters = 1000))
 }
 }

@@ -28,11 +28,11 @@ test_that("anglerfish: input SE, discards, newer r4ss catch columns", {
 
 test_that("anglerfish: FLStockR from the time series when derived quantities are 0", {
   data(ss3ank, package = "ss3diags2", envir = environment())
-  stk <- suppressMessages(ss3_FLStockR(ss3ank, btgt = 0.4))
+  stk <- suppressMessages(ss3stk(ss3ank, btgt = 0.4))
   ts <- ss3ank$timeseries
   expect_equal(as.numeric(FLCore::ssb(stk)[, "2025"]), ts$SpawnBio[ts$Era == "TIME" & ts$Yr == 2025])
   expect_equal(as.numeric(FLCore::refpts(stk)["B0"]), ts$SpawnBio[ts$Era == "VIRG"])
   expect_equal(as.numeric(FLCore::refpts(stk)["Btgt"]), 0.4*ts$SpawnBio[ts$Era == "VIRG"])
-  expect_error(ss3_FLStockR(ss3ank, iters = 10), "CoVar")
+  expect_error(ss3stk(ss3ank, output = "iters", iters = 10), "CoVar")
   expect_silent(suppressMessages(ggplot2::ggplot_build(ss3plot_trj(stk))))
 })

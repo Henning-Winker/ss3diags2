@@ -8,7 +8,7 @@
 #' \code{system.file("extdata", "ank.27.78abd", package = "ss3diags2")}.
 #'
 #' The run was read without CoVar and its derived quantities are reported as 0 (no hessian / sdreport), and the
-#' equilibrium yield table is empty: \code{\link{ss3_FLStockR}()} then builds the trajectories from the time series
+#' equilibrium yield table is empty: \code{\link{ss3stk}()} then builds the trajectories from the time series
 #' (\code{source = "timeseries"}), MVLN draws, Kobe plots and production functions are not available.
 #'
 #' @format list (r4ss \code{SS_output()})

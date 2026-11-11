@@ -51,8 +51,8 @@ lb <- ss2flicc(ss3sma)                  # lfd by gear (common bins and years) + 
 ## Model outputs as FLStockR
 
 ```r
-stk  <- ss3_FLStockR(ss3sma)                 # MLE with log-scale SEs; refpts Ftgt, Btgt, MSY, B0, R0
-stki <- ss3_FLStockR(ss3sma, iters = 1000)   # MVLN draws (as ss3diags::SSdeltaMVLN, without dplyr)
+stk  <- ss3stk(ss3sma)                 # MLE with log-scale SEs; refpts Ftgt, Btgt, MSY, B0, R0
+stki <- ss3stk(ss3sma, output = "iters")  # joint MVLN draws (ss3mvln, as ss3om::ssmvln)
 ```
 
 ## Plots (ggplot2, FLR inputs, r4ss colours)

@@ -56,8 +56,8 @@ Decisions (11 Nov):
 
 | ss3diags2 | SS3 source | Returns | Matches |
 |---|---|---|---|
-| `ss3_mvln()` | `derived_quants`, `CoVar`, `catch` | list(kb, mle: data.tables; refpts: FLPar; basis) | `ss3diags::SSdeltaMVLN()` (no dplyr) |
-| `ss3_FLStockR()` | the above | FLStockR (age "1"): ssb = SSB, fbar = F, rec, catch; refpts Ftgt, Btgt, MSY, B0, R0 (+ Blim, Bpa) | `FLRef::ss2FLStockR()`, `JABBA3::jb3_FLStockR()` |
+| `ss3mvln()` | `derived_quants`, `CoVar`, `catch` | list(kb, mle: data.tables; refpts: FLPar; basis) | `ss3diags::SSdeltaMVLN()` (no dplyr) |
+| `ss3stk()` | the above | FLStockR (age "1"): ssb = SSB, fbar = F, rec, catch; refpts Ftgt, Btgt, MSY, B0, R0 (+ Blim, Bpa) | `FLRef::ss2FLStockR()`, `JABBA3::jb3_FLStockR()` |
 | `ss3_eqcurve()` | `equil_yield` | data.table F, SSB, yield (+ Fmsy, Bmsy, MSY, B0) | production function |
 
 - MLE: `iters = 0`, log-scale SEs of SSB, F, recruitment, B/Btgt and F/Ftgt in `attr(x, "se.log")` (Wald intervals).
@@ -65,7 +65,7 @@ Decisions (11 Nov):
   `attr(x, "status")` (SSB and F draws are marginal, so SSB/Btgt from them would lose the B-F correlation).
 - MLE values and reference points equal `SSdeltaMVLN()` to machine precision (3 test models). The draws differ slightly:
   `SSdeltaMVLN()` subsets CoVar with `paste0(c("Bratio", "F"), "_", yrs)`, which recycles element-wise (Bratio in odd,
-  F in even positions), so its neighbouring-year correlations use a subset; `ss3_mvln()` uses all years
+  F in even positions), so its neighbouring-year correlations use a subset; `ss3mvln()` uses all years
   (terminal-year medians agree within 0.1%).
 
 ## Plots (done, v0.2): `ss3plot_` on FLR objects
@@ -112,7 +112,7 @@ sub-seasons, Ngenders = 2, Nareas = 1):
 - not seasonal; sex structure only in the survey length compositions (Sexes = 3); fishery compositions are
   sex-combined with discard and retained partitions; observed discards (`ss3_discards()`); input SEs present.
 - the report has no CoVar, derived quantities are 0 and `equil_yield` is empty (run without hessian/sdreport):
-  `ss3_FLStockR()` falls back to the time series (SSB, recruitment, dead catch, F = sum of apical F, B0, R0);
+  `ss3stk()` falls back to the time series (SSB, recruitment, dead catch, F = sum of apical F, B0, R0);
   no MVLN, Kobe or production function. **[open: rerun with hessian; a seasonal variant would test the season code]**
 - triggered fixes: r4ss >= 1.50 names (`dead_bio`), compositions completed on all data bins (SS3 tail compression
   drops empty bins), fit lines broken at gaps.
@@ -132,6 +132,25 @@ sub-seasons, Ngenders = 2, Nareas = 1):
   fish than expected (conditional reading), a selectivity or recruitment signal; hake and mako residuals ~N(0,1).
 - **[open]** OSA for conditional age-at-length; OSA for indices (needs the SS3 likelihood: lognormal with total SE).
 
+## MVLN and FLStockR (v0.6)
+
+- `ss3mvln()` (authors L.T. Kell, H. Winker), data.table, no dplyr:
+  - `method = "joint"` (default), the `ss3om::ssmvln()` approach: one MVLN over SSB, recruitment and F of all years and
+    the reference points (Btgt, Ftgt, MSY, B0, R0) with the full CoVar correlation matrix (CoVar holds one
+    triangle; filled symmetric; nearest positive definite), log-scale SD sqrt(log(1 + CV^2)), median at the MLE.
+    Iterations are coherent trajectories, reference points have iterations, B/Btgt and F/Ftgt are ratios within
+    iterations. Extends ss3om (Recr, Bratio, F only) with SSB and the reference points; matches it on the shared
+    quantities (sma 2015: Bratio median 0.961 vs 0.965, CV 0.0486 vs 0.0487; F/Fmsy 4.28 vs 4.25).
+  - `method = "annual"`: `SSdeltaMVLN()` port (year-by-year).
+  - Finding: SSdeltaMVLN attenuates the B-F correlation (sma 2015: -0.24 vs CoVar -0.86; hake -0.26 vs -0.76),
+    the joint method keeps it (-0.86). Likely causes: the covariance entries [2,3] and [1,3] are swapped (cov(B, Fref)
+    and cov(F, Fref)), and the recycled `paste0(status, "_", yrs)` subset of correlations. **[open: fix SSdeltaMVLN?]**
+- `ss3stk()` (as `FLRef::ss2FLStockR()`): FLStockR from an SS3 report (`output = "mle"` from derived quantities with
+  SEs, time-series fallback; `"iters"` from `ss3mvln()`) or from an `ss3mvln` object; `rel`, `thin`, Blim/Bpa.
+  Replaces `ss3_FLStockR()`.
+- `ss3_flqs()`: SSB, F, Rec, Catch, B/Btgt, F/Ftgt, B/B0, Catch/MSY as FLQuants (iterations kept, ratios within
+  iterations) for ggplotFL `plot()` and `ss3plot_trj()`; used by the stock plots.
+
 ## Next (in this order)
 1. **Life history `FLPar`** (`ss3_lhpar()`), from `Growth_Parameters`, `MGparmAdj` and `endgrowth`: linf, k, t0,
    L50 and slope (or a50), M (constant or by age), a, b, CVL (CVmin/CVmax), A1/A2/L1/L2, by sex in a `unit`
@@ -140,7 +159,7 @@ sub-seasons, Ngenders = 2, Nareas = 1):
    numbers at age?]**. Target: FLicc `lhpar` and JABBA3 life-history priors.
 2. **Conditional age-at-length** (`condbase`) and size compositions; mean length/age (Francis TA1.8) as FLQuants.
 3. ~~Model outputs, MLE, FLStockR~~ (done).
-4. **MVLN** (done for annual models): remaining: `ssmvln()` from `ss3om::ssmvln()` / `mvlnFLQuants()` (data.table) and
+4. **MVLN** (done: `ss3mvln()` joint and annual): remaining: from `ss3om::ssmvln()` / `mvlnFLQuants()` (data.table) and
    `FLRef::ssmvln()` (the SSdeltaMVLN port), returning draws as FLQuants with iters and the FLStockR with iters.
    Must work for seasonal ("interannual", seasons-as-years) models, i.e. map SS3 time steps to year/season as
    `ss3diags::SSdiagsStep2Year()` does.

@@ -38,7 +38,7 @@ ggplot
 \description{
 Trajectories of SSB, F, recruitment, catch and stock status (B/Btgt, F/Ftgt, B/B0, Catch/MSY) with nested
 90\% and 60\% bands (\code{probs}), as \code{JABBA3::jbplot_trj()} and \code{FLRef::plotAdvice()}, from an
-\code{FLStockR} (e.g. \code{\link{ss3_FLStockR}()}, \code{FLRef::ss2FLStockR()}, \code{JABBA3::jb3_FLStockR()},
+\code{FLStockR} (e.g. \code{\link{ss3stk}()}, \code{FLRef::ss2FLStockR()}, \code{JABBA3::jb3_FLStockR()},
 \code{FLicc::flicc2FLStockR()}). Bands come from the iterations (MVLN or MCMC), or for a single iteration from the
 log-scale SEs in \code{attr(x, "se.log")}. Several stocks (a list or \code{FLStocks}) are coloured by run, so an
 SS3 run compares directly with JABBA3 or FLicc. Reference points from \code{refpts()} are drawn as labelled lines.
@@ -46,7 +46,7 @@ SS3 run compares directly with JABBA3 or FLicc. Reference points from \code{refp
 \examples{
 \dontrun{
 data(natl.sma, package = "ss3diags")
-ss3plot_trj(ss3_FLStockR(ss3sma))
-ss3plot_trj(ss3_FLStockR(ss3sma, iters = 1000), type = c("B/Btgt", "F/Ftgt", "Catch"), ncol = 1)
+ss3plot_trj(ss3stk(ss3sma))
+ss3plot_trj(ss3stk(ss3sma, iters = 1000), type = c("B/Btgt", "F/Ftgt", "Catch"), ncol = 1)
 }
 }

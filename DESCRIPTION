@@ -3,8 +3,10 @@ Type: Package
 Title: Stock Synthesis Diagnostics and Data Extraction in 'FLR'
 Version: 0.1.0.9000
 Authors@R: c(
-    person("Henning", "Winker", email = "henning.winker@gmail.com",
-           role = c("aut", "cre")))
+    person("Henning", "Winker", email = "henning.winker@gmail.com", role = c("aut", "cre")),
+    person("Massimiliano", "Cardinale", role = "aut"),
+    person("Laurence T.", "Kell", role = "aut"),
+    person("Iago", "Mosqueira", role = "aut"))
 Description: The next generation of 'ss3diags'. Extracts observations and model
     outputs from Stock Synthesis (SS3) reports, as read by 'r4ss::SS_output()',
     into long 'data.table' tables (len/age, year, unit, season, area, iter, data)

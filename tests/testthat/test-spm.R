@@ -24,7 +24,7 @@ test_that("ss3_spm reproduces the SS3 equilibrium curve and benchmarks", {
 
 test_that("production plot overlays the SPM fit", {
   skip_no_data(); skip_if_not_installed("mvtnorm")
-  e <- load_ss3("pac.hke"); stk <- ss3_FLStockR(e$ss3phk)
+  e <- load_ss3("pac.hke"); stk <- ss3stk(e$ss3phk)
   p <- ss3plot_production(stk)
   expect_silent(ggplot2::ggplot_build(p))
   w <- Filter(Negate(is.null), lapply(p$layers, function(l) if(is.data.frame(l$data)) l$data$what))

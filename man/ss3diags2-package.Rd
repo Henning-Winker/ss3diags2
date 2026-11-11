@@ -35,6 +35,9 @@ Useful links:
 Authors:
 \itemize{
   \item Henning Winker \email{henning.winker@gmail.com}
+  \item Massimiliano Cardinale
+  \item Laurence T. Kell
+  \item Iago Mosqueira
 }
 
 }

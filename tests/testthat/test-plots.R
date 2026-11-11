@@ -31,7 +31,7 @@ test_that("plots split by season and area", {
 test_that("stock plots build from FLStockR", {
   skip_no_data(); skip_if_not_installed("mvtnorm")
   e <- load_ss3("pac.hke"); r <- e$ss3phk
-  stk <- ss3_FLStockR(r); stki <- ss3_FLStockR(r, iters = 200)
+  stk <- ss3stk(r); stki <- ss3stk(r, output = "iters", iters = 200)
   builds(ss3plot_trj(stk)); builds(ss3plot_trj(stki)); builds(ss3plot_trj(list(MLE = stk, MVLN = stki)))
   builds(ss3plot_kobe(stki)); builds(ss3plot_kobe(stk))
   builds(ss3plot_production(stk)); builds(ss3plot_production(stk, type = "dyn", rel = TRUE))

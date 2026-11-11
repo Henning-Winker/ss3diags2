@@ -22,12 +22,7 @@
 
 # long table of quantities for one stock: year, quant, iter, data
 .stk_quants <- function(stk, type){
-  B <- FLCore::ssb(stk); F <- FLCore::fbar(stk); R <- FLCore::rec(stk); C <- FLCore::catch(stk)
-  btgt <- .rp(stk, "Btgt"); ftgt <- .rp(stk, "Ftgt"); msy <- .rp(stk, "MSY"); b0 <- .rp(stk, "B0")
-  st <- attr(stk, "status")
-  q <- list(SSB = B, F = F, Rec = R, Catch = C, `B/Btgt` = if(!is.null(st)) st$stock else B/btgt,
-            `F/Ftgt` = if(!is.null(st)) st$harvest else F/ftgt, `B/B0` = B/b0, `Catch/MSY` = C/msy)
-  bad <- setdiff(type, names(q)); if(length(bad)) stop("unknown type: ", paste(bad, collapse = ", "), call. = FALSE)
+  q <- ss3_flqs(stk, type)
   rbindlist(lapply(type, function(k){
     d <- as.data.table(methods::as(q[[k]], "data.frame"))
     d[, .(year, iter, data, quant = k)]
@@ -74,7 +69,7 @@
 #'
 #' Trajectories of SSB, F, recruitment, catch and stock status (B/Btgt, F/Ftgt, B/B0, Catch/MSY) with nested
 #' 90% and 60% bands (\code{probs}), as \code{JABBA3::jbplot_trj()} and \code{FLRef::plotAdvice()}, from an
-#' \code{FLStockR} (e.g. \code{\link{ss3_FLStockR}()}, \code{FLRef::ss2FLStockR()}, \code{JABBA3::jb3_FLStockR()},
+#' \code{FLStockR} (e.g. \code{\link{ss3stk}()}, \code{FLRef::ss2FLStockR()}, \code{JABBA3::jb3_FLStockR()},
 #' \code{FLicc::flicc2FLStockR()}). Bands come from the iterations (MVLN or MCMC), or for a single iteration from the
 #' log-scale SEs in \code{attr(x, "se.log")}. Several stocks (a list or \code{FLStocks}) are coloured by run, so an
 #' SS3 run compares directly with JABBA3 or FLicc. Reference points from \code{refpts()} are drawn as labelled lines.
@@ -91,8 +86,8 @@
 #' @examples
 #' \dontrun{
 #' data(natl.sma, package = "ss3diags")
-#' ss3plot_trj(ss3_FLStockR(ss3sma))
-#' ss3plot_trj(ss3_FLStockR(ss3sma, iters = 1000), type = c("B/Btgt", "F/Ftgt", "Catch"), ncol = 1)
+#' ss3plot_trj(ss3stk(ss3sma))
+#' ss3plot_trj(ss3stk(ss3sma, iters = 1000), type = c("B/Btgt", "F/Ftgt", "Catch"), ncol = 1)
 #' }
 #' @export
 ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftgt"),
@@ -154,7 +149,7 @@ ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftg
 #' the iterations (MVLN or MCMC) with highest-density contours and the percentage of draws in each quadrant, as
 #' \code{JABBA3::jbplot_kobe()} and \code{ss3diags::SSplotKobe()}.
 #'
-#' @param x FLStockR with iterations (e.g. \code{ss3_FLStockR(ss3rep, iters = 1000)}); with one iteration only the
+#' @param x FLStockR with iterations (e.g. \code{ss3stk(ss3rep, iters = 1000)}); with one iteration only the
 #'   trajectory is drawn
 #' @param year year of the uncertainty cloud (default last year)
 #' @param npoints maximum number of points shown
@@ -165,7 +160,7 @@ ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftg
 #' @examples
 #' \dontrun{
 #' data(natl.sma, package = "ss3diags")
-#' ss3plot_kobe(ss3_FLStockR(ss3sma, iters = 1000))
+#' ss3plot_kobe(ss3stk(ss3sma, iters = 1000))
 #' }
 #' @export
 ss3plot_kobe <- function(x, year = NULL, npoints = 2000, contours = c(0.5, 0.8, 0.95),
@@ -174,9 +169,7 @@ ss3plot_kobe <- function(x, year = NULL, npoints = 2000, contours = c(0.5, 0.8, 
   if(!is(x, "FLStockR")) stop("x must be an FLStockR with refpts Btgt and Ftgt", call. = FALSE)
   btgt <- .rp(x, "Btgt"); ftgt <- .rp(x, "Ftgt")
   if(!is.finite(btgt) || !is.finite(ftgt)) stop("Kobe plot needs refpts Btgt and Ftgt", call. = FALSE)
-  st <- attr(x, "status")
-  bb <- if(!is.null(st)) st$stock else FLCore::ssb(x)/btgt
-  ff <- if(!is.null(st)) st$harvest else FLCore::fbar(x)/ftgt
+  q <- ss3_flqs(x, c("B/Btgt", "F/Ftgt")); bb <- q[["B/Btgt"]]; ff <- q[["F/Ftgt"]]
   yrs <- as.numeric(dimnames(bb)$year)
   mle <- attr(x, "mle")
   trj <- if(!is.null(mle)) data.table(year = mle$year, stock = mle$stock, harvest = mle$harvest) else
@@ -248,9 +241,9 @@ ss3plot_kobe <- function(x, year = NULL, npoints = 2000, contours = c(0.5, 0.8, 
 #' SP(t) = SSB(t+1) - SSB(t) + C(t) against SSB with the equilibrium curve (\code{type = "dyn"}, as
 #' \code{JABBA3::jbplot_spdyn()}).
 #'
-#' @param x FLStockR (MLE, or the median of iterations is used), e.g. \code{\link{ss3_FLStockR}()}
+#' @param x FLStockR (MLE, or the median of iterations is used), e.g. \code{\link{ss3stk}()}
 #' @param eq equilibrium curve: data.frame with columns \code{SSB} and \code{yield} (default
-#'   \code{attr(x, "eqcurve")}, set by \code{ss3_FLStockR()} from \code{\link{ss3_eqcurve}()})
+#'   \code{attr(x, "eqcurve")}, set by \code{ss3stk()} from \code{\link{ss3_eqcurve}()})
 #' @param type \code{"phase"} (default) or \code{"dyn"}
 #' @param rel relative axes: SSB/B0 and yield/MSY
 #' @param spm overlay the Pella-Tomlinson fit to the equilibrium curve, extrapolated to SSB = 0 and K: \code{TRUE}
@@ -259,7 +252,7 @@ ss3plot_kobe <- function(x, year = NULL, npoints = 2000, contours = c(0.5, 0.8, 
 #' @examples
 #' \dontrun{
 #' data(natl.sma, package = "ss3diags")
-#' stk <- ss3_FLStockR(ss3sma)
+#' stk <- ss3stk(ss3sma)
 #' ss3plot_production(stk)
 #' ss3plot_production(stk, type = "dyn")
 #' }
@@ -271,7 +264,7 @@ ss3plot_production <- function(x, eq = NULL, type = c("phase", "dyn"), rel = FAL
     warning("SSB is spawning output in numbers, not biomass: yield and surplus production are not on the same scale",
             call. = FALSE)
   eq <- as.data.table(eq %||% attr(x, "eqcurve"))
-  if(!nrow(eq)) stop("no equilibrium curve: give 'eq' or build x with ss3_FLStockR()", call. = FALSE)
+  if(!nrow(eq)) stop("no equilibrium curve: give 'eq' or build x with ss3stk()", call. = FALSE)
   med <- function(q) apply(q@.Data, 2, stats::median, na.rm = TRUE)
   B <- med(FLCore::ssb(x)); C <- med(FLCore::catch(x)); yrs <- as.numeric(dimnames(FLCore::ssb(x))$year)
   msy <- .rp(x, "MSY"); bmsy <- .rp(x, "Btgt"); b0 <- .rp(x, "B0")
