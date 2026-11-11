@@ -1,0 +1,44 @@
+Package: ss3diags2
+Type: Package
+Title: Stock Synthesis Diagnostics and Data Extraction in 'FLR'
+Version: 0.1.0.9000
+Authors@R: c(
+    person("Henning", "Winker", email = "henning.winker@gmail.com",
+           role = c("aut", "cre")))
+Description: The next generation of 'ss3diags'. Extracts observations and model
+    outputs from Stock Synthesis (SS3) reports, as read by 'r4ss::SS_output()',
+    into long 'data.table' tables (len/age, year, unit, season, area, iter, data)
+    that convert directly to 'FLR' classes: catch by fleet as 'FLQuants',
+    abundance indices as 'FLIndices' of 'FLIndexBiomass', and length and age
+    compositions by fleet as 'FLQuants' (sex as unit, season as season).
+    Inputs are shaped to match 'JABBA3' and 'FLicc', so an SS3 model can be
+    refitted with simpler models directly. Diagnostics (runs tests, joint
+    residuals, retrospectives, hindcast cross-validation, MVLN) follow in
+    'ggplot2', harmonised with 'JABBA3' and 'FLicc'.
+License: EUPL (>= 1.2)
+Encoding: UTF-8
+Depends:
+    R (>= 4.1)
+Imports:
+    FLCore (>= 2.6.20),
+    data.table,
+    methods,
+    stats
+Suggests:
+    ss3diags,
+    r4ss,
+    ggplotFL,
+    FLRef,
+    JABBA3,
+    FLicc,
+    testthat (>= 3.0.0)
+Remotes:
+    jabbamodel/ss3diags,
+    flr/FLCore
+Additional_repositories: https://flr.r-universe.dev
+URL: https://github.com/Henning-Winker/ss3diags2
+BugReports: https://github.com/Henning-Winker/ss3diags2/issues
+LazyData: true
+Roxygen: list(markdown = TRUE)
+Config/testthat/edition: 3
+Config/roxygen2/version: 8.1.1

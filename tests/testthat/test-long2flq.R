@@ -1,0 +1,12 @@
+test_that("long2flq keeps numeric bin order, fills years and round-trips", {
+  d <- data.frame(len = c(5, 10, 100, 5, 10, 100), year = rep(c(2000, 2002), each = 3), data = 1:6)
+  q <- long2flq(d, quant = "len", units = "numbers")
+  expect_s4_class(q, "FLQuant")
+  expect_equal(dimnames(q)$len, c("5", "10", "100"))
+  expect_equal(dimnames(q)$year, c("2000", "2001", "2002"))
+  expect_true(all(is.na(q[, "2001"])))
+  expect_equal(FLCore::units(q), "numbers")
+  back <- flqs2long(FLCore::FLQuants(a = q))
+  expect_equal(back$data, 1:6)
+  expect_error(long2flq(rbind(d, d), quant = "len"), "duplicated")
+})
