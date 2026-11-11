@@ -4,7 +4,13 @@
 \alias{ss3plot_production}
 \title{Production function plots}
 \usage{
-ss3plot_production(x, eq = NULL, type = c("phase", "dyn"), rel = FALSE)
+ss3plot_production(
+  x,
+  eq = NULL,
+  type = c("phase", "dyn"),
+  rel = FALSE,
+  spm = TRUE
+)
 }
 \arguments{
 \item{x}{FLStockR (MLE, or the median of iterations is used), e.g. \code{\link{ss3_FLStockR}()}}
@@ -15,6 +21,9 @@ ss3plot_production(x, eq = NULL, type = c("phase", "dyn"), rel = FALSE)
 \item{type}{\code{"phase"} (default) or \code{"dyn"}}
 
 \item{rel}{relative axes: SSB/B0 and yield/MSY}
+
+\item{spm}{overlay the Pella-Tomlinson fit to the equilibrium curve, extrapolated to SSB = 0 and K: \code{TRUE}
+(default: fitted with \code{\link{ss3_spm}()}), an \code{ss3spm} object, or \code{FALSE}}
 }
 \value{
 ggplot

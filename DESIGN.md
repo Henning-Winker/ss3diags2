@@ -87,6 +87,24 @@ unique green, F red, M blue (`ss3unitcols`), observed compositions grey bars, fi
 | `ss3plot_kobe()` | FLStockR with iters | points or filled HDR contours, quadrant percentages |
 | `ss3plot_production()` | FLStockR (+ equilibrium curve) | `type` phase / dyn, `rel` |
 
+## Production function (done, v0.3)
+
+- `ss3_eqcurve()` picks one SS3 profile: `equil_yield` stacks repeated F grids (SPR loops 0-2), single benchmark rows
+  (3-6) and an extension from Fmsy to high F (7, some versions). Default: the last grid from F = 0 (converged; it
+  reproduces the SS3 MSY) plus extension loops. Loop 0 can differ (mako: another F scale, yield 33 at Fmsy).
+- `ss3_spm()` fits Pella-Tomlinson (r, K, m; Fox at m = 1) to yield against SSB, as `FLRef::asem2spm()`; extrapolates to
+  SSB = 0 and K; checks MSY, Bmsy, B0, Bmsy/B0 against SS3 (warning above 5%); returns JABBA3 priors
+  `c(median, log.sd, on)` for r, K (CVs from SS3 SEs of MSY and B0) and m (off by default).
+- Results: hake R2 0.99993, benchmarks within 0.2%; mako R2 0.9999, within 0.6% (SSB in numbers, so r and K priors are
+  off, the shape carries over); herring R2 0.9997 but the equilibrium table implies unfished SSB 1.62 x SSB_unfished
+  and MSY 13% above Dead_Catch_MSY: the table and the SS3 MSY calculation use different settings **[open: which
+  forecast.ss benchmark years?]**.
+- Caveat: with m < 1 the curve has an infinite slope at the origin, so extrapolation to very low SSB is optimistic.
+- `ss3plot_production(spm = TRUE)` overlays the fit (dashed) on the SS3 curve.
+- **[open]** production function in exploitable biomass (rebuild equilibrium numbers at age per F from `endgrowth`,
+  `ageselex`, M and F shares; or FLBRP + `asem2spm(quant = "vb")`), so yield and biomass share units (mako) and JABBA3
+  gets EB/SB mapping for Selex; realised SP(t) fit with process error as a diagnostic.
+
 ## Next (in this order)
 1. **Life history `FLPar`** (`ss3_lhpar()`), from `Growth_Parameters`, `MGparmAdj` and `endgrowth`: linf, k, t0,
    L50 and slope (or a50), M (constant or by age), a, b, CVL (CVmin/CVmax), A1/A2/L1/L2, by sex in a `unit`

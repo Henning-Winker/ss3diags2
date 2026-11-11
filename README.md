@@ -58,7 +58,16 @@ ss3plot_indices(idx, fit = ss3_indices(ss3sma, what = "exp"))
 ss3plot_comps(lfd, by = "unit", type = "pooled")         # "annual", "bubble", "mean"
 ss3plot_trj(stki)                                        # also list(SS3 = stk, JABBA3 = jb3stk)
 ss3plot_kobe(stki)
-ss3plot_production(stk, type = "phase")                  # or "dyn"
+ss3plot_production(stk, type = "phase")                  # or "dyn"; Pella-Tomlinson fit overlaid
+```
+
+## Production function and JABBA3 priors
+
+```r
+data(pac.hke, package = "ss3diags")
+sp <- ss3_spm(ss3phk)        # Pella-Tomlinson fit to the SS3 equilibrium curve, checked against SS3 MSY, Bmsy, B0
+sp$pars                      # r, K, m, MSY, Bmsy, BmsyK, Hmsy
+sp$priors                    # c(median, log.sd, on) for JABBA3::jb3_priors(r = , K = , m = )
 ```
 
 See [DESIGN.md](DESIGN.md) for the data model, decisions and roadmap (life-history `FLPar`, MLE `FLStockR`, MVLN

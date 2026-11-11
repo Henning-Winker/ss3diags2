@@ -1,0 +1,32 @@
+test_that("ss3_eqcurve picks the converged SPR loop and extension loops", {
+  skip_no_data()
+  e <- load_ss3("natl.sma"); eq <- ss3_eqcurve(e$ss3sma)
+  expect_equal(sort(unique(eq$loop)), c(2, 7))
+  expect_equal(max(eq$yield), attr(eq, "MSY"), tolerance = 0.01)
+  e2 <- load_ss3("pac.hke"); expect_equal(unique(ss3_eqcurve(e2$ss3phk)$loop), 2)
+})
+
+test_that("ss3_spm reproduces the SS3 equilibrium curve and benchmarks", {
+  skip_no_data()
+  e <- load_ss3("pac.hke"); sp <- ss3_spm(e$ss3phk)
+  expect_s3_class(sp, "ss3spm")
+  expect_gt(sp$r2, 0.999)
+  expect_true(all(abs(sp$check$rel.diff) < 0.01))
+  expect_equal(sp$curve$yield[1], 0)
+  expect_equal(unname(sp$priors$r[c("median", "on")]), c(as.numeric(sp$pars["r"]), 1))
+  e2 <- load_ss3("natl.sma")
+  expect_warning(s2 <- ss3_spm(e2$ss3sma), "numbers")
+  expect_equal(unname(s2$priors$K["on"]), 0)
+  expect_lt(max(abs(s2$check$rel.diff)), 0.01)
+  e3 <- load_ss3("gob.her")
+  expect_warning(ss3_spm(e3$ss3her), "differ by more than")
+})
+
+test_that("production plot overlays the SPM fit", {
+  skip_no_data(); skip_if_not_installed("mvtnorm")
+  e <- load_ss3("pac.hke"); stk <- ss3_FLStockR(e$ss3phk)
+  p <- ss3plot_production(stk)
+  expect_silent(ggplot2::ggplot_build(p))
+  w <- Filter(Negate(is.null), lapply(p$layers, function(l) if(is.data.frame(l$data)) l$data$what))
+  expect_equal(levels(w[[1]]), c("SS3 equilibrium", "Pella-Tomlinson"))
+})

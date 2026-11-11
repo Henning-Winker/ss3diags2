@@ -4,16 +4,25 @@
 \alias{ss3_eqcurve}
 \title{Equilibrium yield curve}
 \usage{
-ss3_eqcurve(ss3rep)
+ss3_eqcurve(ss3rep, loops = NULL)
 }
 \arguments{
 \item{ss3rep}{output of \code{r4ss::SS_output()}}
+
+\item{loops}{optional SPR loops to use (default: the last grid starting at F = 0 plus extension loops)}
 }
 \value{
-data.table with columns \code{F}, \code{SSB}, \code{yield} (sorted by SSB); attributes \code{Fmsy},
-\code{Bmsy}, \code{MSY}, \code{B0}
+data.table with columns \code{F}, \code{SSB}, \code{yield}, \code{loop} (sorted by SSB); attributes
+\code{Fmsy}, \code{Bmsy}, \code{MSY}, \code{B0}, \code{sd} (SS3 standard errors of MSY and B0) and
+\code{ssbunits}
 }
 \description{
-The SS3 equilibrium yield curve (\code{ss3rep$equil_yield}): SSB, F and yield across the range of F explored by SS3,
-with the MSY reference points, for production function plots.
+The SS3 equilibrium yield curve (\code{ss3rep$equil_yield}, the SPR/YPR profile): SSB, F and yield across the range
+of F explored by SS3, with the MSY reference points, for production function plots and \code{\link{ss3_spm}()}.
+}
+\details{
+The SS3 table stacks several profiles (\code{SPRloop}): repeated F grids from F = 0 (loops 0 to 2), single rows
+for the benchmarks (SPR target, B target, MSY, ...) and, in some versions, an extension from Fmsy to high F
+(loop 7). By default the last F grid from F = 0 (the converged loop, which reproduces the SS3 MSY) is combined with
+the extension loops; earlier grids can differ (e.g. another F scale in loop 0).
 }

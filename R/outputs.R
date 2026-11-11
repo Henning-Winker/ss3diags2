@@ -198,22 +198,39 @@ ss3_FLStockR <- function(ss3rep, iters = 0, Fref = NULL, forecast = FALSE, catch
 
 #' Equilibrium yield curve
 #'
-#' The SS3 equilibrium yield curve (\code{ss3rep$equil_yield}): SSB, F and yield across the range of F explored by SS3,
-#' with the MSY reference points, for production function plots.
+#' The SS3 equilibrium yield curve (\code{ss3rep$equil_yield}, the SPR/YPR profile): SSB, F and yield across the range
+#' of F explored by SS3, with the MSY reference points, for production function plots and \code{\link{ss3_spm}()}.
+#'
+#' The SS3 table stacks several profiles (\code{SPRloop}): repeated F grids from F = 0 (loops 0 to 2), single rows
+#' for the benchmarks (SPR target, B target, MSY, ...) and, in some versions, an extension from Fmsy to high F
+#' (loop 7). By default the last F grid from F = 0 (the converged loop, which reproduces the SS3 MSY) is combined with
+#' the extension loops; earlier grids can differ (e.g. another F scale in loop 0).
+#'
 #' @param ss3rep output of \code{r4ss::SS_output()}
-#' @return data.table with columns \code{F}, \code{SSB}, \code{yield} (sorted by SSB); attributes \code{Fmsy},
-#'   \code{Bmsy}, \code{MSY}, \code{B0}
+#' @param loops optional SPR loops to use (default: the last grid starting at F = 0 plus extension loops)
+#' @return data.table with columns \code{F}, \code{SSB}, \code{yield}, \code{loop} (sorted by SSB); attributes
+#'   \code{Fmsy}, \code{Bmsy}, \code{MSY}, \code{B0}, \code{sd} (SS3 standard errors of MSY and B0) and
+#'   \code{ssbunits}
 #' @export
-ss3_eqcurve <- function(ss3rep){
+ss3_eqcurve <- function(ss3rep, loops = NULL){
   eq <- as.data.table(ss3rep$equil_yield)
   if(!nrow(eq)) stop("no equil_yield table in ss3rep", call. = FALSE)
-  d <- data.table(F = .col(eq, c("F_report", "F_std")), SSB = eq$SSB, yield = .col(eq, c("Tot_Catch", "Catch")))
-  d <- d[is.finite(F) & is.finite(SSB) & is.finite(yield)][order(SSB)]
+  d <- data.table(loop = .col(eq, "SPRloop", 0), F = .col(eq, c("F_report", "F_std")), SSB = eq$SSB,
+                  yield = .col(eq, c("Tot_Catch", "Catch")))
+  d <- d[is.finite(F) & is.finite(SSB) & is.finite(yield)]
+  if(is.null(loops)){
+    ln <- d[, .(n = .N, f0 = min(F), f1 = max(F)), by = loop][n > 2]
+    grid <- ln[f0 <= 0.01*f1]$loop; ext <- ln[f0 > 0.01*f1]$loop
+    loops <- c(if(length(grid)) max(grid), ext)
+  }
+  d <- d[loop %in% loops][order(SSB, -F)]
+  d <- unique(d, by = c("F", "SSB"))
   hat <- as.data.table(ss3rep$derived_quants)
-  lab <- .col(hat, c("Label", "LABEL")); val <- .col(hat, c("Value", "VALUE"))
-  g <- function(l){ v <- val[lab %in% l]; if(length(v)) v[1] else NA_real_ }
-  structure(d, Fmsy = g(c("Fstd_MSY", "annF_MSY")), Bmsy = g("SSB_MSY"), MSY = g(c("Dead_Catch_MSY", "Ret_Catch_MSY")),
-            B0 = g(c("SSB_unfished", "SSB_Unfished")))
+  lab <- .col(hat, c("Label", "LABEL")); val <- .col(hat, c("Value", "VALUE")); sdv <- .col(hat, c("StdDev", "STDDEV"))
+  g <- function(l, v = val){ x <- v[lab %in% l]; if(length(x)) x[1] else NA_real_ }
+  ms <- c("Dead_Catch_MSY", "Ret_Catch_MSY"); bs <- c("SSB_unfished", "SSB_Unfished")
+  structure(d, Fmsy = g(c("Fstd_MSY", "annF_MSY")), Bmsy = g("SSB_MSY"), MSY = g(ms), B0 = g(bs),
+            sd = c(MSY = g(ms, sdv), B0 = g(bs, sdv)), ssbunits = ss3rep$SpawnOutputUnits %||% "biomass")
 }
 
 utils::globalVariables(c("label.i", "label.j", "corr", "stock", "harvest", "SSB", "Recr", "Catch", "F"))

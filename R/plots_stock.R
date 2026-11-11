@@ -247,6 +247,8 @@ ss3plot_kobe <- function(x, year = NULL, npoints = 2000, contours = c(0.5, 0.8, 
 #'   \code{attr(x, "eqcurve")}, set by \code{ss3_FLStockR()} from \code{\link{ss3_eqcurve}()})
 #' @param type \code{"phase"} (default) or \code{"dyn"}
 #' @param rel relative axes: SSB/B0 and yield/MSY
+#' @param spm overlay the Pella-Tomlinson fit to the equilibrium curve, extrapolated to SSB = 0 and K: \code{TRUE}
+#'   (default: fitted with \code{\link{ss3_spm}()}), an \code{ss3spm} object, or \code{FALSE}
 #' @return ggplot
 #' @examples
 #' \dontrun{
@@ -256,7 +258,7 @@ ss3plot_kobe <- function(x, year = NULL, npoints = 2000, contours = c(0.5, 0.8, 
 #' ss3plot_production(stk, type = "dyn")
 #' }
 #' @export
-ss3plot_production <- function(x, eq = NULL, type = c("phase", "dyn"), rel = FALSE){
+ss3plot_production <- function(x, eq = NULL, type = c("phase", "dyn"), rel = FALSE, spm = TRUE){
   type <- match.arg(type)
   if(!is(x, "FLStockR")) stop("x must be an FLStockR", call. = FALSE)
   if(identical(attr(x, "basis")$ssbunits, "numbers"))
@@ -271,7 +273,11 @@ ss3plot_production <- function(x, eq = NULL, type = c("phase", "dyn"), rel = FAL
   if(is.finite(attr(eq, "MSY") %||% NA)) msy <- attr(eq, "MSY")
   sx <- if(rel) b0 else 1; sy <- if(rel) msy else 1
   trj <- data.table(year = yrs, B = B/sx, C = C/sy, SP = (c(B[-1], NA) - B + C)/sy)
-  cur <- data.table(b = eq$SSB/sx, sp = eq$yield/sy)
+  cur <- data.table(b = eq$SSB/sx, sp = eq$yield/sy, what = "SS3 equilibrium")
+  sp <- if(inherits(spm, "ss3spm")) spm else if(isTRUE(spm)) tryCatch(suppressWarnings(ss3_spm(eq)), error = function(e) NULL)
+  if(!is.null(sp)) cur <- rbind(cur, data.table(b = sp$curve$SSB/sx, sp = sp$curve$yield/sy, what = "Pella-Tomlinson"))
+  cur[, what := factor(what, levels = c("SS3 equilibrium", "Pella-Tomlinson"))]
+  ltys <- c(`SS3 equilibrium` = 1, `Pella-Tomlinson` = 2); lws <- c(`SS3 equilibrium` = 1.1, `Pella-Tomlinson` = 0.6)
   Bm <- bmsy/sx; M <- msy/sy
   sel <- trj[unique(c(1, round(0.7*.N), .N))][, lab := factor(year, levels = year)]
   xl <- if(rel) "SSB/B0" else "SSB"
@@ -285,7 +291,7 @@ ss3plot_production <- function(x, eq = NULL, type = c("phase", "dyn"), rel = FAL
     p <- ggplot2::ggplot() +
       ggplot2::geom_polygon(data = zones, ggplot2::aes(x, y, group = zone, fill = zone), alpha = 0.85) +
       ggplot2::scale_fill_manual(values = .kobe_fills, guide = "none") +
-      ggplot2::geom_line(data = cur, ggplot2::aes(b, sp), colour = "blue", linewidth = 1) +
+      ggplot2::geom_line(data = cur, ggplot2::aes(b, sp, linetype = what, linewidth = what), colour = "blue") +
       ggplot2::geom_hline(yintercept = M, colour = "blue", linetype = 5) +
       ggplot2::annotate("segment", x = Bm, xend = Bm, y = 0, yend = M, colour = "blue", linetype = 2) +
       ggplot2::geom_path(data = trj, ggplot2::aes(B, C), na.rm = TRUE) +
@@ -298,7 +304,7 @@ ss3plot_production <- function(x, eq = NULL, type = c("phase", "dyn"), rel = FAL
       ggplot2::geom_hline(yintercept = 0, linetype = 2) +
       ggplot2::geom_hline(yintercept = M, linetype = 3, colour = "grey40") +
       ggplot2::geom_vline(xintercept = Bm, linetype = 3, colour = "grey40") +
-      ggplot2::geom_line(data = cur, ggplot2::aes(b, sp), colour = "blue", linewidth = 1) +
+      ggplot2::geom_line(data = cur, ggplot2::aes(b, sp, linetype = what, linewidth = what), colour = "blue") +
       ggplot2::geom_path(data = trj, ggplot2::aes(B, SP), na.rm = TRUE) +
       ggplot2::geom_point(data = trj, ggplot2::aes(B, SP), size = 1.1, na.rm = TRUE) +
       ggplot2::geom_point(data = sel[is.finite(SP)], ggplot2::aes(B, SP, shape = lab), fill = "white", size = 3.2) +
@@ -306,8 +312,10 @@ ss3plot_production <- function(x, eq = NULL, type = c("phase", "dyn"), rel = FAL
       ggplot2::labs(x = xl, y = if(rel) "SP/MSY" else "Surplus production",
                     subtitle = "realised SP(t) = SSB(t+1) - SSB(t) + C(t)")
   }
-  p + ggplot2::scale_shape_manual(values = c(22, 21, 24), name = NULL) + theme_ss3()
+  p + ggplot2::scale_shape_manual(values = c(22, 21, 24), name = NULL) +
+    ggplot2::scale_linetype_manual(values = ltys, name = NULL) + ggplot2::scale_linewidth_manual(values = lws, name = NULL) +
+    theme_ss3()
 }
 
 utils::globalVariables(c("est", "lci", "uci", "lo1", "hi1", "run", "i.data", "xmin", "xmax", "ymin", "ymax", "zone",
-                         "lab", "B", "C", "SP", "b", "sp", "grp", "z", "x", "y", "yield"))
+                         "lab", "B", "C", "SP", "b", "sp", "grp", "z", "x", "y", "yield", "what"))
