@@ -156,6 +156,16 @@ sub-seasons, Ngenders = 2, Nareas = 1):
   pairs F(Y) and B(Y + 1) within iterations (joint MVLN; warning for SSdeltaMVLN draws). sma 2015: P(red) 78% at
   lag 0, 93% at lag 1.
 
+## Retro, hindcast, runs tests (v0.7)
+
+- `ss3_retro()`: FLStocks of MLE `ss3stk()` per peel (end year from `Retro_year`; `fwd = TRUE` for the year after).
+- `ss3_mohn()`: Mohn's rho and forecast rho for any `ss3_flqs()` quantity; equals `SShcbias()` (sma, hake). Note:
+  SShcbias "F" is the reported F (F/Fmsy for sma), `ss3_mohn("F")` is absolute F; use "F/Ftgt" for the ratio.
+- `ss3_hindcast()` + `ss3plot_hcxval()`: one-year-ahead predictions of indices or mean length/age, MASE and
+  MASE.adj; equals `SSmase()`.
+- `ss3_iresid()`, `ss3_runs()`, `ss3plot_runs()`, `ss3plot_jres()`: log residuals of indices or mean length/age,
+  runs test (own Wald-Wolfowitz, no randtests) with 3-sigma limits, joint residuals with RMSE; equal `SSrunstest()`.
+
 ## Flagged for later: NUTS (11 Nov)
 
 - `ss3nuts(dir, ...)`: wrapper of `adnuts::sample_nuts()` on the SS3 executable (after an `-hbf` MLE run), chains,

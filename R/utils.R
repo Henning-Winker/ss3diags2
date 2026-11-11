@@ -111,3 +111,9 @@ utils::globalVariables(c(".", "name", "fleet", "year", "unit", "season", "area",
 
 # an r4ss::SS_output() list
 .is_ss3rep <- function(x) is.list(x) && !is.data.frame(x) && !is.null(x$FleetNames)
+
+# effective end year: retrospective runs keep endyr and report the peel end year in Retro_year
+.endyr <- function(ss3rep){
+  ry <- ss3rep$Retro_year
+  if(!is.null(ry) && is.finite(ry) && ry < ss3rep$endyr) ry else ss3rep$endyr
+}

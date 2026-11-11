@@ -132,6 +132,7 @@ ss3mvln <- function(ss3rep, mc = 1000, method = c("joint", "annual"), Fref = NUL
                     catch = c("Exp", "Obs", "kill_bio", "dead_bio", "ret_bio"), seed = 123, virgin = FALSE){
   method <- match.arg(method); catch <- match.arg(catch)
   if(catch == "dead_bio") catch <- "kill_bio"
+  ss3rep$endyr <- .endyr(ss3rep)
   if(mc > 0 && is.null(ss3rep$CoVar))
     stop("CoVar required for MVLN draws: run SS3 with the hessian and read it with r4ss::SS_output(covar = TRUE)",
          call. = FALSE)
@@ -276,7 +277,7 @@ ss3stk <- function(x, output = NULL, iters = 1000, method = c("joint", "annual")
   if(inherits(x, "ss3mvln")){
     mv <- x; output <- output %||% (if(is.null(mv$kb)) "mle" else "iters")
   } else {
-    ss3rep <- x; output <- output %||% "mle"
+    ss3rep <- x; ss3rep$endyr <- .endyr(ss3rep); output <- output %||% "mle"
     output <- match.arg(output, c("mle", "iters"))
     if(output == "mle"){
       if(source == "auto") source <- if(.derived_ok(ss3rep)) "derived" else "timeseries"

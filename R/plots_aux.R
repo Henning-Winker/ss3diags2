@@ -145,4 +145,4 @@ scale_x_year <- function(n = 5, ...) ggplot2::scale_x_continuous(breaks = functi
 .gap_run <- function(year) cumsum(c(1, diff(year) > 1))
 
 utils::globalVariables(c("seg", "group", "prop", "pexp", "mu", "mexp", "lo", "hi", "size", "dtype", "rel", "value",
-                         "variable", "fit", "quant", "timef", "t", "xval", "ntot", "bw", "yfac"))
+                         "variable", "fit", "quant", "x", "timef", "t", "xval", "ntot", "bw", "yfac"))
