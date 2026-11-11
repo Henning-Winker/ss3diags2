@@ -185,11 +185,12 @@ ss3plot_comps <- function(comps, fit = NULL, by = NULL, type = c("pooled", "annu
   }
   if(type == "bubble"){
     d[, prop := data/sum(data, na.rm = TRUE), by = gk]
-    p <- ggplot2::ggplot(d[prop > 0], ggplot2::aes(year, quant, size = prop)) +
-      ggplot2::geom_point(shape = 21, fill = ss3bubblecols[["obs"]], colour = "white", stroke = 0.2, alpha = 0.7) +
-      ggplot2::scale_size_area(max_size = 5, name = "Proportion") +
-      ggplot2::labs(x = "Year", y = xlab) + scale_x_year()
-    p <- p + if(length(dims)) ggplot2::facet_grid(group ~ name) else ggplot2::facet_wrap(~ name, ncol = ncol)
+    d <- .panel(d[prop > 0], dims)                         # panels with data only, years with data only
+    p <- ggplot2::ggplot(d, ggplot2::aes(year, quant, size = prop)) +
+      ggplot2::geom_point(shape = 21, fill = ss3bubblecols[["obs"]], colour = "white", stroke = 0.15, alpha = 0.6) +
+      ggplot2::scale_size_area(max_size = 3.5, name = "Proportion") +
+      ggplot2::facet_wrap(~ panel, scales = "free", ncol = ncol) +
+      ggplot2::labs(x = "Year", y = xlab) + scale_x_year(n = 4)
     return(p + theme_ss3() + ggplot2::theme(legend.title = ggplot2::element_text(size = 8)))
   }
   if(type == "mean"){

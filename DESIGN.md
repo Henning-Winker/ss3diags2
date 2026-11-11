@@ -117,6 +117,21 @@ sub-seasons, Ngenders = 2, Nareas = 1):
 - triggered fixes: r4ss >= 1.50 names (`dead_bio`), compositions completed on all data bins (SS3 tail compression
   drops empty bins), fit lines broken at gaps.
 
+## Composition residuals (v0.5)
+
+- `ss3_resid()`: OSA (default) or Pearson residuals of length / age compositions as FLQuants by fleet and partition.
+  OSA as FLicc (Trijoulet et al. 2023): conditional binomial (multinomial) or beta-binomial (Dirichlet-multinomial)
+  along increasing bins, females before males in joint-sex compositions; DM precision from the SS3 effective N,
+  a0 = N (Neff - 1)/(N - Neff) (`Nsamp_DM`, `DM_effN`), equal to theta x N for the linear parameterisation (checked on
+  ss3ank). Counts round(obs x N). Validated on simulated compositions (mean 0, sd 1).
+- `ss3plot_resid()`: bubbles (panels per fleet x unit with data, years with data), cohort tracks from `ss3_lhpar()`
+  by unit (F solid, M dashed; diagonals for ages), residuals pooled over years by bin (Stouffer), QQ.
+- `ss3_lhpar()`: FLPar linf, k, t0, L50, mat.slope, a, b, M, CVmin, CVmax, A1, A2, L1, L2 (unit dimension with two
+  sexes); VB approximated from `endgrowth` for other growth models; missing male parameters set to female values.
+- ss3ank: OSA means 0.1-0.4 and survey residuals negative at 10-25 cm, positive above 30 cm in both sexes: fewer small
+  fish than expected (conditional reading), a selectivity or recruitment signal; hake and mako residuals ~N(0,1).
+- **[open]** OSA for conditional age-at-length; OSA for indices (needs the SS3 likelihood: lognormal with total SE).
+
 ## Next (in this order)
 1. **Life history `FLPar`** (`ss3_lhpar()`), from `Growth_Parameters`, `MGparmAdj` and `endgrowth`: linf, k, t0,
    L50 and slope (or a50), M (constant or by age), a, b, CVL (CVmin/CVmax), A1/A2/L1/L2, by sex in a `unit`
