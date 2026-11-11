@@ -151,6 +151,11 @@ sub-seasons, Ngenders = 2, Nareas = 1):
 - `ss3_flqs()`: SSB, F, Rec, Catch, B/Btgt, F/Ftgt, B/B0, Catch/MSY as FLQuants (iterations kept, ratios within
   iterations) for ggplotFL `plot()` and `ss3plot_trj()`; used by the stock plots.
 
+- `fwd = TRUE` (ss3mvln, ss3stk) adds the SS3 forecast years; `attr(stk, "endyr")` marks the last assessment year.
+- `ss3plot_kobe(lag = 1)`: F(y) against B/Btgt(y + 1), the start-of-year biomass after the fishing in year y; the cloud
+  pairs F(Y) and B(Y + 1) within iterations (joint MVLN; warning for SSdeltaMVLN draws). sma 2015: P(red) 78% at
+  lag 0, 93% at lag 1.
+
 ## Next (in this order)
 1. **Life history `FLPar`** (`ss3_lhpar()`), from `Growth_Parameters`, `MGparmAdj` and `endgrowth`: linf, k, t0,
    L50 and slope (or a50), M (constant or by age), a, b, CVL (CVmin/CVmax), A1/A2/L1/L2, by sex in a `unit`

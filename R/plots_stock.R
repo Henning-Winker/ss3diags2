@@ -149,9 +149,16 @@ ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftg
 #' the iterations (MVLN or MCMC) with highest-density contours and the percentage of draws in each quadrant, as
 #' \code{JABBA3::jbplot_kobe()} and \code{ss3diags::SSplotKobe()}.
 #'
-#' @param x FLStockR with iterations (e.g. \code{ss3stk(ss3rep, iters = 1000)}); with one iteration only the
+#' With \code{lag = 1}, F in year y is plotted against B/Btgt in year y + 1, the biomass at the start of the next year
+#' that results from the fishing in year y (SS3 reports SSB at the start of the year). The uncertainty cloud then pairs
+#' F(Y) and B(Y + 1) within each iteration, which needs draws linked across years (\code{ss3mvln(method = "joint")};
+#' a warning is given for the year-by-year SSdeltaMVLN draws). For the last assessment year build the stock with
+#' \code{ss3stk(..., fwd = TRUE)}, which adds SSB in the year after the end year; F is used up to the end year only.
+#'
+#' @param x FLStockR with iterations (e.g. \code{ss3stk(ss3rep, output = "iters")}); with one iteration only the
 #'   trajectory is drawn
-#' @param year year of the uncertainty cloud (default last year)
+#' @param year year of the uncertainty cloud (the F year when \code{lag > 0}; default the last year available)
+#' @param lag years between F and B: 0 (default, F(y) against B(y)) or 1 (F(y) against B(y + 1))
 #' @param npoints maximum number of points shown
 #' @param contours highest-density contour levels (\code{NULL} or \code{FALSE} for none; needs MASS)
 #' @param style \code{"points"} (draws with contour lines) or \code{"contours"} (filled 50/80/95% regions)
@@ -160,26 +167,36 @@ ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftg
 #' @examples
 #' \dontrun{
 #' data(natl.sma, package = "ss3diags")
-#' ss3plot_kobe(ss3stk(ss3sma, iters = 1000))
+#' stk <- ss3stk(ss3sma, output = "iters", fwd = TRUE)
+#' ss3plot_kobe(stk)            # F(y) vs B(y)
+#' ss3plot_kobe(stk, lag = 1)   # F(y) vs B(y + 1)
 #' }
 #' @export
-ss3plot_kobe <- function(x, year = NULL, npoints = 2000, contours = c(0.5, 0.8, 0.95),
+ss3plot_kobe <- function(x, year = NULL, lag = 0, npoints = 2000, contours = c(0.5, 0.8, 0.95),
                          style = c("points", "contours"), labels = 0){
   style <- match.arg(style)
   if(!is(x, "FLStockR")) stop("x must be an FLStockR with refpts Btgt and Ftgt", call. = FALSE)
+  if(!lag %in% c(0, 1)) stop("lag must be 0 or 1", call. = FALSE)
   btgt <- .rp(x, "Btgt"); ftgt <- .rp(x, "Ftgt")
   if(!is.finite(btgt) || !is.finite(ftgt)) stop("Kobe plot needs refpts Btgt and Ftgt", call. = FALSE)
+  if(lag > 0 && !is.null(attr(x, "status")))
+    warning("year-by-year (SSdeltaMVLN) draws are not linked across years: the lagged cloud pairs unrelated draws; ",
+            "use ss3mvln(method = \"joint\")", call. = FALSE)
   q <- ss3_flqs(x, c("B/Btgt", "F/Ftgt")); bb <- q[["B/Btgt"]]; ff <- q[["F/Ftgt"]]
   yrs <- as.numeric(dimnames(bb)$year)
+  endyr <- attr(x, "endyr") %||% max(yrs)
+  fy <- yrs[yrs <= endyr & (yrs + lag) %in% yrs]                      # F years with B in year + lag
+  if(!length(fy)) stop("no years with B in year + lag; build the stock with ss3stk(..., fwd = TRUE)", call. = FALSE)
   mle <- attr(x, "mle")
-  trj <- if(!is.null(mle)) data.table(year = mle$year, stock = mle$stock, harvest = mle$harvest) else
-    data.table(year = yrs, stock = apply(bb@.Data, 2, stats::median, na.rm = TRUE),
-               harvest = apply(ff@.Data, 2, stats::median, na.rm = TRUE))
-  y <- year %||% max(trj$year)
+  med <- function(q) apply(q@.Data, 2, stats::median, na.rm = TRUE)
+  sv <- if(!is.null(mle)) mle$stock[match(yrs, mle$year)] else med(bb)
+  hv <- if(!is.null(mle)) mle$harvest[match(yrs, mle$year)] else med(ff)
+  trj <- data.table(year = fy, stock = sv[match(fy + lag, yrs)], harvest = hv[match(fy, yrs)])
+  y <- year %||% max(fy)
+  if(!y %in% fy) stop("year ", y, " not available with lag ", lag, call. = FALSE)
   trj <- trj[year <= y & is.finite(stock) & is.finite(harvest)]
   pt <- if(dim(bb)[6] > 1){
-    j <- match(as.character(y), dimnames(bb)$year)
-    data.table(stock = as.numeric(bb[, j]), harvest = as.numeric(ff[, j]))
+    data.table(stock = as.numeric(bb[, as.character(y + lag)]), harvest = as.numeric(ff[, as.character(y)]))
   } else NULL
   qd <- data.table(xmin = c(1, 0, 1, 0), xmax = c(Inf, 1, Inf, 1), ymin = c(0, 0, 1, 1), ymax = c(1, 1, Inf, Inf),
                    zone = c("green", "yellow", "orange", "red"))
@@ -194,23 +211,25 @@ ss3plot_kobe <- function(x, year = NULL, npoints = 2000, contours = c(0.5, 0.8, 
   ymax <- max(2, trj$harvest, if(!is.null(pt)) stats::quantile(pt$harvest, 0.995), na.rm = TRUE)*1.05
   ends <- trj[c(1, .N)]
   lab <- if(labels > 0) trj[year %% labels == 0] else ends
+  ttl <- if(lag > 0) paste0("Uncertainty F ", y, ", B ", y + lag) else paste("Uncertainty", y)
   p <- ggplot2::ggplot() +
     ggplot2::geom_rect(data = qd, ggplot2::aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = zone), alpha = 0.85) +
     ggplot2::scale_fill_manual(values = .kobe_fills, breaks = qd$zone, labels = qd$lab,
-                               name = if(!is.null(pt)) paste("Uncertainty", y) else NULL,
-                               guide = if(is.null(pt)) "none" else "legend")
+                               name = if(!is.null(pt)) ttl else NULL, guide = if(is.null(pt)) "none" else "legend")
   if(!is.null(pt)){
     if(style == "points") p <- p + ggplot2::geom_point(data = pt, ggplot2::aes(stock, harvest), colour = "grey15",
                                                        alpha = 0.3, size = 0.7)
     if(!isFALSE(contours) && length(contours)) p <- p + .kobe_hdr(pt, contours, filled = style == "contours",
                                                                  lims = c(0, xmax, 0, ymax))
   }
+  bl <- attr(x, "basis")$B %||% "Btgt"; fl <- attr(x, "basis")$F %||% "Ftgt"
   p + ggplot2::geom_path(data = trj, ggplot2::aes(stock, harvest), linewidth = 0.6) +
     ggplot2::geom_point(data = trj, ggplot2::aes(stock, harvest), shape = 21, fill = "white", size = 1.3) +
     ggplot2::geom_point(data = ends, ggplot2::aes(stock, harvest), shape = c(22, 24), fill = "white", size = 3) +
     ggplot2::geom_text(data = lab, ggplot2::aes(stock, harvest, label = year), vjust = -1.1, size = 3) +
     ggplot2::coord_cartesian(xlim = c(0, xmax), ylim = c(0, ymax), expand = FALSE) +
-    ggplot2::labs(x = paste0("B/", attr(x, "basis")$B %||% "Btgt"), y = paste0("F/", attr(x, "basis")$F %||% "Ftgt")) +
+    ggplot2::labs(x = if(lag > 0) paste0("B/", bl, " (year + ", lag, ")") else paste0("B/", bl), y = paste0("F/", fl),
+                  subtitle = if(lag > 0) paste0("F(y) against B(y + ", lag, "); years labelled by F year") else NULL) +
     theme_ss3(legend.position = "right") + ggplot2::theme(legend.title = ggplot2::element_text(size = 8))
 }
 

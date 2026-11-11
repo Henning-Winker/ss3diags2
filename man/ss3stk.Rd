@@ -12,7 +12,7 @@ ss3stk(
   rel = FALSE,
   thin = 1,
   Fref = NULL,
-  forecast = FALSE,
+  fwd = FALSE,
   catch = c("Exp", "Obs", "kill_bio", "dead_bio", "ret_bio"),
   blim = NULL,
   bpa = NULL,
@@ -34,7 +34,7 @@ ss3stk(
 
 \item{thin}{keep every \code{thin}-th iteration}
 
-\item{Fref, forecast, catch}{passed to \code{\link{ss3mvln}()}}
+\item{Fref, fwd, catch}{passed to \code{\link{ss3mvln}()} (\code{fwd = TRUE}: add the SS3 forecast years)}
 
 \item{blim, bpa}{optional Blim and Bpa as fractions of Btgt, added to the reference points}
 
@@ -71,6 +71,7 @@ stk <- ss3stk(ss3ank, btgt = 0.4)          # MLE, from the time series (run with
 \dontrun{
 data(natl.sma, package = "ss3diags")
 stk  <- ss3stk(ss3sma)                      # MLE with SEs
+stkf <- ss3stk(ss3sma, output = "iters", fwd = TRUE)   # with forecast years
 stki <- ss3stk(ss3sma, output = "iters")    # joint MVLN iterations
 stki <- ss3stk(ss3mvln(ss3sma, method = "annual"))
 }

@@ -100,8 +100,9 @@
 #' @param mc number of draws
 #' @param method \code{"joint"} (default) or \code{"annual"}
 #' @param Fref reference for F: \code{"MSY"}, \code{"Btgt"}, \code{"SPR"} or \code{"F01"} (default from F_report_basis)
-#' @param years years (default up to the end year; \code{forecast = TRUE} adds forecast years)
-#' @param forecast include forecast years
+#' @param years years (default up to the end year; \code{fwd = TRUE} adds the forecast years)
+#' @param fwd include the SS3 forecast years (e.g. SSB at the start of the year after the end year, needed for the
+#'   lagged Kobe plot)
 #' @param catch catch column of \code{ss3rep$catch} summed over fleets (\code{"Exp"} default, \code{"Obs"},
 #'   \code{"kill_bio"}/\code{"dead_bio"}, \code{"ret_bio"}); forecast catch from \code{ForeCatch_}
 #' @param seed random seed
@@ -117,7 +118,7 @@
 #' mv$refpts.iter
 #' }
 #' @export
-ss3mvln <- function(ss3rep, mc = 1000, method = c("joint", "annual"), Fref = NULL, years = NULL, forecast = FALSE,
+ss3mvln <- function(ss3rep, mc = 1000, method = c("joint", "annual"), Fref = NULL, years = NULL, fwd = FALSE,
                     catch = c("Exp", "Obs", "kill_bio", "dead_bio", "ret_bio"), seed = 123, virgin = FALSE){
   method <- match.arg(method); catch <- match.arg(catch)
   if(catch == "dead_bio") catch <- "kill_bio"
@@ -125,12 +126,12 @@ ss3mvln <- function(ss3rep, mc = 1000, method = c("joint", "annual"), Fref = NUL
     stop("CoVar required for MVLN draws: run SS3 with the hessian and read it with r4ss::SS_output(covar = TRUE)",
          call. = FALSE)
   if(method == "annual"){
-    out <- .mvln_annual(ss3rep, Fref = Fref, years = years, mc = mc, forecast = forecast, virgin = virgin,
+    out <- .mvln_annual(ss3rep, Fref = Fref, years = years, mc = mc, forecast = fwd, virgin = virgin,
                         catch = catch, seed = seed)
     out$method <- "annual"
     return(out)
   }
-  j <- .mvln_joint(ss3rep, Fref = Fref, years = years, mc = mc, forecast = forecast, catch = catch, seed = seed)
+  j <- .mvln_joint(ss3rep, Fref = Fref, years = years, mc = mc, forecast = fwd, catch = catch, seed = seed)
   b <- j$b
   rp <- function(d) FLCore::FLPar(Ftgt = d$Ftgt, Btgt = d$Btgt, MSY = d$MSY, B0 = d$B0, R0 = d$R0)
   rpi <- if(!is.null(j$rp)) FLCore::FLPar(array(t(as.matrix(j$rp[, .(Ftgt, Btgt, MSY, B0, R0)])), dim = c(5, mc),
@@ -238,7 +239,7 @@ print.ss3mvln <- function(x, ...){
 #' @param method MVLN method, \code{"joint"} (default) or \code{"annual"}
 #' @param rel relative quantities (B/Btgt, F/Ftgt) in the stock
 #' @param thin keep every \code{thin}-th iteration
-#' @param Fref,forecast,catch passed to \code{\link{ss3mvln}()}
+#' @param Fref,fwd,catch passed to \code{\link{ss3mvln}()} (\code{fwd = TRUE}: add the SS3 forecast years)
 #' @param blim,bpa optional Blim and Bpa as fractions of Btgt, added to the reference points
 #' @param name stock name
 #' @param source \code{"auto"}, \code{"derived"} or \code{"timeseries"} (MLE only)
@@ -251,12 +252,13 @@ print.ss3mvln <- function(x, ...){
 #' \dontrun{
 #' data(natl.sma, package = "ss3diags")
 #' stk  <- ss3stk(ss3sma)                      # MLE with SEs
+#' stkf <- ss3stk(ss3sma, output = "iters", fwd = TRUE)   # with forecast years
 #' stki <- ss3stk(ss3sma, output = "iters")    # joint MVLN iterations
 #' stki <- ss3stk(ss3mvln(ss3sma, method = "annual"))
 #' }
 #' @export
 ss3stk <- function(x, output = NULL, iters = 1000, method = c("joint", "annual"), rel = FALSE, thin = 1, Fref = NULL,
-                   forecast = FALSE, catch = c("Exp", "Obs", "kill_bio", "dead_bio", "ret_bio"), blim = NULL,
+                   fwd = FALSE, catch = c("Exp", "Obs", "kill_bio", "dead_bio", "ret_bio"), blim = NULL,
                    bpa = NULL, name = "ss3", source = c("auto", "derived", "timeseries"), btgt = NULL){
   method <- match.arg(method); catch <- match.arg(catch); source <- match.arg(source)
   if(catch == "dead_bio") catch <- "kill_bio"
@@ -273,14 +275,14 @@ ss3stk <- function(x, output = NULL, iters = 1000, method = c("joint", "annual")
                 if(isTRUE((btgt %||% ss3rep$btarg %||% -1) > 0)) " and Btgt" else "")
         mv <- .ss3_ts_mle(ss3rep, btgt); mv$method <- "timeseries"
       } else {
-        j <- .mvln_joint(ss3rep, Fref = Fref, mc = 0, forecast = forecast, catch = catch)
+        j <- .mvln_joint(ss3rep, Fref = Fref, mc = 0, forecast = fwd, catch = catch)
         mv <- list(mle = j$mle, refpts = FLCore::FLPar(Ftgt = j$rp.mle$Ftgt, Btgt = j$rp.mle$Btgt, MSY = j$rp.mle$MSY,
                                                        B0 = j$rp.mle$B0, R0 = j$rp.mle$R0),
                    basis = list(B = j$b$Bref, F = j$b$Fref, bbasis = j$b$bbasis, fbasis = j$b$fbasis,
                                 Btgtref = j$b$bref, ssbunits = ss3rep$SpawnOutputUnits %||% "biomass"), method = "mle")
         se <- .se_log(ss3rep, mv$mle$year)
       }
-    } else mv <- ss3mvln(ss3rep, mc = iters, method = method, Fref = Fref, forecast = forecast, catch = catch)
+    } else mv <- ss3mvln(ss3rep, mc = iters, method = method, Fref = Fref, fwd = fwd, catch = catch)
   }
   output <- match.arg(output, c("mle", "iters"))
   if(output == "iters" && is.null(mv$kb)) stop("no draws in this ss3mvln object", call. = FALSE)
@@ -315,6 +317,8 @@ ss3stk <- function(x, output = NULL, iters = 1000, method = c("joint", "annual")
   }
   out <- FLCore::FLStockR(stk, refpts = rp)
   attr(out, "basis") <- mv$basis
+  attr(out, "endyr") <- if(!is.null(ss3rep)) ss3rep$endyr else if("type" %in% names(mv$mle))
+    max(mv$mle$year[mv$mle$type == "fit"]) else NULL
   if(output == "iters"){
     attr(out, "mle") <- mv$mle
     if(identical(mv$method, "annual"))       # SSdeltaMVLN: SSB and F draws marginal, keep the joint B/F ratios

@@ -68,3 +68,19 @@ test_that("ss3stk: joint iterations with iteration refpts, rel, thin; ss3_flqs",
   expect_s4_class(attr(sa, "status"), "FLQuants")
   expect_silent(ggplot2::ggplot_build(ss3plot_kobe(s)))
 })
+
+test_that("fwd adds the forecast years and the Kobe plot takes lag = 1", {
+  skip_no_data(); skip_if_not_installed("mvtnorm")
+  e <- load_ss3("natl.sma"); r <- e$ss3sma
+  s <- ss3stk(r, output = "iters", iters = 200, fwd = TRUE)
+  expect_true(as.character(r$endyr + 1) %in% dimnames(FLCore::ssb(s))$year)
+  expect_equal(attr(s, "endyr"), r$endyr)
+  p <- ss3plot_kobe(s, lag = 1)
+  expect_silent(ggplot2::ggplot_build(p))
+  q <- ss3_flqs(s, c("B/Btgt", "F/Ftgt"))
+  # cloud pairs F(endyr) with B(endyr + 1) within iterations
+  pts <- p$layers[[2]]$data
+  expect_true(all(pts$stock %in% as.numeric(q[["B/Btgt"]][, as.character(r$endyr + 1)])))
+  expect_warning(ss3plot_kobe(ss3stk(ss3mvln(r, mc = 50, method = "annual", fwd = TRUE)), lag = 1), "not linked")
+  expect_error(ss3plot_kobe(s, lag = 2), "lag")
+})

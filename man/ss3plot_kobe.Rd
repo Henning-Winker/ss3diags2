@@ -7,6 +7,7 @@
 ss3plot_kobe(
   x,
   year = NULL,
+  lag = 0,
   npoints = 2000,
   contours = c(0.5, 0.8, 0.95),
   style = c("points", "contours"),
@@ -14,10 +15,12 @@ ss3plot_kobe(
 )
 }
 \arguments{
-\item{x}{FLStockR with iterations (e.g. \code{ss3stk(ss3rep, iters = 1000)}); with one iteration only the
+\item{x}{FLStockR with iterations (e.g. \code{ss3stk(ss3rep, output = "iters")}); with one iteration only the
 trajectory is drawn}
 
-\item{year}{year of the uncertainty cloud (default last year)}
+\item{year}{year of the uncertainty cloud (the F year when \code{lag > 0}; default the last year available)}
+
+\item{lag}{years between F and B: 0 (default, F(y) against B(y)) or 1 (F(y) against B(y + 1))}
 
 \item{npoints}{maximum number of points shown}
 
@@ -35,9 +38,18 @@ B/Btgt against F/Ftgt: the trajectory (MLE, or median of the iterations) and the
 the iterations (MVLN or MCMC) with highest-density contours and the percentage of draws in each quadrant, as
 \code{JABBA3::jbplot_kobe()} and \code{ss3diags::SSplotKobe()}.
 }
+\details{
+With \code{lag = 1}, F in year y is plotted against B/Btgt in year y + 1, the biomass at the start of the next year
+that results from the fishing in year y (SS3 reports SSB at the start of the year). The uncertainty cloud then pairs
+F(Y) and B(Y + 1) within each iteration, which needs draws linked across years (\code{ss3mvln(method = "joint")};
+a warning is given for the year-by-year SSdeltaMVLN draws). For the last assessment year build the stock with
+\code{ss3stk(..., fwd = TRUE)}, which adds SSB in the year after the end year; F is used up to the end year only.
+}
 \examples{
 \dontrun{
 data(natl.sma, package = "ss3diags")
-ss3plot_kobe(ss3stk(ss3sma, iters = 1000))
+stk <- ss3stk(ss3sma, output = "iters", fwd = TRUE)
+ss3plot_kobe(stk)            # F(y) vs B(y)
+ss3plot_kobe(stk, lag = 1)   # F(y) vs B(y + 1)
 }
 }

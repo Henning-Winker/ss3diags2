@@ -64,6 +64,7 @@ ss3plot_indices(idx, fit = ss3_indices(ss3sma, what = "exp"))
 ss3plot_comps(lfd, by = "unit", type = "pooled")         # "annual", "bubble", "mean"
 ss3plot_trj(stki)                                        # also list(SS3 = stk, JABBA3 = jb3stk)
 ss3plot_kobe(stki)
+ss3plot_kobe(ss3stk(ss3sma, output = "iters", fwd = TRUE), lag = 1)   # F(y) vs B(y + 1)
 ss3plot_production(stk, type = "phase")                  # or "dyn"; Pella-Tomlinson fit overlaid
 ```
 

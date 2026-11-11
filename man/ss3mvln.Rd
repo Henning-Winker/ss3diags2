@@ -10,7 +10,7 @@ ss3mvln(
   method = c("joint", "annual"),
   Fref = NULL,
   years = NULL,
-  forecast = FALSE,
+  fwd = FALSE,
   catch = c("Exp", "Obs", "kill_bio", "dead_bio", "ret_bio"),
   seed = 123,
   virgin = FALSE
@@ -25,9 +25,10 @@ ss3mvln(
 
 \item{Fref}{reference for F: \code{"MSY"}, \code{"Btgt"}, \code{"SPR"} or \code{"F01"} (default from F_report_basis)}
 
-\item{years}{years (default up to the end year; \code{forecast = TRUE} adds forecast years)}
+\item{years}{years (default up to the end year; \code{fwd = TRUE} adds the forecast years)}
 
-\item{forecast}{include forecast years}
+\item{fwd}{include the SS3 forecast years (e.g. SSB at the start of the year after the end year, needed for the
+lagged Kobe plot)}
 
 \item{catch}{catch column of \code{ss3rep$catch} summed over fleets (\code{"Exp"} default, \code{"Obs"},
 \code{"kill_bio"}/\code{"dead_bio"}, \code{"ret_bio"}); forecast catch from \code{ForeCatch_}}
