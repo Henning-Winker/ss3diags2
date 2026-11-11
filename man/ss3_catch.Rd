@@ -18,8 +18,9 @@ ss3_catch(
 
 \item{fleets}{fleet numbers or names (default: all catch fleets with catch)}
 
-\item{what}{\code{"obs"} (observed catch, default), \code{"exp"} (expected), model-estimated catch by type
-(\code{"ret_bio"}, \code{"kill_bio"}, \code{"sel_bio"}: biomass retained, killed, selected;
+\item{what}{\code{"obs"} (observed catch, default; retained catch when discards are modelled), \code{"exp"}
+(expected), model-estimated catch by type (\code{"ret_bio"}, \code{"kill_bio"} (\code{dead_bio} in newer r4ss),
+\code{"sel_bio"}: biomass retained, killed (landings + dead discards), selected;
 \code{"ret_num"}, \code{"kill_num"}, \code{"sel_num"}: the same in numbers) or the fleet \code{"F"}}
 
 \item{years}{optional years to keep (default: start to end year of the model)}

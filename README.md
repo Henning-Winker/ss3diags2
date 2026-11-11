@@ -13,6 +13,12 @@ FLR classes, shaped to match the inputs of [`JABBA3`](https://github.com/Henning
 remotes::install_github("Henning-Winker/ss3diags2")
 ```
 
+## Example data
+
+`ss3ank`: SS3 (3.30.22) assessment of black anglerfish in ICES 7 and 8abd (two sexes, one season, two fleets with
+discard/retained length compositions, two surveys with sex-specific length compositions), with the SS3 input files in
+`system.file("extdata", "ank.27.78abd", package = "ss3diags2")`. The examples below also use the `ss3diags` data.
+
 ## Observations from an SS3 report
 
 ```r

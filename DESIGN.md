@@ -105,6 +105,18 @@ unique green, F red, M blue (`ss3unitcols`), observed compositions grey bars, fi
   `ageselex`, M and F shares; or FLBRP + `asem2spm(quant = "vb")`), so yield and biomass share units (mako) and JABBA3
   gets EB/SB mapping for Selex; realised SP(t) fit with process error as a diagnostic.
 
+## Example data: ss3ank (v0.4)
+
+Black anglerfish ank.27.78abd, SS3 3.30.22, 1950-2025. Checked against the input files (data.ss: Nseas = 1 with 4
+sub-seasons, Ngenders = 2, Nareas = 1):
+- not seasonal; sex structure only in the survey length compositions (Sexes = 3); fishery compositions are
+  sex-combined with discard and retained partitions; observed discards (`ss3_discards()`); input SEs present.
+- the report has no CoVar, derived quantities are 0 and `equil_yield` is empty (run without hessian/sdreport):
+  `ss3_FLStockR()` falls back to the time series (SSB, recruitment, dead catch, F = sum of apical F, B0, R0);
+  no MVLN, Kobe or production function. **[open: rerun with hessian; a seasonal variant would test the season code]**
+- triggered fixes: r4ss >= 1.50 names (`dead_bio`), compositions completed on all data bins (SS3 tail compression
+  drops empty bins), fit lines broken at gaps.
+
 ## Next (in this order)
 1. **Life history `FLPar`** (`ss3_lhpar()`), from `Growth_Parameters`, `MGparmAdj` and `endgrowth`: linf, k, t0,
    L50 and slope (or a50), M (constant or by age), a, b, CVL (CVmin/CVmax), A1/A2/L1/L2, by sex in a `unit`

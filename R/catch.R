@@ -12,8 +12,9 @@
 #'
 #' @param ss3rep output of \code{r4ss::SS_output()}
 #' @param fleets fleet numbers or names (default: all catch fleets with catch)
-#' @param what \code{"obs"} (observed catch, default), \code{"exp"} (expected), model-estimated catch by type
-#'   (\code{"ret_bio"}, \code{"kill_bio"}, \code{"sel_bio"}: biomass retained, killed, selected;
+#' @param what \code{"obs"} (observed catch, default; retained catch when discards are modelled), \code{"exp"}
+#'   (expected), model-estimated catch by type (\code{"ret_bio"}, \code{"kill_bio"} (\code{dead_bio} in newer r4ss),
+#'   \code{"sel_bio"}: biomass retained, killed (landings + dead discards), selected;
 #'   \code{"ret_num"}, \code{"kill_num"}, \code{"sel_num"}: the same in numbers) or the fleet \code{"F"}
 #' @param years optional years to keep (default: start to end year of the model)
 #' @param long return the long data.table instead of FLQuants
@@ -40,7 +41,8 @@ ss3_catch <- function(ss3rep, fleets = NULL, what = c("obs", "exp", "ret_bio", "
   fleets <- .pick_fleets(ss3rep, fleets, avail)
   ns <- ss3rep$nseasons %||% 1; na <- ss3rep$nareas %||% 1
   col <- .catch_cols[[what]]
-  if(!col %in% names(ct)) stop("column '", col, "' not found in ss3rep$catch", call. = FALSE)
+  if(!col %in% names(ct)) col <- sub("^kill_", "dead_", col)                 # r4ss >= 1.50: kill_* renamed dead_*
+  if(!col %in% names(ct)) stop("column '", .catch_cols[[what]], "' not found in ss3rep$catch", call. = FALSE)
   d <- data.table(fleet = ct$Fleet, name = .fleetnames(ss3rep)[ct$Fleet], age = "all", year = ct$Yr,
                   unit = "unique", season = .season_lab(ct$Seas, ns), area = .area_lab(ct$Area, na), iter = "1",
                   data = as.numeric(ct[[col]]), obs = ct$Obs, exp = ct$Exp, se = .col(ct, c("se", "SE"), NA_real_))
@@ -56,4 +58,38 @@ ss3_catch <- function(ss3rep, fleets = NULL, what = c("obs", "exp", "ret_bio", "
   if(long) return(d[])
   u <- d[, .(u = units[1]), by = name]
   long2flqs(d, quant = "age", units = u$u[match(fleets, u$name)], order = fleets, years = yrs)
+}
+
+#' Discards by fleet
+#'
+#' Observed (or expected) discards of each fleet from \code{ss3rep$discard} as \code{FLQuants} (quant "all"),
+#' or as a long table with SEs. When SS3 models retention, \code{ss3_catch(what = "obs")} holds the landings
+#' (retained catch); landings plus discards give the total removals (or use \code{ss3_catch(what = "kill_bio")} for
+#' the model's dead catch).
+#'
+#' @param ss3rep output of \code{r4ss::SS_output()}
+#' @param fleets fleet numbers or names (default: all fleets with discard data)
+#' @param what \code{"obs"} (default) or \code{"exp"}
+#' @param long return the long data.table instead of FLQuants
+#' @return FLQuants (named by fleet; units as the fleet catch) or data.table with \code{obs}, \code{exp},
+#'   \code{se_input} (\code{Std_in}) and \code{se} (\code{Std_use})
+#' @export
+ss3_discards <- function(ss3rep, fleets = NULL, what = c("obs", "exp"), long = FALSE){
+  what <- match.arg(what)
+  dd <- as.data.table(ss3rep$discard)
+  if(!nrow(dd)) stop("no discard data in ss3rep$discard", call. = FALSE)
+  fl <- ss3_fleets(ss3rep)
+  fleets <- .pick_fleets(ss3rep, fleets, .fleetnames(ss3rep)[sort(unique(dd$Fleet))])
+  ns <- ss3rep$nseasons %||% 1; na <- ss3rep$nareas %||% 1
+  d <- data.table(fleet = dd$Fleet, name = .fleetnames(ss3rep)[dd$Fleet], age = "all", year = dd$Yr, unit = "unique",
+                  season = .season_lab(dd$Seas, ns), area = .area_lab(.col(dd, "Area", 1), na), iter = "1",
+                  obs = dd$Obs, exp = dd$Exp, se_input = .col(dd, "Std_in", NA_real_), se = .col(dd, "Std_use", NA_real_))
+  d <- d[name %in% fleets]
+  d[, data := if(what == "obs") obs else exp]
+  d[, units := ifelse(fl$catch_units[match(fleet, fl$fleet)] == "numbers", "1000", "t")]
+  setcolorder(d, c("fleet", "name", "age", "year", "unit", "season", "area", "iter", "data"))
+  if(long) return(d[])
+  u <- d[, .(u = units[1]), by = name]
+  long2flqs(d, quant = "age", units = u$u[match(fleets, u$name)], order = fleets,
+            years = seq(ss3rep$startyr, ss3rep$endyr))
 }

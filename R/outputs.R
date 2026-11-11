@@ -134,6 +134,40 @@ ss3_mvln <- function(ss3rep, Fref = NULL, years = NULL, mc = 1000, forecast = FA
             class = "ss3mvln")
 }
 
+# MLE trajectories from the time series when derived quantities are not available (run without hessian/sdreport)
+.ss3_ts_mle <- function(ss3rep, btgt = NULL){
+  ts <- as.data.table(ss3rep$timeseries)
+  tt <- ts[Era == "TIME"]
+  ssb <- tt[, .(SSB = sum(SpawnBio, na.rm = TRUE)), by = .(year = Yr)]
+  rec <- tt[, .(Recr = sum(Recruit_0, na.rm = TRUE)), by = .(year = Yr)]
+  ct <- as.data.table(ss3rep$catch)
+  dcol <- intersect(c("dead_bio", "kill_bio", "Exp"), names(ct))[1]
+  cat <- ct[Yr %in% tt$Yr, .(Catch = sum(get(dcol), na.rm = TRUE)), by = .(year = Yr)]
+  ex <- as.data.table(ss3rep$exploitation)
+  fn <- intersect(.fleetnames(ss3rep), names(ex))
+  Fy <- if(nrow(ex) && "annual_F" %in% names(ex) && any(ex$annual_F > 0, na.rm = TRUE)) {
+    ex[, .(F = sum(annual_F*Seas_dur, na.rm = TRUE)), by = .(year = Yr)]
+  } else if(nrow(ex) && length(fn)){
+    message("annual F not reported (run without sdreport?): F = sum of fleet apical F")
+    ex[, .(F = sum(rowSums(.SD, na.rm = TRUE)*Seas_dur)), by = .(year = Yr), .SDcols = fn]
+  } else data.table(year = ssb$year, F = NA_real_)
+  m <- Reduce(function(a, b) merge(a, b, by = "year", all.x = TRUE), list(ssb, rec, cat, Fy))
+  v <- ts[Era == "VIRG"]
+  b0 <- sum(v$SpawnBio, na.rm = TRUE); r0 <- sum(v$Recruit_0, na.rm = TRUE)
+  bt <- btgt %||% (if(isTRUE(ss3rep$btarg > 0)) ss3rep$btarg else NA_real_)
+  m[, `:=`(type = "fit", stock = SSB/(bt*b0), harvest = NA_real_)]
+  list(mle = m[year <= ss3rep$endyr], refpts = FLCore::FLPar(Ftgt = NA_real_, Btgt = bt*b0, MSY = NA_real_, B0 = b0, R0 = r0),
+       basis = list(B = if(is.finite(bt)) paste0("B", round(100*bt)) else "Btgt", F = "Ftgt", bbasis = "timeseries",
+                    fbasis = "timeseries", Btgtref = bt, ssbunits = ss3rep$SpawnOutputUnits %||% "biomass"))
+}
+
+.derived_ok <- function(ss3rep){
+  h <- ss3rep$derived_quants; if(is.null(h)) return(FALSE)
+  lab <- .col(h, c("Label", "LABEL")); val <- .col(h, c("Value", "VALUE"))
+  v <- val[lab == paste0("SSB_", ss3rep$endyr)]
+  length(v) == 1 && isTRUE(v > 0)
+}
+
 #' SS3 trajectories as FLStockR
 #'
 #' Builds the simplified (biomass-dynamic, age "1") \code{FLStockR} of \code{FLRef::ss2FLStockR()} from an SS3 report:
@@ -149,6 +183,11 @@ ss3_mvln <- function(ss3rep, Fref = NULL, years = NULL, mc = 1000, forecast = FA
 #' @param Fref,forecast,catch passed to \code{\link{ss3_mvln}()}
 #' @param blim,bpa optional Blim and Bpa as fractions of Btgt, added to the reference points
 #' @param name stock name
+#' @param source \code{"auto"} (default): derived quantities (\code{derived_quants}) when available, else the time
+#'   series; \code{"timeseries"}: SSB and recruitment from \code{timeseries}, catch as dead catch, F as annual F or
+#'   sum of fleet apical F (\code{exploitation}), B0 and R0 from the virgin state; used for runs without hessian or
+#'   sdreport, where SS3 reports derived quantities as 0. Then only B0, R0 and Btgt (= \code{btgt} x B0) are known.
+#' @param btgt biomass target as a fraction of B0 for \code{source = "timeseries"} (default the SS3 \code{btarg})
 #' @return FLStockR
 #' @examples
 #' \dontrun{
@@ -159,9 +198,15 @@ ss3_mvln <- function(ss3rep, Fref = NULL, years = NULL, mc = 1000, forecast = FA
 #' }
 #' @export
 ss3_FLStockR <- function(ss3rep, iters = 0, Fref = NULL, forecast = FALSE, catch = c("Exp", "Obs", "kill_bio", "ret_bio"),
-                         blim = NULL, bpa = NULL, name = "ss3"){
-  catch <- match.arg(catch)
-  mv <- ss3_mvln(ss3rep, Fref = Fref, mc = max(iters, 2), forecast = forecast, catch = catch)
+                         blim = NULL, bpa = NULL, name = "ss3", source = c("auto", "derived", "timeseries"), btgt = NULL){
+  catch <- match.arg(catch); source <- match.arg(source)
+  if(source == "auto") source <- if(.derived_ok(ss3rep)) "derived" else "timeseries"
+  if(source == "timeseries"){
+    if(iters > 0) stop("MVLN draws need derived quantities and CoVar (run SS3 with the hessian)", call. = FALSE)
+    message("derived quantities not available: trajectories from the time series; refpts B0, R0", 
+            if(is.finite(btgt %||% ss3rep$btarg %||% NA) && (btgt %||% ss3rep$btarg) > 0) " and Btgt" else "")
+    mv <- .ss3_ts_mle(ss3rep, btgt)
+  } else mv <- ss3_mvln(ss3rep, Fref = Fref, mc = max(iters, 2), forecast = forecast, catch = catch)
   d <- if(iters > 0) mv$kb else mv$mle[, iter := 1L]
   mk <- function(v, u) long2flq(d[, .(age = "1", year, iter, data = get(v))], quant = "age", units = u)
   R <- mk("Recr", "1000"); C <- mk("Catch", "t"); H <- mk("F", "f")
@@ -179,7 +224,9 @@ ss3_FLStockR <- function(ss3rep, iters = 0, Fref = NULL, forecast = FALSE, catch
                                         params = c(dimnames(rp)$params, names(extra)))
   out <- FLCore::FLStockR(stk, refpts = rp)
   attr(out, "basis") <- mv$basis
-  if(iters > 0){
+  if(source == "timeseries"){
+    # no standard errors
+  } else if(iters > 0){
     attr(out, "mle") <- mv$mle
     # jointly sampled B/Btgt and F/Ftgt (SSB and F draws are marginal, so their ratios lose the correlation)
     attr(out, "status") <- FLCore::FLQuants(stock = mk("stock", ""), harvest = mk("harvest", ""))
@@ -233,4 +280,5 @@ ss3_eqcurve <- function(ss3rep, loops = NULL){
             sd = c(MSY = g(ms, sdv), B0 = g(bs, sdv)), ssbunits = ss3rep$SpawnOutputUnits %||% "biomass")
 }
 
-utils::globalVariables(c("label.i", "label.j", "corr", "stock", "harvest", "SSB", "Recr", "Catch", "F"))
+utils::globalVariables(c("label.i", "label.j", "corr", "stock", "harvest", "SSB", "Recr", "Catch", "F", "Era",
+                         "SpawnBio", "Recruit_0", "annual_F", "Seas_dur"))

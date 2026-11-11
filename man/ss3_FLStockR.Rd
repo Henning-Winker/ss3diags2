@@ -12,7 +12,9 @@ ss3_FLStockR(
   catch = c("Exp", "Obs", "kill_bio", "ret_bio"),
   blim = NULL,
   bpa = NULL,
-  name = "ss3"
+  name = "ss3",
+  source = c("auto", "derived", "timeseries"),
+  btgt = NULL
 )
 }
 \arguments{
@@ -25,6 +27,13 @@ ss3_FLStockR(
 \item{blim, bpa}{optional Blim and Bpa as fractions of Btgt, added to the reference points}
 
 \item{name}{stock name}
+
+\item{source}{\code{"auto"} (default): derived quantities (\code{derived_quants}) when available, else the time
+series; \code{"timeseries"}: SSB and recruitment from \code{timeseries}, catch as dead catch, F as annual F or
+sum of fleet apical F (\code{exploitation}), B0 and R0 from the virgin state; used for runs without hessian or
+sdreport, where SS3 reports derived quantities as 0. Then only B0, R0 and Btgt (= \code{btgt} x B0) are known.}
+
+\item{btgt}{biomass target as a fraction of B0 for \code{source = "timeseries"} (default the SS3 \code{btarg})}
 }
 \value{
 FLStockR

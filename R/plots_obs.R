@@ -94,9 +94,10 @@ ss3plot_indices <- function(indices, fit = NULL, by = NULL, ci = 0.95, log = FAL
   p <- ggplot2::ggplot(d, ggplot2::aes(xval, data))
   if(ci > 0) p <- p + ggplot2::geom_linerange(ggplot2::aes(ymin = lo, ymax = hi, colour = group), linewidth = 0.4,
                                               alpha = 0.7, show.legend = FALSE)
-  if(!is.null(fit) && "fit" %in% names(d))
-    p <- p + ggplot2::geom_line(data = d[!is.na(fit)], ggplot2::aes(y = fit, group = group), colour = "blue",
-                                linewidth = 0.7)
+  if(!is.null(fit) && "fit" %in% names(d)){
+    df <- d[!is.na(fit)][order(name, group, year)][, seg := paste(group, .gap_run(year)), by = .(name, group)]
+    p <- p + ggplot2::geom_line(data = df, ggplot2::aes(y = fit, group = seg), colour = "blue", linewidth = 0.7)
+  }
   p <- p + ggplot2::geom_point(ggplot2::aes(fill = group), shape = 21, size = 1.8, colour = "black") +
     ggplot2::scale_colour_manual(values = cols) + ggplot2::scale_fill_manual(values = cols) +
     ggplot2::facet_wrap(~ name, scales = "free_y", ncol = ncol) +
@@ -196,7 +197,8 @@ ss3plot_comps <- function(comps, fit = NULL, by = NULL, type = c("pooled", "annu
                mexp = if(all(is.na(fit))) NA_real_ else sum(quant*fit, na.rm = TRUE)/sum(fit, na.rm = TRUE)), by = gk]
     p <- ggplot2::ggplot(a, ggplot2::aes(year, mu, colour = group)) +
       ggplot2::geom_point(ggplot2::aes(fill = group), shape = 21, colour = "black", size = 1.8)
-    if(!is.null(fit)) p <- p + ggplot2::geom_line(ggplot2::aes(y = mexp), linewidth = 0.6)
+    a <- a[order(name, group, year)][, seg := paste(group, .gap_run(year)), by = .(name, group)]
+    if(!is.null(fit)) p <- p + ggplot2::geom_line(data = a, ggplot2::aes(y = mexp, group = seg), linewidth = 0.6)
     p <- p + ggplot2::scale_fill_manual(values = cols) +
       ggplot2::facet_wrap(~ name, scales = "free_y", ncol = ncol) +
       ggplot2::labs(x = "Year", y = paste("Mean", tolower(xlab))) + scale_x_year()

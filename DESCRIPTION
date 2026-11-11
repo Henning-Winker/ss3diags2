@@ -43,6 +43,7 @@ Additional_repositories: https://flr.r-universe.dev
 URL: https://github.com/Henning-Winker/ss3diags2
 BugReports: https://github.com/Henning-Winker/ss3diags2/issues
 LazyData: true
+LazyDataCompression: xz
 Roxygen: list(markdown = TRUE)
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.1.1

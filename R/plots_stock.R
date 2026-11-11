@@ -100,6 +100,11 @@ ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftg
                         ncol = NULL, label.size = 2.5){
   sl <- .stklist(x); nr <- length(sl)
   d <- rbindlist(lapply(names(sl), function(n) .stk_summary(sl[[n]], type, probs)[, run := n]), fill = TRUE)
+  miss <- d[, .(ok = any(is.finite(est))), by = quant][ok == FALSE]$quant
+  if(length(miss)){
+    message("no values (reference points missing?) for: ", paste(miss, collapse = ", "))
+    type <- setdiff(type, miss); d <- d[quant %in% type]
+  }
   d[, quant := factor(quant, levels = type)][, run := factor(run, levels = names(sl))]
   dr <- d[is.finite(lci) & is.finite(uci)]
   p <- ggplot2::ggplot(d, ggplot2::aes(year, est))
@@ -168,6 +173,7 @@ ss3plot_kobe <- function(x, year = NULL, npoints = 2000, contours = c(0.5, 0.8, 
   style <- match.arg(style)
   if(!is(x, "FLStockR")) stop("x must be an FLStockR with refpts Btgt and Ftgt", call. = FALSE)
   btgt <- .rp(x, "Btgt"); ftgt <- .rp(x, "Ftgt")
+  if(!is.finite(btgt) || !is.finite(ftgt)) stop("Kobe plot needs refpts Btgt and Ftgt", call. = FALSE)
   st <- attr(x, "status")
   bb <- if(!is.null(st)) st$stock else FLCore::ssb(x)/btgt
   ff <- if(!is.null(st)) st$harvest else FLCore::fbar(x)/ftgt
@@ -318,4 +324,4 @@ ss3plot_production <- function(x, eq = NULL, type = c("phase", "dyn"), rel = FAL
 }
 
 utils::globalVariables(c("est", "lci", "uci", "lo1", "hi1", "run", "i.data", "xmin", "xmax", "ymin", "ymax", "zone",
-                         "lab", "B", "C", "SP", "b", "sp", "grp", "z", "x", "y", "yield", "what"))
+                         "lab", "B", "C", "SP", "b", "sp", "grp", "z", "x", "y", "yield", "what", "ok"))

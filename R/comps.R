@@ -45,6 +45,15 @@
                              pearson = pearson)]
   }
   d[, units := if(what == "pearson") "NA" else if(scale == "n") "numbers" else "prop"]
+  # complete each sampled composition with all data bins (SS3 tail compression drops empty bins): 0, not NA
+  bins <- sort(unique(c(if(quant == "len") ss3rep$lbins else ss3rep$agebins, d[[quant]])))
+  keys <- unique(d[, c("partname", .flqdims), with = FALSE])
+  grid <- keys[, setNames(list(bins), quant), by = c("partname", .flqdims)]
+  d <- d[grid, on = c("partname", quant, .flqdims)]
+  fill <- d[!is.na(fleet), .(fleet = fleet[1], name = name[1], part = part[1], units = units[1]), by = partname]
+  d[fill, `:=`(fleet = i.fleet, name = i.name, part = i.part, units = i.units), on = "partname"]
+  if(what != "pearson") d[is.na(data), data := 0]
+  for(v in intersect(c("obs", "exp", "n", "nexp"), names(d))) d[is.na(get(v)), (v) := 0]
   setcolorder(d, c("fleet", "name", "partname", quant, .flqdims, "data"))
   if(long) return(d[])
   nms <- unique(d$partname)

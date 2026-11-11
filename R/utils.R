@@ -106,7 +106,7 @@ flqs2long <- function(x, na.rm = TRUE){
 # global variables used in data.table expressions
 utils::globalVariables(c(".", "name", "fleet", "year", "unit", "season", "area", "iter", "data", "len", "age",
   "obs", "exp", "se", "se_input", "nsamp", "nsamp_adj", "nsamp_in", "part", "sexes", "sex", "bin", "ageerr",
-  "use", "month", "pearson", "type", "Yr", "Seas", "Fleet", "n", "w", "partname", "qname", "nexp", "np", "ne",
+  "use", "month", "pearson", "type", "i.fleet", "i.name", "i.part", "i.units", "Yr", "Seas", "Fleet", "n", "w", "partname", "qname", "nexp", "np", "ne",
   "used", "effN", "units", "se_total", "nlen", "time", "dev", "q"))
 
 # an r4ss::SS_output() list
