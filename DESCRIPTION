@@ -22,6 +22,8 @@ Depends:
 Imports:
     FLCore (>= 2.6.20),
     data.table,
+    ggplot2 (>= 3.4.0),
+    grDevices,
     methods,
     stats
 Suggests:
