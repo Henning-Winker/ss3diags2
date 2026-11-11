@@ -156,6 +156,17 @@ sub-seasons, Ngenders = 2, Nareas = 1):
   pairs F(Y) and B(Y + 1) within iterations (joint MVLN; warning for SSdeltaMVLN draws). sma 2015: P(red) 78% at
   lag 0, 93% at lag 1.
 
+## Flagged for later: NUTS (11 Nov)
+
+- `ss3nuts(dir, ...)`: wrapper of `adnuts::sample_nuts()` on the SS3 executable (after an `-hbf` MLE run), chains,
+  warmup, metric = "mle"; adnuts and rstan in Suggests only (`.need()`), no hard dependency.
+- `ss3_posteriors(dir)` / from an adnuts fit: read `derived_posteriors.sso` (as `ss3diags::SSreadMCMC()`) into the
+  `ss3mvln` draws table (method = "nuts": SSB, Recr, F, Bratio by year and the reference points per iteration), so
+  `ss3stk()`, `ss3plot_trj()` and `ss3plot_kobe()` (incl. `lag = 1`) work unchanged and NUTS can be compared with
+  the joint MVLN. Test data: `ss3diags::gob.her` (`mcmc.her`, derived posteriors).
+- NUTS diagnostics (trace, rank, R-hat, ESS, divergences) in the style of `JABBA3::jbplot_nuts()`.
+- Blocker in this workspace: no SS3/ADMB binary (release assets not reachable); test where SS3 runs.
+
 ## Next (in this order)
 1. **Life history `FLPar`** (`ss3_lhpar()`), from `Growth_Parameters`, `MGparmAdj` and `endgrowth`: linf, k, t0,
    L50 and slope (or a50), M (constant or by age), a, b, CVL (CVmin/CVmax), A1/A2/L1/L2, by sex in a `unit`
