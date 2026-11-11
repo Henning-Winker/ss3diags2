@@ -3,7 +3,7 @@
 **Stock Synthesis diagnostics and data extraction in FLR**
 
 `ss3diags2` is the next generation of [`ss3diags`](https://github.com/JABBAmodel/ss3diags). It extracts observations
-and (soon) model outputs from Stock Synthesis (SS3) reports into long `data.table` tables that convert directly to
+and model outputs from Stock Synthesis (SS3) reports into long `data.table` tables that convert directly to
 FLR classes, shaped to match the inputs of [`JABBA3`](https://github.com/Henning-Winker/JABBA3) and
 [`FLicc`](https://github.com/Henning-Winker/FLicc). Diagnostics in `ggplot2` follow.
 
@@ -40,6 +40,25 @@ inp <- ss2jabba3(ss3sma)                # annual catch by fleet (weight) + FLInd
 
 lb <- ss2flicc(ss3sma)                  # lfd by gear (common bins and years) + catch_by_gear
 # stk <- FLicc::stocklen(lb$lfd, lhpar)
+```
+
+## Model outputs as FLStockR
+
+```r
+stk  <- ss3_FLStockR(ss3sma)                 # MLE with log-scale SEs; refpts Ftgt, Btgt, MSY, B0, R0
+stki <- ss3_FLStockR(ss3sma, iters = 1000)   # MVLN draws (as ss3diags::SSdeltaMVLN, without dplyr)
+```
+
+## Plots (ggplot2, FLR inputs, r4ss colours)
+
+```r
+ss3plot_data(catch = catch, indices = idx, lencomp = lfd)
+ss3plot_catch(catch, by = "season")                      # by any of "unit", "season", "area"
+ss3plot_indices(idx, fit = ss3_indices(ss3sma, what = "exp"))
+ss3plot_comps(lfd, by = "unit", type = "pooled")         # "annual", "bubble", "mean"
+ss3plot_trj(stki)                                        # also list(SS3 = stk, JABBA3 = jb3stk)
+ss3plot_kobe(stki)
+ss3plot_production(stk, type = "phase")                  # or "dyn"
 ```
 
 See [DESIGN.md](DESIGN.md) for the data model, decisions and roadmap (life-history `FLPar`, MLE `FLStockR`, MVLN

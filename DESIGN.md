@@ -52,6 +52,41 @@ Decisions (11 Nov):
 - FLicc fits every gear in every year: `ss2flicc(years = "common")` keeps years in which all gears have a sample;
   `"all"` keeps every year with `NA` for gears without a sample **[open: check FLicc treats NA years as missing]**.
 
+## Model outputs (done, v0.2)
+
+| ss3diags2 | SS3 source | Returns | Matches |
+|---|---|---|---|
+| `ss3_mvln()` | `derived_quants`, `CoVar`, `catch` | list(kb, mle: data.tables; refpts: FLPar; basis) | `ss3diags::SSdeltaMVLN()` (no dplyr) |
+| `ss3_FLStockR()` | the above | FLStockR (age "1"): ssb = SSB, fbar = F, rec, catch; refpts Ftgt, Btgt, MSY, B0, R0 (+ Blim, Bpa) | `FLRef::ss2FLStockR()`, `JABBA3::jb3_FLStockR()` |
+| `ss3_eqcurve()` | `equil_yield` | data.table F, SSB, yield (+ Fmsy, Bmsy, MSY, B0) | production function |
+
+- MLE: `iters = 0`, log-scale SEs of SSB, F, recruitment, B/Btgt and F/Ftgt in `attr(x, "se.log")` (Wald intervals).
+- MVLN: `iters = n`, draws as iterations, MLE in `attr(x, "mle")`, jointly sampled B/Btgt and F/Ftgt in
+  `attr(x, "status")` (SSB and F draws are marginal, so SSB/Btgt from them would lose the B-F correlation).
+- MLE values and reference points equal `SSdeltaMVLN()` to machine precision (3 test models). The draws differ slightly:
+  `SSdeltaMVLN()` subsets CoVar with `paste0(c("Bratio", "F"), "_", yrs)`, which recycles element-wise (Bratio in odd,
+  F in even positions), so its neighbouring-year correlations use a subset; `ss3_mvln()` uses all years
+  (terminal-year medians agree within 0.1%).
+
+## Plots (done, v0.2): `ss3plot_` on FLR objects
+
+All plots take FLR objects (not the SS3 report), so they also work for JABBA3, FLicc and FLRef objects. `by` keeps
+FLQuant dimensions `"unit"`, `"season"`, `"area"` separate (other dimensions are summed). Colours follow r4ss:
+fleets `rich.colors.short` (`ss3cols()`), seasons black / blue4, green3, orange2, red3 (`ss3seascols()`), unit
+unique green, F red, M blue (`ss3unitcols`), observed compositions grey bars, fitted index blue. Theme `theme_ss3()`
+= JABBA3 theme. Stock plots mirror JABBA3 (`jbplot_trj`, `jbplot_kobe`, `jbplot_spphase`, `jbplot_spdyn`).
+
+| Plot | Input | Options |
+|---|---|---|
+| `ss3plot_data()` | catch FLQuants, FLIndices, len/age FLQuants | `by` (panels) |
+| `ss3plot_catch()` | FLQuants by fleet | `type` bar / line / share, `by` (panel rows) |
+| `ss3plot_indices()` | FLIndices (+ fit FLIndices) | CIs from index.var, `by` (colour), `combine`, `log`, `time` |
+| `ss3plot_comps()` | FLQuants of numbers (+ fit) | `type` pooled / annual / bubble / mean, `by` (colour) |
+| `ss3plot_nsamp()` | FLQuants of numbers | `by` |
+| `ss3plot_trj()` | FLStockR, FLStocks, list | SSB, F, Rec, Catch, B/Btgt, F/Ftgt, B/B0, Catch/MSY; nested 90/60% bands; runs compared |
+| `ss3plot_kobe()` | FLStockR with iters | points or filled HDR contours, quadrant percentages |
+| `ss3plot_production()` | FLStockR (+ equilibrium curve) | `type` phase / dyn, `rel` |
+
 ## Next (in this order)
 1. **Life history `FLPar`** (`ss3_lhpar()`), from `Growth_Parameters`, `MGparmAdj` and `endgrowth`: linf, k, t0,
    L50 and slope (or a50), M (constant or by age), a, b, CVL (CVmin/CVmax), A1/A2/L1/L2, by sex in a `unit`
@@ -59,9 +94,8 @@ Decisions (11 Nov):
    that approximates VB by fitting mean length at age from `endgrowth` and reports the fit **[open: weighting by
    numbers at age?]**. Target: FLicc `lhpar` and JABBA3 life-history priors.
 2. **Conditional age-at-length** (`condbase`) and size compositions; mean length/age (Francis TA1.8) as FLQuants.
-3. **Model outputs, MLE**: SSB, F, recruitment, B/Bref, F/Fref, catch and landings as FLQuants, and the simplified
-   `FLStockR` as `FLRef::ss2FLStockR()` builds it (age 1, refpts in `@refpts`), without needing CoVar.
-4. **MVLN**: `ssmvln()` without dplyr, from `ss3om::ssmvln()` / `mvlnFLQuants()` (data.table) and
+3. ~~Model outputs, MLE, FLStockR~~ (done).
+4. **MVLN** (done for annual models): remaining: `ssmvln()` from `ss3om::ssmvln()` / `mvlnFLQuants()` (data.table) and
    `FLRef::ssmvln()` (the SSdeltaMVLN port), returning draws as FLQuants with iters and the FLStockR with iters.
    Must work for seasonal ("interannual", seasons-as-years) models, i.e. map SS3 time steps to year/season as
    `ss3diags::SSdiagsStep2Year()` does.
