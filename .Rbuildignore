@@ -2,3 +2,4 @@
 ^\.Rproj\.user$
 ^DESIGN\.md$
 ^\.github$
+^vignettes/.*\.html$

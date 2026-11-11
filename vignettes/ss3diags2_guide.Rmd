@@ -1,0 +1,124 @@
+---
+title: "ss3diags2 user guide"
+author: "Henning Winker, Massimiliano Cardinale, Laurence T. Kell, Iago Mosqueira"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{ss3diags2 user guide}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 8, fig.height = 5, dpi = 90)
+has <- requireNamespace("ss3diags", quietly = TRUE) && requireNamespace("mvtnorm", quietly = TRUE) &&
+  requireNamespace("MASS", quietly = TRUE)
+library(ss3diags2)
+```
+
+`ss3diags2` extracts observations and outputs of Stock Synthesis (SS3) models, read with `r4ss::SS_output()`, into
+long `data.table` tables that convert to FLR objects (`FLQuants`, `FLIndices`, `FLStockR`, `FLPar`), and plots them
+with `ggplot2`. Inputs are shaped for JABBA3 and FLicc. This guide walks through the workflow and flags points that
+matter for advice. The examples use `ss3ank` (black anglerfish, in the package) and the `ss3diags` example models.
+
+# 1. Observations
+
+```{r obs}
+data(ss3ank)
+ss3_fleets(ss3ank)
+lfd <- ss3_lencomp(ss3ank)          # FLQuants by fleet (and partition), sex as unit
+idx <- ss3_indices(ss3ank)          # FLIndices of FLIndexBiomass, input SE in index.var
+ss3plot_data(catch = ss3_catch(ss3ank), indices = idx, lencomp = lfd, by = "unit")
+```
+
+`ss2jabba3()` and `ss2flicc()` return the same observations shaped as JABBA3 and FLicc inputs (catch in weight by
+fleet, annual indices with input SEs; length compositions by gear on common bins and years).
+
+# 2. Composition residuals
+
+One-step-ahead (OSA) residuals follow the SS3 likelihood (multinomial, or Dirichlet-multinomial with the precision
+implied by the SS3 effective sample size). Cohort tracks of von Bertalanffy growth by sex help to see year classes.
+
+```{r osa, fig.height = 7}
+r <- ss3_resid(ss3ank)
+ss3plot_resid(r, lhpar = ss3_lhpar(ss3ank))
+```
+
+OSA residuals are conditional on the smaller bins: too few small fish gives negative residuals at small lengths
+and positive residuals at larger lengths.
+
+# 3. Stock status: FLStockR and MVLN
+
+`ss3stk()` builds the simplified `FLStockR` of `FLRef::ss2FLStockR()`: maximum likelihood estimates with standard
+errors (`output = "mle"`), or draws from a multivariate lognormal (MVLN) approximation (`output = "iters"`,
+`ss3mvln()`).
+
+* `ss3mvln(method = "joint")` (default) draws SSB, recruitment and F of all years and the reference points from one
+  MVLN with the full correlation matrix of the SS3 derived quantities (Kell et al. 2023; the `ss3om::ssmvln()`
+  approach). Each iteration is a coherent trajectory and the reference points have iterations.
+* `ss3mvln(method = "annual")` is the delta-MVLN of `ss3diags::SSdeltaMVLN()` (Walter and Winker 2020;
+  Winker et al. 2019), drawn year by year.
+
+```{r mvln, eval = has}
+data(natl.sma, package = "ss3diags")
+stk <- ss3stk(ss3sma, output = "iters", iters = 500, fwd = TRUE)
+ss3plot_trj(stk, type = c("B/Btgt", "F/Ftgt", "Catch"), ncol = 1)
+```
+
+**Note on SSdeltaMVLN.** For the example models the year-by-year delta-MVLN understates the correlation between
+B/Bmsy and F/Fmsy in the terminal year (shortfin mako: -0.24, against -0.86 in the SS3 covariance; Pacific hake:
+-0.26 against -0.76), so its Kobe clouds are rounder than the estimated uncertainty. The joint method keeps the
+estimated correlation. Use `method = "joint"` for advice.
+
+# 4. Kobe plots and the timing of F and SSB  {#kobe-lag}
+
+> **Critical for advice.** SS3 reports SSB at spawning (typically at the start of the year), and F of year *y* acts
+> during year *y*. The SSB that results from the fishing in year *y* is therefore SSB in year *y + 1*. The usual Kobe
+> plot pairs F(*y*) with SSB(*y*): it shows the biomass the fishery in *y* started from, not the biomass it led to.
+> When F is well above Fmsy, the stock status that follows from the current exploitation can be markedly worse
+> than the plot of F(*y*) against SSB(*y*) suggests. Advice should state which convention is used and, when the
+> two differ, show both.
+
+`ss3plot_kobe(lag = 1)` plots F(*y*) against B/Btgt(*y + 1*). The uncertainty cloud then pairs F(*Y*) with B(*Y + 1*)
+within each iteration, which needs draws linked across years: use `ss3mvln(method = "joint")` (a warning is given for
+year-by-year draws). Build the stock with `fwd = TRUE` so that SSB at the start of the year after the last assessment
+year (reported by SS3 as a forecast quantity) is available; F is used up to the end year only.
+
+```{r kobe, eval = has, fig.width = 11, fig.height = 4.5}
+k0 <- ss3plot_kobe(stk) + ggplot2::ggtitle("lag = 0: F(y) against B(y)")
+k1 <- ss3plot_kobe(stk, lag = 1) + ggplot2::ggtitle("lag = 1: F(y) against B(y + 1)")
+if(requireNamespace("patchwork", quietly = TRUE)) patchwork::wrap_plots(k0, k1) else k1
+```
+
+For North Atlantic shortfin mako the probability of being overfished and subject to overfishing (red quadrant) in
+2015 is about 78% with F(2015) against SSB(2015) and about 93% with F(2015) against SSB(2016).
+
+Points to check before using the lagged plot for advice:
+
+* SSB(*y + 1*) for the last assessment year is a one-year forecast: it depends on the SS3 forecast settings
+  (`forecast.ss`) and, where recruits mature within a year, on the forecast recruitment.
+* Kell et al. (2023) pair F and SSB both ways in their figures (F in 2020 with SSB in 2021, and both in 2022); the
+  convention is not standardised, which is why it must be stated with the advice.
+
+# 5. Production function and equilibrium
+
+`ss3_spm()` fits a Pella-Tomlinson production function to the SS3 equilibrium yield curve and checks it against
+the SS3 benchmarks. SS3 holds several "unfished" states: SSB_Virgin (start-year biology), SSB_unfished (benchmark
+years) and the dynamic B0 of each year; with time-varying weight-at-age or M (empirical `wtatage`) these differ, and
+the equilibrium table can rest on yet another biology. `ss3_spm()` warns when its fit and the SS3 benchmarks differ.
+
+# References
+
+Kell, L., Rice, J., Courtney, D. and Winker, H. (2023). Approximation of Kobe posteriors from Stock Synthesis for
+North Atlantic blue shark. Collect. Vol. Sci. Pap. ICCAT, 80(4): 837-858 (SCRS/2023/143).
+
+Trijoulet, V., Albertsen, C.M., Kristensen, K., Legault, C.M., Miller, T.J. and Nielsen, A. (2023). Model validation
+for compositional data in stock assessment models: calculating residuals with correct properties. Fisheries
+Research, 257: 106487.
+
+Walter, J. and Winker, H. (2020). Projections to create Kobe 2 Strategy Matrix using the multivariate log-normal
+approximation for Atlantic yellowfin tuna. ICCAT SCRS/2019/145.
+
+Winker, H., Kell, L.T., Fu, D., Sharma, R., Courtney, D., Carvalho, F., Schirripa, M. and Walter, J. (2019). A rapid
+approach to approximate Kobe posteriors from age-structured assessment models with applications to North Atlantic
+shortfin mako. ICCAT SCRS/2019/093.

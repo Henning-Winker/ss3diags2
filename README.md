@@ -80,6 +80,17 @@ sp$priors                    # c(median, log.sd, on) for JABBA3::jb3_priors(r = 
 See [DESIGN.md](DESIGN.md) for the data model, decisions and roadmap (life-history `FLPar`, MLE `FLStockR`, MVLN
 without dplyr, ggplot2 diagnostics, OSA residuals and posterior predictive checks).
 
+## Guide
+
+`vignette("ss3diags2_guide")` walks through the workflow and flags points that matter for advice, in particular the
+timing of F and SSB in Kobe plots (`ss3plot_kobe(lag = 1)`).
+
+## Acknowledgements
+
+The joint MVLN (`ss3mvln()`) follows Kell et al. (2023, Collect. Vol. Sci. Pap. ICCAT 80(4): 837-858) and
+`ss3om::ssmvln()`; the year-by-year option is the delta-MVLN of Walter and Winker (2020, ICCAT SCRS/2019/145) and
+Winker et al. (2019, ICCAT SCRS/2019/093), implemented in `ss3diags::SSdeltaMVLN()`.
+
 ## License
 
 EUPL (>= 1.2)

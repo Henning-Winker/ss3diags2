@@ -110,6 +110,16 @@
 #' @return list of class \code{ss3mvln}: \code{kb} (data.table: year, type, iter, stock = B/Btgt, harvest = F/Ftgt, F,
 #'   SSB, Recr, Catch), \code{mle} (the same at the MLE), \code{refpts} (FLPar at the MLE: Ftgt, Btgt, MSY, B0, R0),
 #'   \code{refpts.iter} (FLPar with iterations, \code{"joint"}), \code{basis} (B and F reference labels), \code{method}
+#' @references
+#' Kell, L., Rice, J., Courtney, D. and Winker, H. (2023). Approximation of Kobe posteriors from Stock Synthesis for
+#' North Atlantic blue shark. Collect. Vol. Sci. Pap. ICCAT, 80(4): 837-858 (SCRS/2023/143).
+#'
+#' Walter, J. and Winker, H. (2020). Projections to create Kobe 2 Strategy Matrix using the multivariate log-normal
+#' approximation for Atlantic yellowfin tuna. ICCAT SCRS/2019/145.
+#'
+#' Winker, H., Kell, L.T., Fu, D., Sharma, R., Courtney, D., Carvalho, F., Schirripa, M. and Walter, J. (2019). A rapid
+#' approach to approximate Kobe posteriors from age-structured assessment models with applications to North Atlantic
+#' shortfin mako. ICCAT SCRS/2019/093.
 #' @author Laurence T. Kell (joint MVLN, ss3om), Henning Winker
 #' @examples
 #' \dontrun{

@@ -29,6 +29,9 @@ Imports:
     methods,
     stats
 Suggests:
+    knitr,
+    rmarkdown,
+    patchwork,
     MASS,
     mvtnorm,
     ss3diags,
@@ -48,4 +51,5 @@ LazyData: true
 LazyDataCompression: xz
 Roxygen: list(markdown = TRUE)
 Config/testthat/edition: 3
+VignetteBuilder: knitr
 Config/roxygen2/version: 8.1.1

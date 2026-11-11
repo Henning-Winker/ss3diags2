@@ -44,6 +44,8 @@ that results from the fishing in year y (SS3 reports SSB at the start of the yea
 F(Y) and B(Y + 1) within each iteration, which needs draws linked across years (\code{ss3mvln(method = "joint")};
 a warning is given for the year-by-year SSdeltaMVLN draws). For the last assessment year build the stock with
 \code{ss3stk(..., fwd = TRUE)}, which adds SSB in the year after the end year; F is used up to the end year only.
+The choice matters for advice when F is well above Ftgt (see the guide, \code{vignette("ss3diags2_guide")}): state the
+convention used and show both when they differ.
 }
 \examples{
 \dontrun{
@@ -52,4 +54,15 @@ stk <- ss3stk(ss3sma, output = "iters", fwd = TRUE)
 ss3plot_kobe(stk)            # F(y) vs B(y)
 ss3plot_kobe(stk, lag = 1)   # F(y) vs B(y + 1)
 }
+}
+\references{
+Kell, L., Rice, J., Courtney, D. and Winker, H. (2023). Approximation of Kobe posteriors from Stock Synthesis for
+North Atlantic blue shark. Collect. Vol. Sci. Pap. ICCAT, 80(4): 837-858 (SCRS/2023/143).
+
+Walter, J. and Winker, H. (2020). Projections to create Kobe 2 Strategy Matrix using the multivariate log-normal
+approximation for Atlantic yellowfin tuna. ICCAT SCRS/2019/145.
+
+Winker, H., Kell, L.T., Fu, D., Sharma, R., Courtney, D., Carvalho, F., Schirripa, M. and Walter, J. (2019). A rapid
+approach to approximate Kobe posteriors from age-structured assessment models with applications to North Atlantic
+shortfin mako. ICCAT SCRS/2019/093.
 }
