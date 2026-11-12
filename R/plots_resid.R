@@ -61,6 +61,10 @@
 #' @param cohort_by years between cohort tracks
 #' @param cap residuals beyond +-cap drawn at the cap (bubble and len plots)
 #' @param ncol number of panel columns
+#' @param fleets fleets to plot: names (a fleet name selects all its partitions, e.g. \code{"DK3a"} gives
+#'   \code{DK3a.discard} and \code{DK3a.retained}) or positions in the FLQuants (default: all)
+#' @param units units (sexes) to plot, e.g. \code{"F"}, \code{"M"} or \code{"unique"} (combined-sex data); fleets
+#'   without these units are dropped (default: all)
 #' @return ggplot
 #' @examples
 #' data(ss3ank)
@@ -70,9 +74,11 @@
 #' ss3plot_resid(r, type = "qq")
 #' @export
 ss3plot_resid <- function(x, type = c("bubble", "len", "qq"), by = "unit", lhpar = NULL, cohorts = TRUE,
-                          cohort_by = 2, cap = 4, ncol = NULL){
+                          cohort_by = 2, cap = 4, ncol = NULL,
+                          fleets = NULL, units = NULL){
   type <- match.arg(type); dims <- .bydims(by)
   rtype <- attr(x, "type") %||% "osa"
+  x <- .subset_flqs(x, fleets, units)
   lab <- paste(if(rtype == "osa") "OSA" else "Pearson", "residual")
   qn <- FLCore::quant(if(is(x, "FLQuant")) x else x[[1]])
   d <- .flq_long(x, 1, "resid")[is.finite(data)]

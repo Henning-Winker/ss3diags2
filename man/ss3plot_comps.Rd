@@ -11,7 +11,9 @@ ss3plot_comps(
   type = c("pooled", "annual", "bubble", "mean"),
   years = NULL,
   ncol = NULL,
-  iter = 1
+  iter = 1,
+  fleets = NULL,
+  units = NULL
 )
 }
 \arguments{
@@ -31,6 +33,12 @@ conventions: unique green, F red, M blue; r4ss season colours)}
 \item{ncol}{number of panel columns (\code{"annual"} with one fleet)}
 
 \item{iter}{iteration to plot}
+
+\item{fleets}{fleets to plot: names (a fleet name selects all its partitions, e.g. \code{"DK3a"} gives
+\code{DK3a.discard} and \code{DK3a.retained}) or positions in the FLQuants (default: all)}
+
+\item{units}{units (sexes) to plot, e.g. \code{"F"}, \code{"M"} or \code{"unique"} (combined-sex data); fleets
+without these units are dropped (default: all)}
 }
 \value{
 ggplot

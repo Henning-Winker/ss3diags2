@@ -158,3 +158,24 @@ scale_x_year <- function(n = 5, ...) ggplot2::scale_x_continuous(breaks = functi
 
 utils::globalVariables(c("seg", "group", "prop", "pexp", "mu", "mexp", "lo", "hi", "size", "dtype", "rel", "value",
                          "variable", "fit", "quant", "x", "timef", "t", "xval", "ntot", "bw", "yfac"))
+
+# select fleets (names or numbers) and units (sexes) of FLQuants; fleets without the units are dropped
+.subset_flqs <- function(x, fleets = NULL, units = NULL){
+  if(is.null(fleets) && is.null(units)) return(x)
+  one <- is(x, "FLQuant")
+  if(one) x <- FLCore::FLQuants(x = x)
+  if(!is.null(fleets)){
+    nm <- names(x)
+    sel <- if(is.numeric(fleets)) nm[fleets] else
+      nm[nm %in% fleets | sub("\\.(all|discard|retained)$", "", nm) %in% fleets]
+    if(!length(sel)) stop("no data for fleet(s): ", paste(fleets, collapse = ", "), call. = FALSE)
+    x <- x[sel]
+  }
+  if(!is.null(units)){
+    x <- FLCore::FLQuants(Filter(Negate(is.null), lapply(x, function(q){
+      u <- intersect(as.character(units), dimnames(q)$unit)
+      if(length(u)) q[, , u] else NULL })))
+    if(!length(x)) stop("no data for unit(s): ", paste(units, collapse = ", "), call. = FALSE)
+  }
+  if(one && length(x) == 1) x[[1]] else x
+}

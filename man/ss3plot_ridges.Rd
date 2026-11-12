@@ -13,7 +13,9 @@ ss3plot_ridges(
   cohort_by = 2,
   years = NULL,
   scale = 0.9,
-  ncol = NULL
+  ncol = NULL,
+  fleets = NULL,
+  units = NULL
 )
 }
 \arguments{
@@ -34,6 +36,12 @@ ss3plot_ridges(
 \item{scale}{ridge height relative to the year spacing}
 
 \item{ncol}{facet columns}
+
+\item{fleets}{fleets to plot: names (a fleet name selects all its partitions, e.g. \code{"DK3a"} gives
+\code{DK3a.discard} and \code{DK3a.retained}) or positions in the FLQuants (default: all)}
+
+\item{units}{units (sexes) to plot, e.g. \code{"F"}, \code{"M"} or \code{"unique"} (combined-sex data); fleets
+without these units are dropped (default: all)}
 }
 \value{
 ggplot

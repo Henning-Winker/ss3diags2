@@ -83,6 +83,10 @@ ss3plot_growth <- function(x, lhpar = NULL, lfd = NULL, maxage = NULL){
 #' @param years optional years
 #' @param scale ridge height relative to the year spacing
 #' @param ncol facet columns
+#' @param fleets fleets to plot: names (a fleet name selects all its partitions, e.g. \code{"DK3a"} gives
+#'   \code{DK3a.discard} and \code{DK3a.retained}) or positions in the FLQuants (default: all)
+#' @param units units (sexes) to plot, e.g. \code{"F"}, \code{"M"} or \code{"unique"} (combined-sex data); fleets
+#'   without these units are dropped (default: all)
 #' @return ggplot
 #' @examples
 #' data(ss3ank)
@@ -91,7 +95,10 @@ ss3plot_growth <- function(x, lhpar = NULL, lfd = NULL, maxage = NULL){
 #'                lhpar = ss3_lhpar(ss3ank))
 #' @export
 ss3plot_ridges <- function(comps, fit = NULL, type = c("obs", "exp", "both"), by = "unit", lhpar = NULL,
-                           cohort_by = 2, years = NULL, scale = 0.9, ncol = NULL){
+                           cohort_by = 2, years = NULL, scale = 0.9, ncol = NULL,
+                           fleets = NULL, units = NULL){
+  comps <- .subset_flqs(comps, fleets, units)
+  if(!is.null(fit)) fit <- .subset_flqs(fit, fleets, units)
   type <- match.arg(type); dims <- .bydims(by)
   if(type != "obs" && is.null(fit)) stop("type = \"", type, "\" needs 'fit'", call. = FALSE)
   qn <- FLCore::quant(if(is(comps, "FLQuant")) comps else comps[[1]])

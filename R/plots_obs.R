@@ -124,6 +124,10 @@ ss3plot_indices <- function(indices, fit = NULL, by = NULL, ci = 0.95, log = FAL
 #' @param years optional years to show
 #' @param ncol number of panel columns (\code{"annual"} with one fleet)
 #' @param iter iteration to plot
+#' @param fleets fleets to plot: names (a fleet name selects all its partitions, e.g. \code{"DK3a"} gives
+#'   \code{DK3a.discard} and \code{DK3a.retained}) or positions in the FLQuants (default: all)
+#' @param units units (sexes) to plot, e.g. \code{"F"}, \code{"M"} or \code{"unique"} (combined-sex data); fleets
+#'   without these units are dropped (default: all)
 #' @return ggplot
 #' @examples
 #' \dontrun{
@@ -136,7 +140,9 @@ ss3plot_indices <- function(indices, fit = NULL, by = NULL, ci = 0.95, log = FAL
 #' }
 #' @export
 ss3plot_comps <- function(comps, fit = NULL, by = NULL, type = c("pooled", "annual", "bubble", "mean"),
-                          years = NULL, ncol = NULL, iter = 1){
+                          years = NULL, ncol = NULL, iter = 1, fleets = NULL, units = NULL){
+  comps <- .subset_flqs(comps, fleets, units)
+  if(!is.null(fit)) fit <- .subset_flqs(fit, fleets, units)
   type <- match.arg(type); dims <- .bydims(by)
   q0 <- if(is(comps, "FLQuant")) comps else comps[[1]]
   qn <- FLCore::quant(q0)

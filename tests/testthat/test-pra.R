@@ -59,3 +59,17 @@ test_that("selectivity, stock by area and stock-recruitment", {
   expect_s3_class(ss3plot_fa(ss3_fa(ss3pra)), "ggplot")
   expect_s3_class(ss3plot_catch(ss3_catch(ss3pra), by = c("season", "area")), "ggplot")
 })
+
+test_that("plots select fleets and units", {
+  rs <- ss3_resid(ss3pra)
+  lh <- ss3_lhpar(ss3pra)
+  p <- ss3plot_resid(rs, lhpar = lh, fleets = "DK3a")
+  expect_setequal(unique(as.character(p$data$name)), c("DK3a.discard", "DK3a.retained"))
+  p <- ss3plot_resid(rs, units = "F")
+  expect_true(all(p$data$unit == "F"))
+  expect_true(all(grepl("SURVEY|SWE3a", unique(as.character(p$data$name)))))
+  lf <- ss3_lencomp(ss3pra); lx <- ss3_lencomp(ss3pra, what = "exp")
+  expect_s3_class(ss3plot_comps(lf, fit = lx, fleets = c("NORSURVEY3a", "NORSURVEY4a"), units = "M"), "ggplot")
+  expect_s3_class(ss3plot_ridges(lf, fit = lx, type = "both", fleets = "NORSURVEY3a", units = "F", lhpar = lh), "ggplot")
+  expect_error(ss3plot_resid(rs, fleets = "nope"), "no data")
+})

@@ -12,7 +12,9 @@ ss3plot_resid(
   cohorts = TRUE,
   cohort_by = 2,
   cap = 4,
-  ncol = NULL
+  ncol = NULL,
+  fleets = NULL,
+  units = NULL
 )
 }
 \arguments{
@@ -32,6 +34,12 @@ tracks of length compositions (not needed for ages); \code{NULL} for none}
 \item{cap}{residuals beyond +-cap drawn at the cap (bubble and len plots)}
 
 \item{ncol}{number of panel columns}
+
+\item{fleets}{fleets to plot: names (a fleet name selects all its partitions, e.g. \code{"DK3a"} gives
+\code{DK3a.discard} and \code{DK3a.retained}) or positions in the FLQuants (default: all)}
+
+\item{units}{units (sexes) to plot, e.g. \code{"F"}, \code{"M"} or \code{"unique"} (combined-sex data); fleets
+without these units are dropped (default: all)}
 }
 \value{
 ggplot
