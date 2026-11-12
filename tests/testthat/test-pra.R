@@ -1,5 +1,5 @@
 # season-, sex- and area-structured model: northern shrimp pra.27.3a4a
-data(ss3pra, package = "ss3diags2")
+ss3pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
 g3 <- list(Denmark = 1:2, Norway = 3:4, Sweden = 5:6)
 
 test_that("observations keep season, unit and area structure", {
@@ -34,13 +34,12 @@ test_that("partial impact reproduces SS3 SSB and dynamic B0", {
   imp <- ss3_impact(ss3pra, groups = g3)
   ck <- imp$check
   expect_equal(ck$dynB0, ck$ss3_dynB0, tolerance = 1e-4)          # no fishing = SS3 dynamic B0
-  late <- ck$year >= 2000
-  expect_equal(ck$projected[late], ck$ss3[late], tolerance = 1e-4)  # all fleets = SS3 SSB
+  expect_equal(ck$projected, ck$ss3, tolerance = 1e-8)              # all fleets = SS3 SSB
   im <- imp$impact[year == 2024]
   b0 <- imp$ssb[scenario == "no fishing" & year == 2024]$ssb
   expect_equal(sum(im$impact), b0 - ck[year == 2024]$projected, tolerance = 1e-8)
-  m <- ss3_impact(ss3pra, groups = g3, init = "model")
-  expect_equal(m$check$projected, m$check$ss3, tolerance = 1e-8)
+  v <- ss3_impact(ss3pra, groups = g3, init = "virgin")
+  expect_equal(v$check$dynB0, v$check$ss3_dynB0, tolerance = 1e-4)
   expect_s3_class(ss3plot_impact(imp), "ggplot")
   expect_s3_class(ss3plot_impact(ss3_impact(ss3pra, type = "remove"), type = "line"), "ggplot")
 })

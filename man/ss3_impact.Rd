@@ -8,7 +8,7 @@ ss3_impact(
   ss3rep,
   groups = NULL,
   type = c("cumulative", "remove"),
-  init = c("virgin", "model"),
+  init = c("equilibrium", "virgin", "model"),
   sr = c("ss3", "constant"),
   M = c("ss3", "baranov"),
   years = NULL
@@ -23,11 +23,14 @@ ss3_impact(
 \item{type}{\code{"cumulative"} (default, Wang et al. 2009: groups added one at a time, impacts add up) or
 \code{"remove"} (each group removed from the fishery in turn; impacts do not add up)}
 
-\item{init}{initial numbers: \code{"virgin"} (default; unfished numbers at age in the first year, as the SS3
-dynamic B0, which the no-fishing scenario then reproduces) or \code{"model"} (the SS3 numbers in the first year,
-which include the initial depletion). With \code{"virgin"} the scenario with all fleets starts unfished and joins
-the SS3 SSB after about a generation; with \code{"model"} it equals the SS3 SSB from the first year but the
-impact of fishing before the first year is not counted.}
+\item{init}{initial numbers in the first year: \code{"equilibrium"} (default) scales the SS3 numbers at age by
+the ratio of the equilibrium numbers under the initial F of the fleets in each scenario to those under the initial
+F of all fleets (SS3 INIT era: Z from the initial equilibrium numbers, SS3 M, fleet shares from the initial catch
+at age; recruitment at the SS3 initial level, as in the SS3 initial equilibrium). The all-fleets scenario then starts at the SS3
+numbers and the no-fishing scenario near the unfished state, so the impacts add up from the first year and the
+initial depletion is attributed to the fleets. \code{"virgin"} starts all scenarios unfished (as the SS3 dynamic
+B0; the all-fleets scenario joins the SS3 SSB only after about a generation), \code{"model"} starts all scenarios
+at the SS3 numbers (fishing before the first year is not counted).}
 
 \item{sr}{recruitment: \code{"ss3"} (SS3 stock-recruit curve with deviations, default) or \code{"constant"} (the
 SS3 recruitments)}

@@ -20,27 +20,24 @@
 #' names(lfd)
 "ss3ank"
 
-#' Northern shrimp (Pandalus borealis) in Skagerrak and the Norwegian Deep: SS3 report
+#' Simple simulated two-sex model (r4ss "simple_small"): SS3 report
 #'
-#' Output of \code{r4ss::SS_output()} for the Stock Synthesis (3.30.22) assessment of northern shrimp in ICES
-#' division 3.a and subarea 4.a East (pra.27.3a4a), 1970-2024. A season-, sex- and area-structured model:
-#' \itemize{
-#'   \item four seasons (quarters), spawning in season 1;
-#'   \item two sexes with protandric hermaphroditism (born male, change to female; unit "M" and "F");
-#'   \item two areas (1: Skagerrak 3.a, 2: Norwegian Deep 4.a) with time-varying recruitment distribution;
-#'   \item six area-specific fleets (DK3a, DK4a, NOR3a, NOR4a, SWE3a, SWE4a) with seasonal catches, retention and
-#'     discard, retained and combined length compositions, and two surveys (NORSURVEY3a, NORSURVEY4a) with
-#'     sex-specific length compositions and biomass indices;
-#'   \item F reported as Fbar over ages 1-3 (Z - M), MSY proxy F at B30%.
-#' }
-#' The CoVar table is reduced to the derived quantities and the length-based numbers at length are dropped to keep
-#' the package small. The SS3 input files are in \code{system.file("extdata", "pra.27.3a4a", package = "ss3diags2")}.
+#' Output of \code{r4ss::SS_output()} for the "simple_small" Stock Synthesis (3.30.26) example of the r4ss package,
+#' the example also used by the PIFSC ss3diags package (\url{https://github.com/PIFSCstockassessments/ss3diags}), so
+#' results can be compared between ss3diags and ss3diags2. Simulated stock, 2011-2022, one season, one area, two
+#' sexes, one fishery (FISHERY: catch, length and age compositions) and two surveys (SURVEY1, SURVEY2: indices, length
+#' and age compositions); Hessian available (CoVar reduced to the derived quantities), initial F, Beverton-Holt
+#' stock-recruitment. The SS3 input and output files are in \code{system.file("extdata", "simple_small", package = "r4ss")}.
+#'
+#' A season-, sex- and area-structured example (northern shrimp pra.27.3a4a: four seasons, hermaphrodite, two areas,
+#' six area-specific fleets) is shipped as an rds file with its SS3 input files:
+#' \code{readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))}; see the
+#' vignette "Season-, sex- and area-structured models".
 #'
 #' @format list (r4ss \code{SS_output()})
-#' @source ICES assessment of northern shrimp (pra.27.3a4a)
+#' @source r4ss package (\url{https://github.com/r4ss/r4ss}), \code{inst/extdata/simple_small}
 #' @examples
-#' data(ss3pra)
-#' ss3_fleets(ss3pra)
-#' pf <- ss3_partialF(ss3pra, groups = "area", method = "fbar")
-#' imp <- ss3_impact(ss3pra, groups = list(Denmark = 1:2, Norway = 3:4, Sweden = 5:6))
-"ss3pra"
+#' data(ss3simple)
+#' ss3_fleets(ss3simple)
+#' stk <- ss3stk(ss3simple)
+"ss3simple"

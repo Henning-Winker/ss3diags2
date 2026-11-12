@@ -73,10 +73,10 @@ ss3_fa <- function(ss3rep, fleets = NULL, era = "TIME", annual = FALSE, long = F
 }
 
 # catch at age in numbers by fleet, summed over seasons, sexes and areas: data.table fleet, year, age, data
-.catage_annual <- function(ss3rep){
+.catage_annual <- function(ss3rep, era = "TIME"){
   ca <- as.data.table(ss3rep$catage)
   ca <- ca[, !duplicated(names(ca)), with = FALSE]
-  if("Era" %in% names(ca)) ca <- ca[Era == "TIME"]
+  if("Era" %in% names(ca)) ca <- ca[Era == era]
   if("Type" %in% names(ca)) ca <- ca[Type == "dead" | is.na(Type)]
   ages <- names(ca)[grepl("^[0-9]+$", names(ca))]
   d <- melt(ca, id.vars = c("Fleet", "Yr"), measure.vars = ages, variable.name = "age", value.name = "data",

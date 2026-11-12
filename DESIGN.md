@@ -168,7 +168,7 @@ sub-seasons, Ngenders = 2, Nareas = 1):
 
 ## Season-, sex- and area-structured models: ss3pra (v0.8, 12 Nov)
 
-Test case: northern shrimp pra.27.3a4a (`data(ss3pra)`, SS 3.30.22): 4 seasons (spawning in season 1), 2 sexes
+Test case: northern shrimp pra.27.3a4a (`inst/extdata/pra.27.3a4a/pra.27.3a4a.rds`, SS 3.30.22): 4 seasons (spawning in season 1), 2 sexes
 (protandric hermaphrodite, born male), 2 areas with time-varying recruitment distribution, 6 area-specific catch
 fleets (DK/NOR/SWE x 3a/4a) with retention, 2 surveys with sex-specific length compositions. F basis: Fbar 1-3 as
 Z - M; MSY proxy F at B30%.
@@ -198,13 +198,22 @@ New (from the r4ss HTML tabs and the GSA 17-18 hake advice):
 - `ss3_impact()` + `ss3plot_impact()`: partial impact after Wang et al. (2009) without re-running SS3 or FLasher.
   Annual Z from the SS3 numbers at age (seasons, areas, sexes pooled), SS3 M at age (season-weighted), fishing
   Z - M split among fleets by catch at age in numbers, SS3 spawning output at age at spawning time, BH/Ricker SR with
-  the SS3 deviations kept. Validation on ss3pra: no fishing (init = "virgin") reproduces `Dynamic_Bzero` to 1e-5;
-  all fleets reproduce the SS3 SSB (exactly with init = "model"). Approximation: movement, sex change and in-year
+  the SS3 deviations kept. Start of each scenario (init = "equilibrium", default): SS3 start-year numbers scaled by
+  the equilibrium numbers under the initial F of its fleets relative to all fleets (Z from the INIT numbers, fleet
+  shares from INIT catch at age, recruitment at the SS3 initial level). Validation on ss3pra and ss3simple (heavy
+  initial depletion): all fleets reproduce the SS3 SSB exactly and no fishing reproduces `Dynamic_Bzero` (1e-5)
+  from the first year, so impacts add up from the start. Approximation: movement, sex change and in-year
   timing held at their fitted values. `type = "remove"` for one-group-out.
 - `ss3_sel()` + `ss3plot_sel()`: selectivity, retention, discard mortality at length (time blocks) and selectivity at
   age, by unit. `ss3_byarea()` + `ss3plot_byarea()`: SSB, biomass, recruitment by area (FLQuants with area dimension).
   `ss3plot_sr()`: stock-recruit curve and recruitment deviations.
 - `ss3plot_catch(by = c("season", "area"))`: two dimensions now give a grid.
+
+Examples and vignettes (12 Nov): `data(ss3simple)` (r4ss simple_small, the PIFSC ss3diags example, so results can be
+compared with ss3diags) runs the main guide with evaluated chunks; the Pandalus report moved from `data(ss3pra)` to an
+rds file with the SS3 inputs (`inst/extdata/pra.27.3a4a`) and has its own vignette ("Season-, sex- and
+area-structured models"). Retro and hindcast for Pandalus to follow (needs the peels). `fleets =` / `units =` in
+`ss3plot_resid()`, `ss3plot_comps()`, `ss3plot_ridges()`.
 
 Still missing from the r4ss tabs: numbers at age / mean age by area (Numbers), hermaphroditism transition and
 maturity/fecundity at age (Bio), SPR curves (SPR), parameter table with priors (Pars), discard fits plot (Discard).

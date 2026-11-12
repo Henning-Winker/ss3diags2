@@ -15,9 +15,17 @@ remotes::install_github("Henning-Winker/ss3diags2")
 
 ## Example data
 
-`ss3ank`: SS3 (3.30.22) assessment of black anglerfish in ICES 7 and 8abd (two sexes, one season, two fleets with
-discard/retained length compositions, two surveys with sex-specific length compositions), with the SS3 input files in
-`system.file("extdata", "ank.27.78abd", package = "ss3diags2")`. The examples below also use the `ss3diags` data.
+- `ss3simple`: the simulated two-sex "simple_small" model of r4ss (SS 3.30.26; one fishery, two surveys, length and age
+  compositions). It is the example of the PIFSC ss3diags, so results can be compared with ss3diags; the user guide
+  runs on it.
+- Northern shrimp pra.27.3a4a (SS 3.30.22): four seasons, protandric hermaphrodite (two sexes), two areas, six
+  area-specific fleets with retention. Report and SS3 input files:
+  `readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))`; vignette
+  "Season-, sex- and area-structured models" (F-at-age, partial F, F by area, partial impact).
+- `ss3ank`: black anglerfish in ICES 7 and 8abd (two sexes, one season, two fleets with discard/retained length
+  compositions, two surveys), with the SS3 input files in `system.file("extdata", "ank.27.78abd", package = "ss3diags2")`.
+
+Some examples below also use the `ss3diags` data.
 
 ## Observations from an SS3 report
 
@@ -83,7 +91,9 @@ without dplyr, ggplot2 diagnostics, OSA residuals and posterior predictive check
 ## Guide
 
 `vignette("ss3diags2_guide")` walks through the workflow and flags points that matter for advice, in particular the
-timing of F and SSB in Kobe plots (`ss3plot_kobe(lag = 1)`).
+timing of F and SSB in Kobe plots (`ss3plot_kobe(lag = 1)`). `vignette("pandalus")` covers season-, sex- and
+area-structured models: F-at-age by fleet (`ss3_fa()`), partial F and F by area (`ss3_partialF()`), and the partial
+impact of fleets on SSB after Wang et al. (2009) (`ss3_impact()`).
 
 ## Acknowledgements
 

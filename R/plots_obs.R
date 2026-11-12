@@ -202,15 +202,16 @@ ss3plot_comps <- function(comps, fit = NULL, by = NULL, type = c("pooled", "annu
   if(type == "mean"){
     a <- d[, .(mu = sum(quant*data, na.rm = TRUE)/sum(data, na.rm = TRUE),
                mexp = if(all(is.na(fit))) NA_real_ else sum(quant*fit, na.rm = TRUE)/sum(fit, na.rm = TRUE)), by = gk]
-    p <- ggplot2::ggplot(a, ggplot2::aes(year, mu, colour = group)) +
+    p <- ggplot2::ggplot(a, ggplot2::aes(year, mu)) +
       ggplot2::geom_point(ggplot2::aes(fill = group), shape = 21, colour = "black", size = 1.8)
     a <- a[order(name, group, year)][, seg := paste(group, .gap_run(year)), by = .(name, group)]
-    if(!is.null(fit)) p <- p + ggplot2::geom_line(data = a, ggplot2::aes(y = mexp, group = seg), linewidth = 0.6)
+    if(!is.null(fit)) p <- p + ggplot2::geom_line(data = a, ggplot2::aes(y = mexp, group = seg, colour = group), linewidth = 0.6)
     p <- p + ggplot2::scale_fill_manual(values = cols) +
       ggplot2::facet_wrap(~ name, scales = "free_y", ncol = ncol) +
       ggplot2::labs(x = "Year", y = paste("Mean", tolower(xlab))) + scale_x_year()
   }
-  p <- p + ggplot2::scale_colour_manual(values = cols) + theme_ss3()
+  if(!(type == "mean" && is.null(fit))) p <- p + ggplot2::scale_colour_manual(values = cols)
+  p <- p + theme_ss3()
   if(!length(dims)) p <- p + ggplot2::theme(legend.position = "none")
   p
 }

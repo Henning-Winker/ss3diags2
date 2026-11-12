@@ -37,6 +37,33 @@
   m$M[match(as.numeric(ages), m$age)]
 }
 
+# initial equilibrium: function of the fleets fishing that returns N_eq(fleets)/N_eq(all fleets) at age
+.init_eq <- function(ss3rep, fleets, ages, M){
+  Ni <- tryCatch(.natage_mat(ss3rep, era = "INIT"), error = function(e) NULL)
+  ci <- .catage_annual(ss3rep, era = "INIT")
+  if(is.null(Ni) || !ncol(Ni) || !nrow(ci)) return(NULL)
+  n <- Ni[, ncol(Ni)]; A <- length(n)
+  # equilibrium survival at age from the INIT numbers (plus group: Z(A-1) = Z(A))
+  sv <- c(n[-1]/n[-A], NA)
+  sv[A - 1] <- sv[A] <- n[A]/(n[A] + n[A - 1])
+  Zi <- -log(sv); Fi <- pmax(Zi - M, 0)
+  nm <- .fleetnames(ss3rep)
+  cf <- vapply(fleets, function(f){ x <- ci[fleet == match(f, nm)]
+    v <- numeric(A); v[match(x$age, as.numeric(ages))] <- x$data; v[A - 1] <- v[A] <- v[A - 1] + v[A]; v }, numeric(A))
+  if(!is.matrix(cf)) cf <- matrix(cf, ncol = length(fleets), dimnames = list(NULL, fleets))
+  sh <- cf/rowSums(cf); sh[!is.finite(sh)] <- 0
+  pr <- function(Z){ s <- exp(-Z); l <- cumprod(c(1, s[-A])); l[A] <- l[A]/(1 - s[A]); l }
+  Zall <- M + Fi
+  lall <- pr(Zall)
+  function(fl){
+    Z <- M + Fi*rowSums(sh[, intersect(fl, colnames(sh)), drop = FALSE])
+    l <- pr(Z)
+    r <- l/lall
+    r[!is.finite(r)] <- 1
+    r
+  }
+}
+
 # stock-recruit shape f(S) (R0 cancels in the ratio f(S')/f(S))
 .sr_shape <- function(ss3rep, sr){
   if(sr == "constant") return(function(S) rep(1, length(S)))
@@ -77,11 +104,14 @@
 #'   \code{\link{ss3_partialF}()}); the order of the list is the order in which groups are added
 #' @param type \code{"cumulative"} (default, Wang et al. 2009: groups added one at a time, impacts add up) or
 #'   \code{"remove"} (each group removed from the fishery in turn; impacts do not add up)
-#' @param init initial numbers: \code{"virgin"} (default; unfished numbers at age in the first year, as the SS3
-#'   dynamic B0, which the no-fishing scenario then reproduces) or \code{"model"} (the SS3 numbers in the first year,
-#'   which include the initial depletion). With \code{"virgin"} the scenario with all fleets starts unfished and joins
-#'   the SS3 SSB after about a generation; with \code{"model"} it equals the SS3 SSB from the first year but the
-#'   impact of fishing before the first year is not counted.
+#' @param init initial numbers in the first year: \code{"equilibrium"} (default) scales the SS3 numbers at age by
+#'   the ratio of the equilibrium numbers under the initial F of the fleets in each scenario to those under the initial
+#'   F of all fleets (SS3 INIT era: Z from the initial equilibrium numbers, SS3 M, fleet shares from the initial catch
+#'   at age; recruitment at the SS3 initial level, as in the SS3 initial equilibrium). The all-fleets scenario then starts at the SS3
+#'   numbers and the no-fishing scenario near the unfished state, so the impacts add up from the first year and the
+#'   initial depletion is attributed to the fleets. \code{"virgin"} starts all scenarios unfished (as the SS3 dynamic
+#'   B0; the all-fleets scenario joins the SS3 SSB only after about a generation), \code{"model"} starts all scenarios
+#'   at the SS3 numbers (fishing before the first year is not counted).
 #' @param sr recruitment: \code{"ss3"} (SS3 stock-recruit curve with deviations, default) or \code{"constant"} (the
 #'   SS3 recruitments)
 #' @param M natural mortality: \code{"ss3"} (default; SS3 M at age, seasons weighted by duration, with the fishing
@@ -100,7 +130,7 @@
 #' ss3plot_impact(imp)
 #' }
 #' @export
-ss3_impact <- function(ss3rep, groups = NULL, type = c("cumulative", "remove"), init = c("virgin", "model"),
+ss3_impact <- function(ss3rep, groups = NULL, type = c("cumulative", "remove"), init = c("equilibrium", "virgin", "model"),
                        sr = c("ss3", "constant"), M = c("ss3", "baranov"), years = NULL){
   type <- match.arg(type); init <- match.arg(init); sr <- match.arg(sr); M <- match.arg(M)
   fl <- ss3_fleets(ss3rep)
@@ -156,9 +186,15 @@ ss3_impact <- function(ss3rep, groups = NULL, type = c("cumulative", "remove"), 
   dur <- ss3rep$seasdurations %||% 1
   tsp <- sum(dur[seq_len((ss3rep$spawnseas %||% 1) - 1)])
   fS <- .sr_shape(ss3rep, sr)
+  if(init == "equilibrium"){
+    eq <- .init_eq(ss3rep, fleets, rownames(N), Mb %||% Mm[, 1])
+    if(is.null(eq)){ warning("initial equilibrium (INIT era) not available: init = \"virgin\" used", call. = FALSE)
+                     init <- "virgin" }
+  }
   Nv <- if(init == "virgin") { v <- .natage_mat(ss3rep, era = "VIRG"); v[, ncol(v)] } else N[, 1]
-  proj <- function(Fsum){
-    Np <- matrix(0, A, ny); Np[, 1] <- Nv; S <- R <- numeric(ny)
+  proj <- function(Fsum, fl){
+    Np <- matrix(0, A, ny); S <- R <- numeric(ny)
+    Np[, 1] <- if(init == "equilibrium") N[, 1]*eq(fl) else Nv
     for(i in seq_len(ny)){
       Zp <- Mm[, i] + Fsum[, i]
       S[i] <- sum(Np[, i]*fec[, i]*exp(-(Zp - Z[, i])*tsp))
@@ -175,12 +211,15 @@ ss3_impact <- function(ss3rep, groups = NULL, type = c("cumulative", "remove"), 
   gsum <- lapply(grp, function(g) Reduce(`+`, Ff[g]))
   sc <- if(type == "cumulative"){
     lv <- c("no fishing", vapply(seq_along(grp), function(k) paste0("+", names(grp)[k]), ""))
+    scf <- lapply(0:length(grp), function(k) unlist(grp[seq_len(k)]))
     stats::setNames(lapply(0:length(grp), function(k) if(k == 0) zero else Reduce(`+`, gsum[seq_len(k)])), lv)
   } else {
     lv <- c("no fishing", paste0("-", names(grp)), "all fleets")
+    scf <- c(list(character(0)), lapply(names(grp), function(g) setdiff(fleets, grp[[g]])), list(fleets))
     stats::setNames(c(list(zero), lapply(names(grp), function(g) Fall - gsum[[g]]), list(Fall)), lv)
   }
-  res <- rbindlist(lapply(names(sc), function(s){ p <- proj(sc[[s]]); data.table(year = yrs, scenario = s,
+  names(scf) <- lv
+  res <- rbindlist(lapply(names(sc), function(s){ p <- proj(sc[[s]], scf[[s]]); data.table(year = yrs, scenario = s,
                                                                                 ssb = p$ssb, rec = p$rec) }))
   res[, scenario := factor(scenario, levels = names(sc))]
   ref <- if(type == "cumulative") res[scenario == utils::tail(names(sc), 1)] else res[scenario == "all fleets"]
