@@ -209,7 +209,9 @@ New (from the r4ss HTML tabs and the GSA 17-18 hake advice):
   `ss3plot_sr()`: stock-recruit curve and recruitment deviations.
 - `ss3plot_catch(by = c("season", "area"))`: two dimensions now give a grid.
 
-Examples and vignettes (12 Nov): `data(ss3simple)` (r4ss simple_small, the PIFSC ss3diags example, so results can be
+Examples and vignettes (12 Nov; management quantities (status, Kobe, production, partial F, impact) in the
+Pandalus vignette, the guide keeps the diagnostics on ss3simple; reference lines: targets green, Bpa orange, Blim
+red, R0/B0 blue; dotted line marks forecast years): `data(ss3simple)` (r4ss simple_small, the PIFSC ss3diags example, so results can be
 compared with ss3diags) runs the main guide with evaluated chunks; the Pandalus report moved from `data(ss3pra)` to an
 rds file with the SS3 inputs (`inst/extdata/pra.27.3a4a`) and has its own vignette ("Season-, sex- and
 area-structured models"). Retro and hindcast for Pandalus to follow (needs the peels). `fleets =` / `units =` in

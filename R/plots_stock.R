@@ -1,6 +1,10 @@
 # plots_stock.R - trajectories, Kobe and production function from FLStockR (as JABBA3 jbplot_trj, jbplot_kobe,
 # jbplot_spphase / jbplot_spdyn)
 
+# reference point colours: targets green, precautionary orange, limits red, unfished blue
+.rpcols <- c(Btgt = "darkgreen", Ftgt = "darkgreen", MSY = "darkgreen", Fmsy = "darkgreen", Bmsy = "darkgreen",
+             Bpa = "darkorange", Fpa = "darkorange", Btrigger = "darkorange", Blim = "red", Flim = "red",
+             B0 = "blue", R0 = "blue")
 .kobe_fills <- c(green = "#2ca25f", yellow = "#fee391", orange = "#fd8d3c", red = "#de2d26")
 
 # FLStockR / FLStock / FLStocks / list -> named list of stocks
@@ -119,6 +123,11 @@ ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftg
   p <- p + ggplot2::facet_wrap(~ quant, scales = "free_y", ncol = ncol,
                                labeller = ggplot2::as_labeller(.ylab_quant(type))) +
     ggplot2::expand_limits(y = 0) + ggplot2::labs(x = "Year", y = NULL) + scale_x_year() + theme_ss3()
+  # forecast years (fwd = TRUE): dotted line after the assessment end year
+  ey <- attr(sl[[1]], "endyr")
+  if(!is.null(ey) && max(d$year) > ey)
+    p <- p + ggplot2::geom_vline(xintercept = ey + 0.5, linetype = 3, colour = "grey40") +
+      ggplot2::labs(caption = paste0("dotted line: forecast years after ", ey))
   if(refpts){
     s1 <- sl[[1]]
     rel <- data.table(quant = c("B/Btgt", "F/Ftgt", "B/B0", "Catch/MSY", "B/Btgt", "B/Btgt"),
@@ -132,11 +141,15 @@ ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftg
     if(nrow(refs)){
       refs[, quant := factor(quant, levels = type)]
       lty <- c(Btgt = 2, Ftgt = 2, MSY = 2, R0 = 3, Blim = 3, Bpa = 4)
-      p <- p + ggplot2::geom_hline(data = refs, ggplot2::aes(yintercept = value, linetype = name), colour = "darkred",
-                                   linewidth = 0.5, show.legend = FALSE) +
-        ggplot2::scale_linetype_manual(values = lty) +
-        ggplot2::geom_text(data = refs, ggplot2::aes(x = min(d$year), y = value, label = name), hjust = 0, vjust = -0.4,
-                           size = label.size, colour = "darkred", inherit.aes = FALSE)
+      # targets green, precautionary orange, limits red, unfished blue (fixed colours, one layer per point,
+      # so the colour scale stays free for runs)
+      for(k in unique(refs$name)){
+        rk <- refs[name == k]; ck <- .rpcols[[k]] %||% "grey30"
+        p <- p + ggplot2::geom_hline(data = rk, ggplot2::aes(yintercept = value), colour = ck, linewidth = 0.6,
+                                     linetype = lty[[k]] %||% 2) +
+          ggplot2::geom_text(data = rk, ggplot2::aes(x = min(d$year), y = value, label = name), hjust = 0,
+                             vjust = -0.4, size = label.size, colour = ck, inherit.aes = FALSE)
+      }
     }
   }
   if(nr == 1) p <- p + ggplot2::theme(legend.position = "none")
