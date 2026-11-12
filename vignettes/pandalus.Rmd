@@ -85,6 +85,14 @@ ss3plot_byarea(ba, type = "share")
 
 # Part II: management quantities
 
+`ss3plot()` summarises the assessment on one page, as the JABBA3 summary plot: SSB (with the observed indices
+scaled to SSB), F and catch with reference points, B/Btgt, F/Ftgt and the Kobe plot (here with F(y) against
+B(y + 1), see section 5), the stock-recruitment curve, the recruitment deviations and the production phase plot.
+
+```{r ss3plot, eval = has_mvln && requireNamespace("patchwork", quietly = TRUE), fig.width = 11, fig.height = 9.5}
+ss3plot(pra, iters = 500, lag = 1)
+```
+
 # 4. Stock status: FLStockR and MVLN
 
 `ss3stk()` builds the simplified `FLStockR` of `FLRef::ss2FLStockR()`: maximum likelihood estimates with standard

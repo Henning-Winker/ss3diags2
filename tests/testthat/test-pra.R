@@ -72,3 +72,10 @@ test_that("plots select fleets and units", {
   expect_s3_class(ss3plot_ridges(lf, fit = lx, type = "both", fleets = "NORSURVEY3a", units = "F", lhpar = lh), "ggplot")
   expect_error(ss3plot_resid(rs, fleets = "nope"), "no data")
 })
+
+test_that("ss3plot summary page", {
+  skip_if_not_installed("patchwork"); skip_if_not_installed("mvtnorm")
+  p <- ss3plot(ss3pra, iters = 50, lag = 1)
+  expect_s3_class(p, "patchwork")
+  for(i in 1:9) expect_silent(ggplot2::ggplot_build(p[[i]]))
+})

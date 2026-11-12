@@ -134,13 +134,15 @@ ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftg
                       name = c("Btgt", "Ftgt", "Btgt", "MSY", "Blim", "Bpa"),
                       value = c(1, 1, .rp(s1, "Btgt")/.rp(s1, "B0"), 1, .rp(s1, "Blim")/.rp(s1, "Btgt"),
                                 .rp(s1, "Bpa")/.rp(s1, "Btgt")))
-    abs <- data.table(quant = c("SSB", "SSB", "SSB", "F", "Catch", "Rec"), name = c("Btgt", "Blim", "Bpa", "Ftgt", "MSY", "R0"),
-                      value = c(.rp(s1, "Btgt"), .rp(s1, "Blim"), .rp(s1, "Bpa"), .rp(s1, "Ftgt"), .rp(s1, "MSY"), .rp(s1, "R0")))
+    abs <- data.table(quant = c("SSB", "SSB", "SSB", "SSB", "F", "Catch", "Rec"),
+                      name = c("B0", "Btgt", "Blim", "Bpa", "Ftgt", "MSY", "R0"),
+                      value = c(.rp(s1, "B0"), .rp(s1, "Btgt"), .rp(s1, "Blim"), .rp(s1, "Bpa"), .rp(s1, "Ftgt"),
+                                .rp(s1, "MSY"), .rp(s1, "R0")))
     refs <- if(nr == 1) rbind(rel, abs) else rel[name != "Btgt" | quant != "B/B0"]
     refs <- refs[quant %in% type & is.finite(value)]
     if(nrow(refs)){
       refs[, quant := factor(quant, levels = type)]
-      lty <- c(Btgt = 2, Ftgt = 2, MSY = 2, R0 = 3, Blim = 3, Bpa = 4)
+      lty <- c(B0 = 2, Btgt = 2, Ftgt = 2, MSY = 2, R0 = 3, Blim = 2, Bpa = 2)
       # targets green, precautionary orange, limits red, unfished blue (fixed colours, one layer per point,
       # so the colour scale stays free for runs)
       for(k in unique(refs$name)){
