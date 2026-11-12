@@ -6,8 +6,8 @@
 #' JABBA3 / FLicc catch input), as stacked bars, lines or shares, optionally split by unit, season or area.
 #'
 #' @param catch FLQuants (or FLQuant) of catch by fleet
-#' @param by dimensions to keep separate, any of \code{"unit"}, \code{"season"}, \code{"area"} (panels by row);
-#'   other dimensions are summed
+#' @param by dimensions to keep separate, any of \code{"unit"}, \code{"season"}, \code{"area"} (panels by row;
+#'   two dimensions give a grid, e.g. \code{by = c("season", "area")}); other dimensions are summed
 #' @param type \code{"bar"} (stacked, default), \code{"line"} or \code{"share"} (proportion by fleet)
 #' @param iter iteration to plot
 #' @param ylab y-axis label (default from the units)
@@ -34,7 +34,7 @@ ss3plot_catch <- function(catch, by = NULL, type = c("bar", "line", "share"), it
   else
     p + ggplot2::geom_col(ggplot2::aes(fill = name), position = if(type == "share") "fill" else "stack",
                           width = 0.9, colour = NA) + ggplot2::scale_fill_manual(values = cols)
-  if(length(dims)) p <- p + ggplot2::facet_grid(group ~ ., scales = if(type == "share") "fixed" else "free_y")
+  if(length(dims)) p <- p + .facet_by(dims, if(type == "share") "fixed" else "free_y")
   if(length(un) > 1 && type != "share") warning("catch in mixed units: ", paste(un, collapse = ", "), call. = FALSE)
   p + ggplot2::labs(x = "Year", y = ylab) + scale_x_year() + theme_ss3()
 }

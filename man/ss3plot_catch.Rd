@@ -15,8 +15,8 @@ ss3plot_catch(
 \arguments{
 \item{catch}{FLQuants (or FLQuant) of catch by fleet}
 
-\item{by}{dimensions to keep separate, any of \code{"unit"}, \code{"season"}, \code{"area"} (panels by row);
-other dimensions are summed}
+\item{by}{dimensions to keep separate, any of \code{"unit"}, \code{"season"}, \code{"area"} (panels by row;
+two dimensions give a grid, e.g. \code{by = c("season", "area")}); other dimensions are summed}
 
 \item{type}{\code{"bar"} (stacked, default), \code{"line"} or \code{"share"} (proportion by fleet)}
 

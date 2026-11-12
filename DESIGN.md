@@ -166,6 +166,49 @@ sub-seasons, Ngenders = 2, Nareas = 1):
 - `ss3_iresid()`, `ss3_runs()`, `ss3plot_runs()`, `ss3plot_jres()`: log residuals of indices or mean length/age,
   runs test (own Wald-Wolfowitz, no randtests) with 3-sigma limits, joint residuals with RMSE; equal `SSrunstest()`.
 
+## Season-, sex- and area-structured models: ss3pra (v0.8, 12 Nov)
+
+Test case: northern shrimp pra.27.3a4a (`data(ss3pra)`, SS 3.30.22): 4 seasons (spawning in season 1), 2 sexes
+(protandric hermaphrodite, born male), 2 areas with time-varying recruitment distribution, 6 area-specific catch
+fleets (DK/NOR/SWE x 3a/4a) with retention, 2 surveys with sex-specific length compositions. F basis: Fbar 1-3 as
+Z - M; MSY proxy F at B30%.
+
+Structure map (what each dimension means and where it goes):
+
+| SS3                    | FLR dimension | extraction                              | note |
+|------------------------|---------------|-----------------------------------------|------|
+| Sexes 0 / 1-2 (data)   | unit          | unique / F, M                           | combined-sex data stay "unique" |
+| Seas                   | season        | catch, comps, fa, sel (age)             | seasons are not years (no step2year needed) |
+| Area                   | area          | catch, fa, byarea; fleet area from `fleet_area` | fleets are area-specific, so observations need no area split |
+| Part 0/1/2             | fleet name    | `fleet.all`, `fleet.discard`, `fleet.retained` | |
+| Morph / platoon        | (averaged)    | fa, sel                                 | one morph per sex here |
+| Era INIT/TIME/FORE     | year range    | `era =` in `ss3_fa()`                   | |
+
+All existing extractors and plots ran on ss3pra without changes (catch by season x area, indices, length comps by
+unit/season/part, OSA residuals with growth tracks for both sexes, ss3stk/ss3mvln, Kobe with lag, production
+function, runs tests). The SPM fit warns (Bmsy > 5% from the SS3 benchmark; MSY proxy is F at B30%).
+
+New (from the r4ss HTML tabs and the GSA 17-18 hake advice):
+- `ss3_fa()`: F-at-age by fleet as FLQuants (age, year, unit, season, area), from `fatage` (getFa of the hake Rmd);
+  `annual = TRUE` sums seasons weighted by duration. `ss3plot_fa()`: F-at-age by fleet and season.
+- `ss3_partialF()` + `ss3plot_partialF()`: partial F by fleet, gear (named list) or area. `method = "catch"` splits the
+  reported F (exploitation$annual_F) by catch numbers over the F ages, so partial F's add up to F (tested);
+  `"fbar"` / `"apical"` give the F experienced in the area of the fleet (F by area with `groups = "area"`), optionally
+  by season.
+- `ss3_impact()` + `ss3plot_impact()`: partial impact after Wang et al. (2009) without re-running SS3 or FLasher.
+  Annual Z from the SS3 numbers at age (seasons, areas, sexes pooled), SS3 M at age (season-weighted), fishing
+  Z - M split among fleets by catch at age in numbers, SS3 spawning output at age at spawning time, BH/Ricker SR with
+  the SS3 deviations kept. Validation on ss3pra: no fishing (init = "virgin") reproduces `Dynamic_Bzero` to 1e-5;
+  all fleets reproduce the SS3 SSB (exactly with init = "model"). Approximation: movement, sex change and in-year
+  timing held at their fitted values. `type = "remove"` for one-group-out.
+- `ss3_sel()` + `ss3plot_sel()`: selectivity, retention, discard mortality at length (time blocks) and selectivity at
+  age, by unit. `ss3_byarea()` + `ss3plot_byarea()`: SSB, biomass, recruitment by area (FLQuants with area dimension).
+  `ss3plot_sr()`: stock-recruit curve and recruitment deviations.
+- `ss3plot_catch(by = c("season", "area"))`: two dimensions now give a grid.
+
+Still missing from the r4ss tabs: numbers at age / mean age by area (Numbers), hermaphroditism transition and
+maturity/fecundity at age (Bio), SPR curves (SPR), parameter table with priors (Pars), discard fits plot (Discard).
+
 ## Flagged for later: NUTS (11 Nov)
 
 - `ss3nuts(dir, ...)`: wrapper of `adnuts::sample_nuts()` on the SS3 executable (after an `-hbf` MLE run), chains,

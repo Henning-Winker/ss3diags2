@@ -107,6 +107,35 @@ the SS3 benchmarks. SS3 holds several "unfished" states: SSB_Virgin (start-year 
 years) and the dynamic B0 of each year; with time-varying weight-at-age or M (empirical `wtatage`) these differ, and
 the equilibrium table can rest on yet another biology. `ss3_spm()` warns when its fit and the SS3 benchmarks differ.
 
+# 6. Season-, sex- and area-structured models: fleets, partial F and impact
+
+The northern shrimp assessment (`data(ss3pra)`) has four seasons, two sexes (hermaphrodite) and two areas with
+area-specific fleets. The extraction functions keep this structure in the FLQuant dimensions (unit = sex, season,
+area), so the observation plots split by any of them, e.g. `ss3plot_catch(ss3_catch(ss3pra), by = c("season", "area"))`.
+
+```{r pra, eval = FALSE}
+data(ss3pra)
+fa <- ss3_fa(ss3pra)                    # F-at-age by fleet: age, year, unit, season, area
+ss3plot_fa(fa)
+pf <- ss3_partialF(ss3pra, groups = list(Denmark = 1:2, Norway = 3:4, Sweden = 5:6))
+ss3plot_partialF(pf)                    # partial F's add up to the reported Fbar
+ss3plot_partialF(ss3_partialF(ss3pra, groups = "area", method = "fbar"))   # F by area
+imp <- ss3_impact(ss3pra, groups = list(Denmark = 1:2, Norway = 3:4, Sweden = 5:6))
+imp$check                               # projected vs SS3 SSB and dynamic B0
+ss3plot_impact(imp)
+```
+
+Two notions of F by area should not be confused. The partial F from `method = "catch"` is each fleet's (or area's)
+share of the stock F and adds up to the reported F. The F from `method = "fbar"` is the mortality experienced by the
+fish in the area where a fleet operates; F's of fleets in the same area add up, but F's of different areas do not add
+up to the stock F when the stock is spread over the areas.
+
+`ss3_impact()` follows Wang et al. (2009): SSB is projected without fishing and with the fleet groups added one by
+one, so the impact of each group is the SSB it removes, and all impacts add up to dynamic B0 minus SSB. It runs on
+the SS3 report, with the realised SS3 mortality, spawning output and recruitment deviations, and its no-fishing
+projection reproduces the SS3 dynamic B0. The order in which groups are added matters for the share of each group
+when the stock-recruit relationship is not flat.
+
 # References
 
 Kell, L., Rice, J., Courtney, D. and Winker, H. (2023). Approximation of Kobe posteriors from Stock Synthesis for
@@ -118,6 +147,9 @@ Research, 257: 106487.
 
 Walter, J. and Winker, H. (2020). Projections to create Kobe 2 Strategy Matrix using the multivariate log-normal
 approximation for Atlantic yellowfin tuna. ICCAT SCRS/2019/145.
+
+Wang, S.-P., Maunder, M.N., Aires-da-Silva, A. and Bayliff, W.H. (2009). Evaluating fishery impacts:
+application to bigeye tuna (*Thunnus obesus*) in the eastern Pacific Ocean. Fisheries Research 99: 106-111.
 
 Winker, H., Kell, L.T., Fu, D., Sharma, R., Courtney, D., Carvalho, F., Schirripa, M. and Walter, J. (2019). A rapid
 approach to approximate Kobe posteriors from age-structured assessment models with applications to North Atlantic

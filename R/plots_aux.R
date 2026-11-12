@@ -126,7 +126,19 @@ scale_x_year <- function(n = 5, ...) ggplot2::scale_x_continuous(breaks = functi
   lab <- do.call(paste, c(lapply(dims, function(k) lab1(k, d[[k]])), sep = " | "))
   ord <- do.call(order, lapply(dims, function(k) match(as.character(d[[k]]), .lev(d[[k]]))))
   d[, group := factor(lab, levels = unique(lab[ord]))]
+  # row / column labels for a two-way grid (e.g. season x area)
+  if(length(dims) == 2) for(i in 1:2){
+    v <- lab1(dims[i], d[[dims[i]]])
+    d[, (c(".frow", ".fcol")[i]) := factor(v, levels = unique(v[ord]))]
+  }
   d
+}
+
+# facets for the 'by' dimensions: rows for one dimension, a grid (first ~ second) for two, 'group' for three
+.facet_by <- function(dims, scales = "free_y"){
+  if(!length(dims)) return(NULL)
+  if(length(dims) == 2) return(ggplot2::facet_grid(.frow ~ .fcol, scales = scales))
+  ggplot2::facet_grid(group ~ ., scales = scales)
 }
 
 # r4ss colours for the groups
