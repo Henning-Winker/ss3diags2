@@ -88,7 +88,8 @@ without dplyr, ggplot2 diagnostics, OSA residuals and posterior predictive check
 
 ## User guide
 
-The user guide (`inst/guide/ss3diags2_user_guide.Rmd`, rendered with `inst/guide/updguide.R`) follows the JABBA3
+The user guide (<https://henning-winker.github.io/ss3diags2/>; source `inst/guide/ss3diags2_user_guide.Rmd`, R code with
+comments in `inst/ss3diags2_user_guide.R`, both updated by `inst/guide/updguide.R`) follows the JABBA3
 guide: Part I goes through the diagnostics with checks (data, fits, OSA residuals, runs tests, retrospective,
 hindcast; cookbook examples), Part II covers stock status and the reference point basis, the timing of F and SSB in
 Kobe plots (`ss3plot_kobe(lag = 1)`), the production function, season-, sex- and area-structured models (F by area,

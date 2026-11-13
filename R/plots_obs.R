@@ -169,20 +169,20 @@ ss3plot_comps <- function(comps, fit = NULL, by = NULL, type = c("pooled", "annu
   if(type == "pooled"){
     a <- d[, .(data = sum(data, na.rm = TRUE), fit = sum(fit, na.rm = TRUE)), by = .(name, group, quant)]
     a[, `:=`(prop = data/sum(data), pexp = fit/sum(fit)), by = .(name, group)]
-    p <- ggplot2::ggplot(a, ggplot2::aes(quant, prop, colour = group))
-    p <- if(!length(dims)) p + ggplot2::geom_col(fill = "grey75", colour = NA, width = .bw(a$quant)) else
-      p + ggplot2::geom_line(linewidth = 0.6)
-    if(!is.null(fit)) p <- p + ggplot2::geom_line(ggplot2::aes(y = pexp), linewidth = 0.7,
+    p <- ggplot2::ggplot(a, ggplot2::aes(quant, prop))
+    p <- if(!length(dims)) p + ggplot2::geom_col(fill = .obsfill, colour = NA, width = .bw(a$quant)) else
+      p + ggplot2::geom_line(ggplot2::aes(colour = group), linewidth = 0.6)
+    if(!is.null(fit)) p <- p + ggplot2::geom_line(ggplot2::aes(y = pexp, colour = group), linewidth = 0.7,
                                                   linetype = if(length(dims)) 2 else 1)
     p <- p + ggplot2::facet_wrap(~ name, scales = "free_y", ncol = ncol) +
       ggplot2::labs(x = xlab, y = "Proportion (pooled over years)")
   }
   if(type == "annual"){
     d[, `:=`(prop = data/sum(data, na.rm = TRUE), pexp = fit/sum(fit, na.rm = TRUE)), by = gk]
-    p <- ggplot2::ggplot(d, ggplot2::aes(quant, prop, colour = group))
-    p <- if(!length(dims)) p + ggplot2::geom_col(fill = "grey75", colour = NA, width = .bw(d$quant)) else
-      p + ggplot2::geom_line(linewidth = 0.5)
-    if(!is.null(fit)) p <- p + ggplot2::geom_line(ggplot2::aes(y = pexp), linewidth = 0.6,
+    p <- ggplot2::ggplot(d, ggplot2::aes(quant, prop))
+    p <- if(!length(dims)) p + ggplot2::geom_col(fill = .obsfill, colour = NA, width = .bw(d$quant)) else
+      p + ggplot2::geom_line(ggplot2::aes(colour = group), linewidth = 0.5)
+    if(!is.null(fit)) p <- p + ggplot2::geom_line(ggplot2::aes(y = pexp, colour = group), linewidth = 0.6,
                                                   linetype = if(length(dims)) 2 else 1)
     p <- p + if(nlevels(droplevels(d$name)) == 1) ggplot2::facet_wrap(~ year, ncol = ncol, dir = "v") else
       ggplot2::facet_grid(year ~ name)
@@ -210,7 +210,8 @@ ss3plot_comps <- function(comps, fit = NULL, by = NULL, type = c("pooled", "annu
       ggplot2::facet_wrap(~ name, scales = "free_y", ncol = ncol) +
       ggplot2::labs(x = "Year", y = paste("Mean", tolower(xlab))) + scale_x_year()
   }
-  if(!(type == "mean" && is.null(fit))) p <- p + ggplot2::scale_colour_manual(values = cols)
+  # colour scale only where a layer maps colour (fits, or lines by unit/season/area)
+  if(!is.null(fit) || (length(dims) && type != "mean")) p <- p + ggplot2::scale_colour_manual(values = cols)
   p <- p + theme_ss3()
   if(!length(dims)) p <- p + ggplot2::theme(legend.position = "none")
   p

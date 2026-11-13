@@ -51,6 +51,9 @@ ss3seascols <- function(n, alpha = 1){
 
 #' @rdname ss3cols
 #' @export
+# fill of observed composition bars
+.obsfill <- "grey45"
+
 ss3unitcols <- c(unique = "#008000", F = "#CC0000", M = "#0000CC")
 
 #' @rdname ss3cols
