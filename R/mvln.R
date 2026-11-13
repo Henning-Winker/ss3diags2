@@ -483,7 +483,11 @@ utils::globalVariables(c("Ftgt", "Btgt", "MSY", "B0", "R0"))
 #'
 #' @param x FLQuants (with iterations)
 #' @param probs quantiles for the bands (outer and inner) and the median
-#' @param worms number of single draws drawn as thin lines (0 for none)
+#' @param worms number of single draws drawn as lines (0 for none)
+#' @param ci draw the quantile bands (\code{FALSE}: worms and median only)
+#' @param median draw the median line
+#' @param worm.col \code{"colour"} (each draw its own colour, default) or \code{"grey"}
+#' @param alpha transparency of the worms
 #' @param ncol number of panel columns
 #' @return ggplot
 #' @examples
@@ -492,7 +496,9 @@ utils::globalVariables(c("Ftgt", "Btgt", "MSY", "B0", "R0"))
 #' ss3plot_flqs(m$flqs)
 #' }
 #' @export
-ss3plot_flqs <- function(x, probs = c(0.05, 0.25, 0.5, 0.75, 0.95), worms = 0, ncol = 2){
+ss3plot_flqs <- function(x, probs = c(0.05, 0.25, 0.5, 0.75, 0.95), worms = 0, ci = TRUE, median = TRUE,
+                         worm.col = c("colour", "grey"), alpha = 0.5, ncol = 2){
+  worm.col <- match.arg(worm.col)
   bs <- attr(x, "basis")
   d <- rbindlist(lapply(names(x), function(n){
     v <- x[[n]]; yr <- as.numeric(dimnames(v)$year)
@@ -505,13 +511,23 @@ ss3plot_flqs <- function(x, probs = c(0.05, 0.25, 0.5, 0.75, 0.95), worms = 0, n
   lab <- .ylab_quant(names(x), bs); lab[is.na(lab)] <- names(x)[is.na(lab)]; names(lab) <- names(x)
   lv <- names(x)
   s[, quant := factor(quant, levels = lv)]; d[, quant := factor(quant, levels = lv)]
-  p <- ggplot2::ggplot(s, ggplot2::aes(year)) +
-    ggplot2::geom_ribbon(ggplot2::aes(ymin = lo, ymax = hi), fill = "grey75") +
+  p <- ggplot2::ggplot(s, ggplot2::aes(year))
+  if(ci) p <- p + ggplot2::geom_ribbon(ggplot2::aes(ymin = lo, ymax = hi), fill = "grey75") +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = lo2, ymax = hi2), fill = "grey55")
-  if(worms > 0) p <- p + ggplot2::geom_line(data = d[iter %in% seq_len(worms)], ggplot2::aes(year, data, group = iter),
-                                           linewidth = 0.2, colour = "grey20", alpha = 0.6)
+  nw <- min(worms, max(d$iter))
+  if(nw > 0){
+    w <- d[iter %in% seq_len(nw)]
+    p <- p + if(worm.col == "grey")
+      ggplot2::geom_line(data = w, ggplot2::aes(year, data, group = iter), linewidth = 0.3, colour = "grey30",
+                         alpha = alpha)
+    else
+      list(ggplot2::geom_line(data = w, ggplot2::aes(year, data, group = iter, colour = factor(iter)),
+                              linewidth = 0.3, alpha = alpha),
+           ggplot2::scale_colour_manual(values = ss3cols(nw), guide = "none"))
+  }
   r1 <- data.table(quant = factor(intersect(c("B/Btgt", "F/Ftgt", "B/B0", "Catch/MSY"), lv), levels = lv))
-  p + ggplot2::geom_line(ggplot2::aes(y = med), linewidth = 0.7) +
+  if(median) p <- p + ggplot2::geom_line(ggplot2::aes(y = med), linewidth = 0.7)
+  p +
     ggplot2::geom_hline(data = r1, ggplot2::aes(yintercept = 1), linetype = 2, colour = "darkgreen") +
     ggplot2::facet_wrap(~ quant, scales = "free_y", ncol = ncol, labeller = ggplot2::as_labeller(lab)) +
     ggplot2::expand_limits(y = 0) + ggplot2::labs(x = "Year", y = NULL) + scale_x_year() + theme_ss3()

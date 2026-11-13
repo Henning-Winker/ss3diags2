@@ -96,6 +96,8 @@ test_that("ss3mvln returns FLQuants with the draws as iterations", {
   expect_equal(names(q), c("SSB", "F/Ftgt"))
   expect_equal(attr(q, "basis")$F, "Fmsy")
   expect_s3_class(ss3plot_flqs(q, worms = 3), "ggplot")
+  expect_silent(ggplot2::ggplot_build(ss3plot_flqs(q, worms = 10, ci = FALSE)))
+  expect_silent(ggplot2::ggplot_build(ss3plot_flqs(q, worms = 10, worm.col = "grey", median = FALSE)))
   a <- ss3mvln(ss3sma, mc = 20, method = "annual")
   expect_equal(dim(a$flqs[["F/Ftgt"]])[6], 20)
 })

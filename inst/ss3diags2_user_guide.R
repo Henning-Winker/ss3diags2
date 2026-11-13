@@ -557,15 +557,16 @@ plot(ss3_flqs(ss3stk(ss3sma), c("SSB", "F", "Catch")))
 # if wanted:
 
 mv <- ss3mvln(ss3sma, mc = 1000)              # joint MVLN draws
-mv$flqs
+names(mv$flqs)
 dim(mv$flqs$SSB)                              # 1000 iterations
-ss3plot_flqs(ss3_flqs(mv, c("SSB", "F", "B/Btgt", "F/Ftgt")), worms = 5)
+ss3plot_flqs(ss3_flqs(mv, c("SSB", "F", "B/Btgt", "F/Ftgt")), worms = 5)   # 50% and 90% bands, 5 draws
 
 # The year-by-year delta-MVLN draws (method = "annual") as FLQuants, for Pandalus with the B30
-# and F30 targets:
+# and F30 targets, as single draws only (ci = FALSE), each in its own colour (worm.col = "grey"
+# for grey) with transparency alpha (default 0.5):
 
 mp <- ss3mvln(pra, mc = 1000, method = "annual")
-ss3plot_flqs(ss3_flqs(mp, c("SSB", "Rec", "B/Btgt", "F/Ftgt")))
+ss3plot_flqs(ss3_flqs(mp, c("SSB", "Rec", "B/Btgt", "F/Ftgt")), worms = 100, ci = FALSE)
 
 # The same FLQuants come from the stock with iterations, ss3_flqs(ss3stk(ss3sma, output =
 # "iters")), and work with ggplotFL (plot(mv$flqs)).

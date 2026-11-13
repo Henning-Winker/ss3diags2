@@ -4,14 +4,31 @@
 \alias{ss3plot_flqs}
 \title{Plot FLQuants with iterations}
 \usage{
-ss3plot_flqs(x, probs = c(0.05, 0.25, 0.5, 0.75, 0.95), worms = 0, ncol = 2)
+ss3plot_flqs(
+  x,
+  probs = c(0.05, 0.25, 0.5, 0.75, 0.95),
+  worms = 0,
+  ci = TRUE,
+  median = TRUE,
+  worm.col = c("colour", "grey"),
+  alpha = 0.5,
+  ncol = 2
+)
 }
 \arguments{
 \item{x}{FLQuants (with iterations)}
 
 \item{probs}{quantiles for the bands (outer and inner) and the median}
 
-\item{worms}{number of single draws drawn as thin lines (0 for none)}
+\item{worms}{number of single draws drawn as lines (0 for none)}
+
+\item{ci}{draw the quantile bands (\code{FALSE}: worms and median only)}
+
+\item{median}{draw the median line}
+
+\item{worm.col}{\code{"colour"} (each draw its own colour, default) or \code{"grey"}}
+
+\item{alpha}{transparency of the worms}
 
 \item{ncol}{number of panel columns}
 }
