@@ -17,7 +17,7 @@
 | Observations | `ss3_fleets()`, `ss3_catch()`, `ss3_discards()`, `ss3_indices()`, `ss3_lencomp()`, `ss3_agecomp()` |
 | Model inputs | `ss2jabba3()`, `ss2flicc()`, `ss3_lhpar()` |
 | Observation plots | `ss3plot_data()`, `ss3plot_catch()`, `ss3plot_indices()`, `ss3plot_comps()`, `ss3plot_nsamp()`, `ss3plot_growth()`, `ss3plot_ridges()` |
-| Residuals | `ss3_resid()`, `ss3plot_resid()`, `ss3_runs()`, `ss3plot_runs()`, `ss3plot_jres()`, `ss3_iresid()` |
+| Residuals | `ss3_resid()` (len, age, conditional age-at-length, size), `ss3plot_resid()`, `ss3plot_caal()`, `ss3_runs()`, `ss3plot_runs()`, `ss3plot_jres()`, `ss3_iresid()` |
 | Retro and hindcast | `ss3_retro()`, `ss3_mohn()`, `ss3plot_retro()`, `ss3_hindcast()`, `ss3plot_hcxval()` |
 | Status | `ss3stk()`, `ss3mvln()`, `ss3_flqs()`, `ss3plot_flqs()`, `ss3plot()`, `ss3plot_trj()`, `ss3plot_kobe()` |
 | Production | `ss3_eqcurve()`, `ss3_spm()`, `ss3plot_production()` |

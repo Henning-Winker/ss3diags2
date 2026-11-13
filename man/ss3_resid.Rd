@@ -6,7 +6,7 @@
 \usage{
 ss3_resid(
   ss3rep,
-  quant = c("len", "age"),
+  quant = c("len", "age", "con", "size"),
   type = c("osa", "pearson"),
   fleets = NULL,
   seed = 1,
@@ -16,7 +16,10 @@ ss3_resid(
 \arguments{
 \item{ss3rep}{output of \code{r4ss::SS_output()}}
 
-\item{quant}{\code{"len"} (default) or \code{"age"}}
+\item{quant}{\code{"len"} (default), \code{"age"}, \code{"con"} (conditional age-at-length: each length bin of a
+sample is its own multinomial over ages, so OSA residuals are computed per length bin; in the FLQuants the bins of
+an age x year cell are combined (Stouffer), \code{long = TRUE} keeps the length bin, for
+\code{\link{ss3plot_caal}()}) or \code{"size"} (generalised size compositions)}
 
 \item{type}{\code{"osa"} (default) or \code{"pearson"}}
 

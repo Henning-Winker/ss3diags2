@@ -21,6 +21,18 @@ data(ss3phk)
 ss3plot_resid(ss3_resid(ss3phk, "age"), cohorts = FALSE)
 ```
 
+Conditional age-at-length data are a multinomial over ages for each length bin, so `ss3_resid(quant = "con")`
+computes OSA residuals per length bin; `long = TRUE` keeps the bin for `ss3plot_caal()` (length bin by age, one
+panel per year, with the growth curves). Runs tests, joint residuals and hindcasts use the mean age by length bin
+combined over the bins (`quant = "con"`, as `ss3diags::SScompsTA1.8(type = "con")`), and generalised size
+compositions are `quant = "size"`. None of the example models has conditional age-at-length data:
+
+```{r res-caal, eval = FALSE}
+d <- ss3_resid(ss3rep, quant = "con", long = TRUE)
+ss3plot_caal(d, fleet = "Survey", lhpar = ss3_lhpar(ss3rep))
+ss3plot_runs(ss3rep, quant = "con")
+```
+
 > **Reading OSA residuals.** Bins are conditioned on the smaller bins: too few small fish gives negative residuals
 > at small sizes and positive residuals at larger sizes. Diagonal patterns that follow the growth curves are year
 > classes the model does not fit.

@@ -8,10 +8,12 @@
 #' \code{\link{ss3plot_jres}()}.
 #'
 #' @param ss3rep output of \code{r4ss::SS_output()}
-#' @param quant \code{"cpue"} (default), \code{"len"} or \code{"age"}
+#' @param quant \code{"cpue"} (default), \code{"len"}, \code{"age"} (mean length / age), \code{"con"} (conditional
+#'   age-at-length: mean age by length bin combined over bins weighted by sample size, as
+#'   \code{ss3diags::SScompsTA1.8(type = "con")}) or \code{"size"} (generalised size compositions)
 #' @return FLQuants (quant "all", year x unit x season x area)
 #' @export
-ss3_iresid <- function(ss3rep, quant = c("cpue", "len", "age")){
+ss3_iresid <- function(ss3rep, quant = c("cpue", "len", "age", "con", "size")){
   quant <- match.arg(quant)
   d <- .hc_obs(ss3rep, quant)
   if(quant == "cpue") d <- d[use > 0 & !is.na(like)]
@@ -93,7 +95,7 @@ ss3plot_runs <- function(x, mixing = "less", ncol = NULL, ...){
           by = panel]
   lim <- d[, .(y = c(min(-1, sigma3.lo[1]*1.3, min(data)), max(1, sigma3.hi[1]*1.3, max(data))), year = year[1]), by = panel]
   ylab <- switch(attr(x, "type") %||% "cpue", cpue = "Index residuals", len = "Mean length residuals",
-                 age = "Mean age residuals", "Residuals")
+                 age = "Mean age residuals", con = "Mean age-at-length residuals", size = "Mean size residuals", "Residuals")
   ggplot2::ggplot(d, ggplot2::aes(year, data)) +
     ggplot2::geom_rect(data = bx, ggplot2::aes(xmin = xmin, xmax = xmax, ymin = lo, ymax = hi, fill = test),
                        inherit.aes = FALSE, alpha = 0.6) +
@@ -132,7 +134,7 @@ ss3plot_jres <- function(x, ...){
   mn[, sm := if(.N > 4) stats::predict(stats::loess(m ~ year)) else m]
   cols <- stats::setNames(ss3cols(nl), levels(d$name))
   ylab <- switch(attr(x, "type") %||% "cpue", cpue = "Index residuals", len = "Mean length residuals",
-                 age = "Mean age residuals", "Residuals")
+                 age = "Mean age residuals", con = "Mean age-at-length residuals", size = "Mean size residuals", "Residuals")
   p <- ggplot2::ggplot(d) +
     ggplot2::geom_boxplot(ggplot2::aes(year, data, group = year), fill = "grey85", colour = "grey50", outlier.shape = NA,
                           width = 0.7, na.rm = TRUE) +

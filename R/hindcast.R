@@ -8,13 +8,33 @@
                     obs = cp$Obs, exp = cp$Exp, se = cp$SE, use = .col(cp, "Use", 1), like = cp$Like)
     return(d)
   }
-  db <- as.data.table(if(quant == "len") ss3rep$lendbase else ss3rep$agedbase)
-  if(!nrow(db)) stop("no ", quant, " compositions", call. = FALSE)
-  # mean length / age of each fleet x year x season (sexes and partitions pooled), as SScompsTA1.8
-  d <- db[, .(obs = sum(Bin*Obs)/sum(Obs), exp = sum(Bin*Exp)/sum(Exp),
-              like = if(all(is.na(Like))) NA_real_ else 1, n = mean(Nsamp_adj)), by = .(Fleet, Yr, Seas)]
+  db <- .comp_db(ss3rep, quant, ghost = TRUE)
+  if(quant == "con"){
+    # conditional age-at-length: mean age by length bin, combined over length bins weighted by N (as SScompsTA1.8)
+    lb <- db[, .(o = sum(Bin*Obs)/sum(Obs), e = sum(Bin*Exp)/sum(Exp), n = mean(Nsamp_adj),
+                 like = if(all(is.na(Like))) NA_real_ else 1), by = .(Fleet, Yr, Seas, Lbin_lo)]
+    d <- lb[is.finite(o) & is.finite(e), .(obs = sum(o*n)/sum(n), exp = sum(e*n)/sum(n),
+                                          like = if(all(is.na(like))) NA_real_ else 1), by = .(Fleet, Yr, Seas)]
+  } else
+    # mean length / age / size of each fleet x year x season (sexes and partitions pooled), as SScompsTA1.8
+    d <- db[, .(obs = sum(Bin*Obs)/sum(Obs), exp = sum(Bin*Exp)/sum(Exp),
+                like = if(all(is.na(Like))) NA_real_ else 1, n = mean(Nsamp_adj)), by = .(Fleet, Yr, Seas)]
   data.table(fleet = d$Fleet, name = .fleetnames(ss3rep)[d$Fleet], year = d$Yr, season = d$Seas, obs = d$obs,
              exp = d$exp, se = NA_real_, use = 1, like = d$like)
+}
+
+# composition data base: len, age, con (conditional age-at-length) or size; ghost = TRUE adds the excluded
+# (ghost) observations, e.g. the peeled years of retrospective runs
+.comp_db <- function(ss3rep, quant, ghost = FALSE){
+  nm <- c(len = "lendbase", age = "agedbase", con = "condbase", size = "sizedbase")[[quant]]
+  db <- as.data.table(ss3rep[[nm]])
+  if(ghost){
+    g <- as.data.table(ss3rep[[paste0("ghost", nm)]])
+    if(nrow(g)){ g[, Fleet := abs(Fleet)]; db <- rbind(db, g, fill = TRUE) }
+  }
+  if(!nrow(db)) stop("no ", c(len = "length", age = "age", con = "conditional age-at-length", size = "generalised size")[[quant]],
+                     " compositions in this SS3 report", call. = FALSE)
+  db
 }
 
 #' Hindcast cross-validation
@@ -27,7 +47,9 @@
 #' MASE for nearly flat series.
 #'
 #' @param retro list of SS3 reports (reference run first)
-#' @param quant \code{"cpue"} (default), \code{"len"} or \code{"age"} (mean length / age)
+#' @param quant \code{"cpue"} (default), \code{"len"}, \code{"age"}, \code{"con"} (conditional age-at-length:
+#'   mean age by length bin combined over bins) or \code{"size"} (generalised size compositions); for compositions
+#'   the observations excluded from the peels (SS3 ghost data) are included
 #' @param MAE.base.adj minimum naive MAE for \code{MASE.adj}
 #' @param fleets optional fleets (numbers or names)
 #' @return list of class \code{ss3hc}: \code{data} (data.table: name, year, obs, se, ref (reference fit), peel,
@@ -41,7 +63,7 @@
 #' ss3plot_hcxval(hc)
 #' }
 #' @export
-ss3_hindcast <- function(retro, quant = c("cpue", "len", "age"), MAE.base.adj = 0.1, fleets = NULL){
+ss3_hindcast <- function(retro, quant = c("cpue", "len", "age", "con", "size"), MAE.base.adj = 0.1, fleets = NULL){
   quant <- match.arg(quant)
   ey <- vapply(retro, .endyr, 0)
   runs <- rbindlist(lapply(seq_along(retro), function(i) .hc_obs(retro[[i]], quant)[, `:=`(peel = as.character(ey[i]),
@@ -137,7 +159,8 @@ ss3plot_hcxval <- function(x, ci = 0.95, xmin = NULL, ncol = NULL){
     ggplot2::geom_point(data = pp, ggplot2::aes(y = obs, fill = peel), shape = 21, size = 2.6, colour = "black") +
     ggplot2::scale_colour_manual(values = cols, breaks = pl) + ggplot2::scale_fill_manual(values = cols, guide = "none") +
     ggplot2::facet_wrap(~ panel, scales = "free_y", ncol = ncol) + ggplot2::expand_limits(y = 0) +
-    ggplot2::labs(x = "Year", y = switch(x$quant, cpue = "Index", len = "Mean length", age = "Mean age")) +
+    ggplot2::labs(x = "Year", y = switch(x$quant, cpue = "Index", len = "Mean length", age = "Mean age",
+                                                 con = "Mean age (conditional on length)", size = "Mean size")) +
     scale_x_year() + theme_ss3()
 }
 

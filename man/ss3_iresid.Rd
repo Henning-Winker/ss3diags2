@@ -4,12 +4,14 @@
 \alias{ss3_iresid}
 \title{Index and mean length / age residuals}
 \usage{
-ss3_iresid(ss3rep, quant = c("cpue", "len", "age"))
+ss3_iresid(ss3rep, quant = c("cpue", "len", "age", "con", "size"))
 }
 \arguments{
 \item{ss3rep}{output of \code{r4ss::SS_output()}}
 
-\item{quant}{\code{"cpue"} (default), \code{"len"} or \code{"age"}}
+\item{quant}{\code{"cpue"} (default), \code{"len"}, \code{"age"} (mean length / age), \code{"con"} (conditional
+age-at-length: mean age by length bin combined over bins weighted by sample size, as
+\code{ss3diags::SScompsTA1.8(type = "con")}) or \code{"size"} (generalised size compositions)}
 }
 \value{
 FLQuants (quant "all", year x unit x season x area)

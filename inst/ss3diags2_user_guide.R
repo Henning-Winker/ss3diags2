@@ -251,6 +251,19 @@ ss3plot_resid(rl, type = "qq")
 data(ss3phk)
 ss3plot_resid(ss3_resid(ss3phk, "age"), cohorts = FALSE)
 
+# Conditional age-at-length data are a multinomial over ages for each length bin, so
+# ss3_resid(quant = "con") computes OSA residuals per length bin; long = TRUE keeps the bin for
+# ss3plot_caal() (length bin by age, one panel per year, with the growth curves). Runs tests,
+# joint residuals and hindcasts use the mean age by length bin combined over the bins (quant =
+# "con", as ss3diags::SScompsTA1.8(type = "con")), and generalised size compositions are quant =
+# "size". None of the example models has conditional age-at-length data:
+
+if(FALSE){
+  d <- ss3_resid(ss3rep, quant = "con", long = TRUE)
+  ss3plot_caal(d, fleet = "Survey", lhpar = ss3_lhpar(ss3rep))
+  ss3plot_runs(ss3rep, quant = "con")
+}
+
 # Reading OSA residuals. Bins are conditioned on the smaller bins: too few small fish gives
 # negative residuals at small sizes and positive residuals at larger sizes. Diagonal patterns
 # that follow the growth curves are year classes the model does not fit.
@@ -590,7 +603,7 @@ ss3plot_flqs(ss3_flqs(mp, c("SSB", "Rec", "B/Btgt", "F/Ftgt")), worms = 100, ci 
 # | Observations | ss3_fleets(), ss3_catch(), ss3_discards(), ss3_indices(), ss3_lencomp(), ss3_agecomp() |
 # | Model inputs | ss2jabba3(), ss2flicc(), ss3_lhpar() |
 # | Observation plots | ss3plot_data(), ss3plot_catch(), ss3plot_indices(), ss3plot_comps(), ss3plot_nsamp(), ss3plot_growth(), ss3plot_ridges() |
-# | Residuals | ss3_resid(), ss3plot_resid(), ss3_runs(), ss3plot_runs(), ss3plot_jres(), ss3_iresid() |
+# | Residuals | ss3_resid() (len, age, conditional age-at-length, size), ss3plot_resid(), ss3plot_caal(), ss3_runs(), ss3plot_runs(), ss3plot_jres(), ss3_iresid() |
 # | Retro and hindcast | ss3_retro(), ss3_mohn(), ss3plot_retro(), ss3_hindcast(), ss3plot_hcxval() |
 # | Status | ss3stk(), ss3mvln(), ss3_flqs(), ss3plot_flqs(), ss3plot(), ss3plot_trj(), ss3plot_kobe() |
 # | Production | ss3_eqcurve(), ss3_spm(), ss3plot_production() |

@@ -235,6 +235,17 @@ maturity/fecundity at age (Bio), SPR curves (SPR), parameter table with priors (
 - Vignettes replaced by the user guide in inst/guide (JABBA3 style: chapters, checks, summary table, function
   reference).
 
+## Conditional age-at-length and size compositions (13 Nov)
+
+- `ss3_resid(quant = "con")`: OSA per length bin (each bin a multinomial over ages); FLQuants combine bins
+  (Stouffer), `long = TRUE` keeps `lbin`; `ss3plot_caal()`. `quant = "size"` for sizedbase (per method).
+- `ss3_iresid()/ss3_runs()/ss3plot_runs()/ss3plot_jres()/ss3_hindcast()`: `quant = "con"` (mean age by length bin
+  combined weighted by N, as SScompsTA1.8 con) and `"size"`. Hindcasts of compositions now include the SS3 ghost
+  data (excluded peeled years), as SSretroComps.
+- Tested on synthetic CAAL (OSA ~ N(0,1)); no example model has CAAL.
+- Still missing from PIFSC ss3diags: Francis TA1.8 weights (SScompsTA1.8 output), SSplotEnsemble (model ensembles,
+  for the Pandalus three-model ensemble), SSplotModelcomp (ASPM comparison: aspm.sma/aspm.phk ship), SSdiagsMCMC.
+
 ## Flagged for later: NUTS (11 Nov)
 
 - `ss3nuts(dir, ...)`: wrapper of `adnuts::sample_nuts()` on the SS3 executable (after an `-hbf` MLE run), chains,

@@ -6,7 +6,7 @@
 \usage{
 ss3_hindcast(
   retro,
-  quant = c("cpue", "len", "age"),
+  quant = c("cpue", "len", "age", "con", "size"),
   MAE.base.adj = 0.1,
   fleets = NULL
 )
@@ -14,7 +14,9 @@ ss3_hindcast(
 \arguments{
 \item{retro}{list of SS3 reports (reference run first)}
 
-\item{quant}{\code{"cpue"} (default), \code{"len"} or \code{"age"} (mean length / age)}
+\item{quant}{\code{"cpue"} (default), \code{"len"}, \code{"age"}, \code{"con"} (conditional age-at-length:
+mean age by length bin combined over bins) or \code{"size"} (generalised size compositions); for compositions
+the observations excluded from the peels (SS3 ghost data) are included}
 
 \item{MAE.base.adj}{minimum naive MAE for \code{MASE.adj}}
 
