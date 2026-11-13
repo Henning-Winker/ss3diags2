@@ -119,9 +119,9 @@ utils::globalVariables(c("comp", "a0", "neff", "N", "pobs", "repl", "np"))
 
 #' Plot residuals of conditional age-at-length data
 #'
-#' OSA (or Pearson) residuals of conditional age-at-length compositions by length bin (x) and age (y), one panel per
+#' OSA (or Pearson) residuals of conditional age-at-length compositions by age (x) and length bin (y), one panel per
 #' year, for one fleet: bubbles sized by the absolute residual, blue for observed > expected, red for observed <
-#' expected, as the r4ss conditional age-at-length plots. Growth curves (\code{lhpar}) show the expected age at length.
+#' expected. Growth curves (\code{lhpar}) show the mean length at age.
 #'
 #' @param x long data.table from \code{ss3_resid(ss3rep, quant = "con", long = TRUE)}
 #' @param fleet fleet name (default: the first fleet with data)
@@ -140,17 +140,17 @@ ss3plot_caal <- function(x, fleet = NULL, years = NULL, lhpar = NULL, cap = 4, n
   if(!is.null(years)) d <- d[year %in% years]
   if(!nrow(d)) stop("no residuals for this fleet / years", call. = FALSE)
   d[, `:=`(age = as.numeric(as.character(age)), r = pmin(abs(data), cap), sign = ifelse(data > 0, "obs > exp", "obs < exp"))]
-  p <- ggplot2::ggplot(d, ggplot2::aes(lbin, age)) +
+  p <- ggplot2::ggplot(d, ggplot2::aes(age, lbin)) +
     ggplot2::geom_point(ggplot2::aes(size = r, fill = sign), shape = 21, colour = "grey30", stroke = 0.2, alpha = 0.8) +
     ggplot2::scale_fill_manual(values = c(`obs > exp` = "#3C78B4", `obs < exp` = "#D2604B"), name = NULL) +
     ggplot2::scale_size_area(max_size = 4, limits = c(0, cap), name = "|residual|")
   if(!is.null(lhpar)){
     gc <- .growth_curves(lhpar, maxage = max(d$age))
     gc <- gc[L >= min(d$lbin) & L <= max(d$lbin)*1.05]
-    p <- p + ggplot2::geom_line(data = gc, ggplot2::aes(L, age, linetype = unit), colour = "grey40", inherit.aes = FALSE)
+    p <- p + ggplot2::geom_line(data = gc, ggplot2::aes(age, L, linetype = unit), colour = "grey40", inherit.aes = FALSE)
   }
   p + ggplot2::facet_wrap(~ year, ncol = ncol) +
-    ggplot2::labs(x = "Length bin", y = "Age", title = fl[1],
+    ggplot2::labs(x = "Age", y = "Length bin", title = fl[1],
                   subtitle = paste(attr(x, "type") %||% "osa", "residuals, conditional age-at-length")) +
     theme_ss3() + ggplot2::theme(legend.title = ggplot2::element_text(size = 8))
 }

@@ -27,3 +27,15 @@ test_that("diagnostic plots build", {
   pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
   expect_silent(ggplot2::ggplot_build(ss3plot_runs(pra)))
 })
+
+test_that("model ensemble pools draws by weight, ratios within models", {
+  data(retro.sma, package = "ss3diags2", envir = environment())
+  e <- ss3_ensemble(list(a = retro.sma$replist1, b = retro.sma$replist2), weights = c(3, 1), iters = 40)
+  expect_equal(names(e), c("a", "b", "Joint"))
+  expect_equal(attr(e, "weights")$iters, c(60, 20))
+  expect_equal(FLCore::dims(e$Joint)$iter, 80)
+  ja <- c(ss3_flqs(e$Joint, "B/Btgt")[[1]][, "2010"])
+  expect_equal(sort(ja), sort(c(c(ss3_flqs(e$a, "B/Btgt")[[1]][, "2010"]), c(ss3_flqs(e$b, "B/Btgt")[[1]][, "2010"]))))
+  expect_s3_class(ss3plot_ensemble(e), "ggplot")
+  expect_s3_class(ss3plot_ensemble(e, models = FALSE), "ggplot")
+})

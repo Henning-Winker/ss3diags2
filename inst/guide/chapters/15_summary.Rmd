@@ -4,6 +4,7 @@
 |---|---|---|---|
 | 1 | data (`ss3plot_data`, `ss3plot_nsamp`) | no contrast; conflicting indices; few samples | sensitivity runs; data weighting |
 | 2 | fits (`ss3plot_indices`, `ss3plot_comps`) | systematic misfit | conflicts between data; selectivity, catchability |
+| 2b | data weighting (`ss3_francis`, `ss3plot_francis`) | Francis weight far from 1 | adjust the variance adjustment; Dirichlet-multinomial |
 | 3 | residuals (`ss3plot_resid`, `ss3plot_runs`, `ss3plot_jres`) | failed runs test; residuals outside 3 sigma; RMSE > 30% | time-varying q, selectivity or growth |
 | 4 | retrospective (`ss3_mohn`, `ss3plot_retro`) | Mohn's rho outside -0.15 to 0.20 (short-lived: -0.22 to 0.30) | recent data; time-varying processes |
 | 5 | hindcast (`ss3_hindcast`, `ss3plot_hcxval`) | MASE > 1 | index without prediction skill |
@@ -19,6 +20,8 @@
 | Observation plots | `ss3plot_data()`, `ss3plot_catch()`, `ss3plot_indices()`, `ss3plot_comps()`, `ss3plot_nsamp()`, `ss3plot_growth()`, `ss3plot_ridges()` |
 | Residuals | `ss3_resid()` (len, age, conditional age-at-length, size), `ss3plot_resid()`, `ss3plot_caal()`, `ss3_runs()`, `ss3plot_runs()`, `ss3plot_jres()`, `ss3_iresid()` |
 | Retro and hindcast | `ss3_retro()`, `ss3_mohn()`, `ss3plot_retro()`, `ss3_hindcast()`, `ss3plot_hcxval()` |
+| Data weighting | `ss3_francis()`, `ss3plot_francis()` |
+| Ensembles | `ss3_ensemble()`, `ss3plot_ensemble()` |
 | Status | `ss3stk()`, `ss3mvln()`, `ss3_flqs()`, `ss3plot_flqs()`, `ss3plot()`, `ss3plot_trj()`, `ss3plot_kobe()` |
 | Production | `ss3_eqcurve()`, `ss3_spm()`, `ss3plot_production()` |
 | Structure | `ss3_sel()`, `ss3plot_sel()`, `ss3_byarea()`, `ss3plot_byarea()`, `ss3plot_sr()` |

@@ -23,7 +23,7 @@ ss3plot_caal(x, fleet = NULL, years = NULL, lhpar = NULL, cap = 4, ncol = NULL)
 ggplot
 }
 \description{
-OSA (or Pearson) residuals of conditional age-at-length compositions by length bin (x) and age (y), one panel per
+OSA (or Pearson) residuals of conditional age-at-length compositions by age (x) and length bin (y), one panel per
 year, for one fleet: bubbles sized by the absolute residual, blue for observed > expected, red for observed <
-expected, as the r4ss conditional age-at-length plots. Growth curves (\code{lhpar}) show the expected age at length.
+expected. Growth curves (\code{lhpar}) show the mean length at age.
 }

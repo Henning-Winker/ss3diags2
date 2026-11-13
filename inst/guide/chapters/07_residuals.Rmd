@@ -22,20 +22,38 @@ ss3plot_resid(ss3_resid(ss3phk, "age"), cohorts = FALSE)
 ```
 
 Conditional age-at-length data are a multinomial over ages for each length bin, so `ss3_resid(quant = "con")`
-computes OSA residuals per length bin; `long = TRUE` keeps the bin for `ss3plot_caal()` (length bin by age, one
+computes OSA residuals per length bin; `long = TRUE` keeps the bin for `ss3plot_caal()` (age by length bin, one
 panel per year, with the growth curves). Runs tests, joint residuals and hindcasts use the mean age by length bin
 combined over the bins (`quant = "con"`, as `ss3diags::SScompsTA1.8(type = "con")`), and generalised size
 compositions are `quant = "size"`. None of the example models has conditional age-at-length data:
 
 ```{r res-caal, eval = FALSE}
 d <- ss3_resid(ss3rep, quant = "con", long = TRUE)
-ss3plot_caal(d, fleet = "Survey", lhpar = ss3_lhpar(ss3rep))
+ss3plot_caal(d, fleet = "Survey", lhpar = ss3_lhpar(ss3rep))   # age by length bin, one panel per year
+ss3_francis(ss3rep, "con")
 ss3plot_runs(ss3rep, quant = "con")
 ```
 
 > **Reading OSA residuals.** Bins are conditioned on the smaller bins: too few small fish gives negative residuals
 > at small sizes and positive residuals at larger sizes. Diagonal patterns that follow the growth curves are year
 > classes the model does not fit.
+
+## Data weighting: Francis TA1.8
+
+The Francis (2011) TA1.8 weight compares the observed mean length (or age) of each composition with its expected
+value; with correct weighting the standardised residuals have variance 1. `ss3_francis()` gives the weight
+$w = 1/\mathrm{var}(\mathrm{std.res})$ by fleet with a bootstrap interval and the new SS3 variance adjustment
+(current adjustment times $w$), as `r4ss::SSMethod.TA1.8()`:
+
+```{r res-francis, fig.height = 3.5, fig.width = 8}
+fw <- ss3_francis(ss3simple)
+fw
+ss3plot_francis(fw)
+```
+
+> **Check: data weighting.** $w < 1$: the compositions are overweighted relative to the variation of their mean
+> lengths; multiply the variance adjustment of the fleet by $w$ and rerun. Wide intervals (few compositions) mean
+> the weight is poorly determined. Dirichlet-multinomial fleets estimate their weight and need no tuning.
 
 ## Runs tests and joint residuals
 

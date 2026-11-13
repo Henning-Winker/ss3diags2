@@ -1,0 +1,31 @@
+# Model ensembles
+
+Advice is increasingly based on an ensemble of assessment models that span structural uncertainty (natural
+mortality, steepness, growth, data weighting). `ss3_ensemble()` combines the MVLN draws of several SS3 runs, as
+`ss3diags::SSdeltaMVLN(weight = )` with `SSplotEnsemble(joint = TRUE)`: each model contributes draws in proportion
+to its weight, and the joint ensemble pools them. Ratios to the targets are computed within each model, with its
+own reference points, before pooling. `ss3plot_ensemble()` shows the models in colour and the joint ensemble in
+black, with `ss3plot_trj()`.
+
+The example uses the shortfin mako reference run and two retrospective peels as stand-ins for alternative models:
+
+```{r ens, fig.height = 6, fig.width = 9}
+ens <- ss3_ensemble(list(ref = retro.sma$replist1, alt1 = retro.sma$replist2, alt2 = retro.sma$replist3),
+                    weights = c(0.5, 0.25, 0.25), iters = 1000)
+attr(ens, "weights")
+ss3plot_ensemble(ens)
+```
+
+The joint ensemble on its own, and its Kobe plot:
+
+```{r ens-joint, fig.height = 3.5, fig.width = 8}
+ss3plot_ensemble(ens, models = FALSE, type = c("B/Btgt", "F/Ftgt"))
+```
+
+```{r ens-kobe, fig.height = 4.5, fig.width = 6}
+ss3plot_kobe(ens$Joint)
+```
+
+> **Weights and years.** Weights are normalised to sum to one; model $i$ contributes `round(iters * n * w_i)`
+> draws. The joint ensemble covers the years common to all models. Models built from `FLStockR` with iterations
+> (`ss3stk(output = "iters")`) are resampled to their number of draws.

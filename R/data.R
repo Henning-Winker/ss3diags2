@@ -27,7 +27,7 @@
 #' 2021) and in ss3diags: \code{ss3sma} the reference model, \code{retro.sma} the retrospective runs (list of five
 #' peels plus the reference, as \code{r4ss::SSgetoutput()}), \code{aspm.sma} the age-structured production model
 #' (summary for model comparison). Copied from the ss3diags package (\code{natl.sma}); CoVar reduced to the derived
-#' quantities and large age/length tables dropped (in the retro peels also the CoVar, as only the MLE is used).
+#' quantities and large age/length tables dropped.
 #'
 #' @format lists (r4ss output)
 #' @source \url{https://github.com/jabbamodel/ss3diags}

@@ -42,6 +42,8 @@ library(ggplot2)
 # | SSplotHCxval(), SSmase() | ss3_hindcast(), ss3plot_hcxval() |
 # | SSdeltaMVLN(), SSplotKobe() | ss3mvln(), ss3stk(), ss3plot_trj(), ss3plot_kobe(), ss3plot() |
 # | SSsettingsBratioF() | reference point basis in ss3stk() (same logic, benchmark labels) |
+# | SScompsTA1.8(), r4ss::SSMethod.TA1.8() | ss3_francis(), ss3plot_francis() (len, age, con, size) |
+# | SSplotEnsemble() | ss3_ensemble(), ss3plot_ensemble() |
 # | SSplot_eqcurves() | ss3_eqcurve(), ss3_spm(), ss3plot_production() |
 # | SSgetComps() | ss3_lencomp(), ss3_agecomp() |
 # | (Pearson residuals in r4ss) | ss3_resid() (OSA), ss3plot_resid() |
@@ -253,20 +255,38 @@ ss3plot_resid(ss3_resid(ss3phk, "age"), cohorts = FALSE)
 
 # Conditional age-at-length data are a multinomial over ages for each length bin, so
 # ss3_resid(quant = "con") computes OSA residuals per length bin; long = TRUE keeps the bin for
-# ss3plot_caal() (length bin by age, one panel per year, with the growth curves). Runs tests,
+# ss3plot_caal() (age by length bin, one panel per year, with the growth curves). Runs tests,
 # joint residuals and hindcasts use the mean age by length bin combined over the bins (quant =
 # "con", as ss3diags::SScompsTA1.8(type = "con")), and generalised size compositions are quant =
 # "size". None of the example models has conditional age-at-length data:
 
 if(FALSE){
   d <- ss3_resid(ss3rep, quant = "con", long = TRUE)
-  ss3plot_caal(d, fleet = "Survey", lhpar = ss3_lhpar(ss3rep))
+  ss3plot_caal(d, fleet = "Survey", lhpar = ss3_lhpar(ss3rep))   # age by length bin, one panel per year
+  ss3_francis(ss3rep, "con")
   ss3plot_runs(ss3rep, quant = "con")
 }
 
 # Reading OSA residuals. Bins are conditioned on the smaller bins: too few small fish gives
 # negative residuals at small sizes and positive residuals at larger sizes. Diagonal patterns
 # that follow the growth curves are year classes the model does not fit.
+
+# ---- Data weighting: Francis TA1.8 -----------------------------------------------------------
+
+# The Francis (2011) TA1.8 weight compares the observed mean length (or age) of each composition
+# with its expected value; with correct weighting the standardised residuals have variance 1.
+# ss3_francis() gives the weight $w = 1/\mathrm{var}(\mathrm{std.res})$ by fleet with a bootstrap
+# interval and the new SS3 variance adjustment (current adjustment times $w$), as
+# r4ss::SSMethod.TA1.8():
+
+fw <- ss3_francis(ss3simple)
+fw
+ss3plot_francis(fw)
+
+# Check: data weighting. $w < 1$: the compositions are overweighted relative to the variation of
+# their mean lengths; multiply the variance adjustment of the fleet by $w$ and rerun. Wide
+# intervals (few compositions) mean the weight is poorly determined. Dirichlet-multinomial fleets
+# estimate their weight and need no tuning.
 
 # ---- Runs tests and joint residuals ----------------------------------------------------------
 
@@ -442,6 +462,36 @@ ss3plot_production(ss3stk(ss3sma), type = "dyn")
 # 5%.
 
 ####################################################################################################
+# MODEL ENSEMBLES
+####################################################################################################
+
+# Advice is increasingly based on an ensemble of assessment models that span structural
+# uncertainty (natural mortality, steepness, growth, data weighting). ss3_ensemble() combines the
+# MVLN draws of several SS3 runs, as ss3diags::SSdeltaMVLN(weight = ) with SSplotEnsemble(joint =
+# TRUE): each model contributes draws in proportion to its weight, and the joint ensemble pools
+# them. Ratios to the targets are computed within each model, with its own reference points,
+# before pooling. ss3plot_ensemble() shows the models in colour and the joint ensemble in black,
+# with ss3plot_trj().
+
+# The example uses the shortfin mako reference run and two retrospective peels as stand-ins for
+# alternative models:
+
+ens <- ss3_ensemble(list(ref = retro.sma$replist1, alt1 = retro.sma$replist2, alt2 = retro.sma$replist3),
+                    weights = c(0.5, 0.25, 0.25), iters = 1000)
+attr(ens, "weights")
+ss3plot_ensemble(ens)
+
+# The joint ensemble on its own, and its Kobe plot:
+
+ss3plot_ensemble(ens, models = FALSE, type = c("B/Btgt", "F/Ftgt"))
+
+ss3plot_kobe(ens$Joint)
+
+# Weights and years. Weights are normalised to sum to one; model $i$ contributes round(iters * n
+# * w_i) draws. The joint ensemble covers the years common to all models. Models built from
+# FLStockR with iterations (ss3stk(output = "iters")) are resampled to their number of draws.
+
+####################################################################################################
 # SEASON-, SEX- AND AREA-STRUCTURED MODELS
 ####################################################################################################
 
@@ -591,6 +641,7 @@ ss3plot_flqs(ss3_flqs(mp, c("SSB", "Rec", "B/Btgt", "F/Ftgt")), worms = 100, ci 
 # | # | Check | Red flag | Action |
 # | 1 | data (ss3plot_data, ss3plot_nsamp) | no contrast; conflicting indices; few samples | sensitivity runs; data weighting |
 # | 2 | fits (ss3plot_indices, ss3plot_comps) | systematic misfit | conflicts between data; selectivity, catchability |
+# | 2b | data weighting (ss3_francis, ss3plot_francis) | Francis weight far from 1 | adjust the variance adjustment; Dirichlet-multinomial |
 # | 3 | residuals (ss3plot_resid, ss3plot_runs, ss3plot_jres) | failed runs test; residuals outside 3 sigma; RMSE > 30% | time-varying q, selectivity or growth |
 # | 4 | retrospective (ss3_mohn, ss3plot_retro) | Mohn's rho outside -0.15 to 0.20 (short-lived: -0.22 to 0.30) | recent data; time-varying processes |
 # | 5 | hindcast (ss3_hindcast, ss3plot_hcxval) | MASE > 1 | index without prediction skill |
@@ -605,6 +656,8 @@ ss3plot_flqs(ss3_flqs(mp, c("SSB", "Rec", "B/Btgt", "F/Ftgt")), worms = 100, ci 
 # | Observation plots | ss3plot_data(), ss3plot_catch(), ss3plot_indices(), ss3plot_comps(), ss3plot_nsamp(), ss3plot_growth(), ss3plot_ridges() |
 # | Residuals | ss3_resid() (len, age, conditional age-at-length, size), ss3plot_resid(), ss3plot_caal(), ss3_runs(), ss3plot_runs(), ss3plot_jres(), ss3_iresid() |
 # | Retro and hindcast | ss3_retro(), ss3_mohn(), ss3plot_retro(), ss3_hindcast(), ss3plot_hcxval() |
+# | Data weighting | ss3_francis(), ss3plot_francis() |
+# | Ensembles | ss3_ensemble(), ss3plot_ensemble() |
 # | Status | ss3stk(), ss3mvln(), ss3_flqs(), ss3plot_flqs(), ss3plot(), ss3plot_trj(), ss3plot_kobe() |
 # | Production | ss3_eqcurve(), ss3_spm(), ss3plot_production() |
 # | Structure | ss3_sel(), ss3plot_sel(), ss3_byarea(), ss3plot_byarea(), ss3plot_sr() |

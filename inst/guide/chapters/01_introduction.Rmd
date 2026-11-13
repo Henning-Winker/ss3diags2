@@ -28,6 +28,8 @@ How ss3diags functions map to ss3diags2:
 | `SSplotHCxval()`, `SSmase()` | `ss3_hindcast()`, `ss3plot_hcxval()` |
 | `SSdeltaMVLN()`, `SSplotKobe()` | `ss3mvln()`, `ss3stk()`, `ss3plot_trj()`, `ss3plot_kobe()`, `ss3plot()` |
 | `SSsettingsBratioF()` | reference point basis in `ss3stk()` (same logic, benchmark labels) |
+| `SScompsTA1.8()`, `r4ss::SSMethod.TA1.8()` | `ss3_francis()`, `ss3plot_francis()` (len, age, con, size) |
+| `SSplotEnsemble()` | `ss3_ensemble()`, `ss3plot_ensemble()` |
 | `SSplot_eqcurves()` | `ss3_eqcurve()`, `ss3_spm()`, `ss3plot_production()` |
 | `SSgetComps()` | `ss3_lencomp()`, `ss3_agecomp()` |
 | (Pearson residuals in r4ss) | `ss3_resid()` (OSA), `ss3plot_resid()` |

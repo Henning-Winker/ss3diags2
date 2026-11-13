@@ -246,6 +246,18 @@ maturity/fecundity at age (Bio), SPR curves (SPR), parameter table with priors (
 - Still missing from PIFSC ss3diags: Francis TA1.8 weights (SScompsTA1.8 output), SSplotEnsemble (model ensembles,
   for the Pandalus three-model ensemble), SSplotModelcomp (ASPM comparison: aspm.sma/aspm.phk ship), SSdiagsMCMC.
 
+## Francis TA1.8 and ensembles (13 Nov)
+
+- `ss3_francis()` / `ss3plot_francis()`: TA1.8 weights for len, age, con (per length bin) and size; identical to
+  `r4ss::SSMethod.TA1.8()` on ss3simple, sma, phk; bootstrap 95% interval; current variance adjustment from the comp
+  fit summary and `var_adj.new = var_adj * w`.
+- `ss3_ensemble()` / `ss3plot_ensemble()`: after jabbamodel/ss3diags SSdeltaMVLN(weight) + SSplotEnsemble(joint):
+  draws per model = round(iters * n * w_i); ratios within models (own refpts) before pooling; joint FLStockR with
+  pooled iterations, refpts iterations of the models and the ratios in attr status; plot via ss3plot_trj (models in
+  colour, joint black). Inputs SS3 reports or FLStockR with iterations (resampled). Retro peels keep the reduced
+  CoVar so they can stand in as ensemble members. Pandalus three-model ensemble to follow.
+- ss3plot_caal: x = age, y = length bin.
+
 ## Flagged for later: NUTS (11 Nov)
 
 - `ss3nuts(dir, ...)`: wrapper of `adnuts::sample_nuts()` on the SS3 executable (after an `-hbf` MLE run), chains,
