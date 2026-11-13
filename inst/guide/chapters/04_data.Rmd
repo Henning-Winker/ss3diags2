@@ -17,7 +17,8 @@ ct  <- ss3_catch(ss3simple)                  # FLQuants: catch by fleet
 idx <- ss3_indices(ss3simple)                # FLIndices of FLIndexBiomass: index, index.var (input SE)
 lfd <- ss3_lencomp(ss3simple)                # FLQuants: length compositions by fleet, sex as unit
 afd <- ss3_agecomp(ss3simple)
-lfd
+
+ss3plot_comps(lfd,type="annual",year=2015:2022)
 ```
 
 Every extractor also returns the long `data.table` (`long = TRUE`), with the FLQuant dimension columns:
