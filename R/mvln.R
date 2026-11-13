@@ -107,7 +107,8 @@
 #'   \code{"kill_bio"}/\code{"dead_bio"}, \code{"ret_bio"}); forecast catch from \code{ForeCatch_}
 #' @param seed random seed
 #' @param virgin (\code{"annual"} only) B/B0 relative to virgin rather than unfished SSB
-#' @return list of class \code{ss3mvln}: \code{kb} (data.table: year, type, iter, stock = B/Btgt, harvest = F/Ftgt, F,
+#' @return list of class \code{ss3mvln}: \code{flqs} (FLQuants with the draws as iterations: SSB, F, Rec, Catch,
+#'   B/Btgt, F/Ftgt, B/B0, Catch/MSY; plot with \code{\link{ss3plot_flqs}()}), \code{kb} (data.table: year, type, iter, stock = B/Btgt, harvest = F/Ftgt, F,
 #'   SSB, Recr, Catch), \code{mle} (the same at the MLE), \code{refpts} (FLPar at the MLE: Ftgt, Btgt, MSY, B0, R0),
 #'   \code{refpts.iter} (FLPar with iterations, \code{"joint"}), \code{basis} (B and F reference labels), \code{method}
 #' @references
@@ -148,10 +149,10 @@ ss3mvln <- function(ss3rep, mc = 1000, method = c("joint", "annual"), Fref = NUL
   rpi <- if(!is.null(j$rp)) FLCore::FLPar(array(t(as.matrix(j$rp[, .(Ftgt, Btgt, MSY, B0, R0)])), dim = c(5, mc),
                                                 dimnames = list(params = c("Ftgt", "Btgt", "MSY", "B0", "R0"),
                                                                 iter = seq_len(mc)))) else NULL
-  structure(list(kb = j$kb, mle = j$mle, refpts = rp(j$rp.mle), refpts.iter = rpi,
+  .add_flqs(structure(list(kb = j$kb, mle = j$mle, refpts = rp(j$rp.mle), refpts.iter = rpi,
                  basis = list(B = b$Bref, F = b$Fref, C = b$Cref, bbasis = b$bbasis, fbasis = b$fbasis, Btgtref = b$bref,
                               ssbunits = ss3rep$SpawnOutputUnits %||% "biomass"),
-                 method = "joint"), class = "ss3mvln")
+                 method = "joint"), class = "ss3mvln"))
 }
 
 #' @export
@@ -219,10 +220,10 @@ print.ss3mvln <- function(x, ...){
   kb <- fix(kb); mle <- fix(mle)
   ftgt <- mle$F[1]/mle$harvest[1]; btgt <- mle$SSB[1]/mle$stock[1]
   refpts <- FLCore::FLPar(Ftgt = ftgt, Btgt = btgt, MSY = b$msy, B0 = b$b0, R0 = b$r0)
-  structure(list(kb = kb[], mle = mle[], refpts = refpts,
+  .add_flqs(structure(list(kb = kb[], mle = mle[], refpts = refpts,
                  basis = list(B = b$Bref, F = b$Fref, C = b$Cref, bbasis = b$bbasis, fbasis = b$fbasis, Btgtref = b$bref,
                               ssbunits = ss3rep$SpawnOutputUnits %||% "biomass")),
-            class = "ss3mvln")
+            class = "ss3mvln"))
 }
 
 
@@ -377,6 +378,11 @@ ss3stk <- function(x, output = NULL, iters = 1000, method = c("joint", "annual")
 #' }
 #' @export
 ss3_flqs <- function(x, quants = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftgt"), ...){
+  if(inherits(x, "ss3mvln")){
+    bad <- setdiff(quants, names(x$flqs)); if(length(bad)) stop("not in the ss3mvln draws: ", paste(bad, collapse = ", "), call. = FALSE)
+    out <- x$flqs[quants]; attr(out, "basis") <- x$basis
+    return(out)
+  }
   stk <- if(is(x, "FLStock")) x else ss3stk(x, ...)
   B <- FLCore::ssb(stk); F <- FLCore::fbar(stk); R <- FLCore::rec(stk); C <- FLCore::catch(stk)
   rp <- if(is(stk, "FLStockR")) FLCore::refpts(stk) else NULL
@@ -447,4 +453,66 @@ utils::globalVariables(c("Ftgt", "Btgt", "MSY", "B0", "R0"))
   })
   names(out) <- paste("area", sort(unique(d$area)))
   FLCore::FLStocks(c(list(stock = tot), out))
+}
+
+# FLQuants with iterations from the MVLN draws: SSB, F, Rec, Catch, B/Btgt, F/Ftgt (+ B/B0, Catch/MSY)
+.add_flqs <- function(x){
+  kb <- x$kb
+  if(is.null(kb) || !is.data.frame(kb) || !nrow(kb)){             # mc = 0: MLE as one iteration
+    if(is.null(x$mle) || !nrow(x$mle)) return(x)
+    kb <- copy(as.data.table(x$mle))[, iter := 1L]
+  }
+  mk <- function(v, u) long2flq(kb[, .(age = "all", year, unit = "unique", season = "all", area = "unique",
+                                       iter = as.character(iter), data = get(v))], units = u)
+  q <- list(SSB = mk("SSB", x$basis$ssbunits %||% "NA"), F = mk("F", "f"), Rec = mk("Recr", "1000"),
+            Catch = mk("Catch", "t"), `B/Btgt` = mk("stock", ""), `F/Ftgt` = mk("harvest", ""))
+  b0 <- c(x$refpts["B0"]); msy <- c(x$refpts["MSY"])
+  if(is.finite(b0) && b0 > 0) q$`B/B0` <- q$SSB/b0
+  if(is.finite(msy) && msy > 0) q$`Catch/MSY` <- q$Catch/msy
+  x$flqs <- FLCore::FLQuants(q)
+  attr(x$flqs, "basis") <- x$basis
+  x
+}
+
+#' Plot FLQuants with iterations
+#'
+#' Median and quantile bands of \code{FLQuants} with iterations, one panel per quantity: the MVLN draws of
+#' \code{\link{ss3mvln}()} (\code{$flqs} or \code{ss3_flqs()}), \code{\link{ss3_flqs}()} of an FLStockR with iterations, or
+#' any FLQuants. Ratios get a reference line at 1, labelled by the benchmark (e.g. B/Bmsy, F/F30) when the FLQuants
+#' carry a basis.
+#'
+#' @param x FLQuants (with iterations)
+#' @param probs quantiles for the bands (outer and inner) and the median
+#' @param worms number of single draws drawn as thin lines (0 for none)
+#' @param ncol number of panel columns
+#' @return ggplot
+#' @examples
+#' \dontrun{
+#' m <- ss3mvln(ss3sma, mc = 1000)
+#' ss3plot_flqs(m$flqs)
+#' }
+#' @export
+ss3plot_flqs <- function(x, probs = c(0.05, 0.25, 0.5, 0.75, 0.95), worms = 0, ncol = 2){
+  bs <- attr(x, "basis")
+  d <- rbindlist(lapply(names(x), function(n){
+    v <- x[[n]]; yr <- as.numeric(dimnames(v)$year)
+    m <- matrix(c(v), nrow = length(yr))                  # years x iters (age, unit, season, area of length 1)
+    data.table(quant = n, year = rep(yr, ncol(m)), iter = rep(seq_len(ncol(m)), each = length(yr)), data = c(m))
+  }))
+  s <- d[, .(lo = stats::quantile(data, probs[1], na.rm = TRUE), lo2 = stats::quantile(data, probs[2], na.rm = TRUE),
+             med = stats::quantile(data, probs[3], na.rm = TRUE), hi2 = stats::quantile(data, probs[4], na.rm = TRUE),
+             hi = stats::quantile(data, probs[5], na.rm = TRUE)), by = .(quant, year)]
+  lab <- .ylab_quant(names(x), bs); lab[is.na(lab)] <- names(x)[is.na(lab)]; names(lab) <- names(x)
+  lv <- names(x)
+  s[, quant := factor(quant, levels = lv)]; d[, quant := factor(quant, levels = lv)]
+  p <- ggplot2::ggplot(s, ggplot2::aes(year)) +
+    ggplot2::geom_ribbon(ggplot2::aes(ymin = lo, ymax = hi), fill = "grey75") +
+    ggplot2::geom_ribbon(ggplot2::aes(ymin = lo2, ymax = hi2), fill = "grey55")
+  if(worms > 0) p <- p + ggplot2::geom_line(data = d[iter %in% seq_len(worms)], ggplot2::aes(year, data, group = iter),
+                                           linewidth = 0.2, colour = "grey20", alpha = 0.6)
+  r1 <- data.table(quant = factor(intersect(c("B/Btgt", "F/Ftgt", "B/B0", "Catch/MSY"), lv), levels = lv))
+  p + ggplot2::geom_line(ggplot2::aes(y = med), linewidth = 0.7) +
+    ggplot2::geom_hline(data = r1, ggplot2::aes(yintercept = 1), linetype = 2, colour = "darkgreen") +
+    ggplot2::facet_wrap(~ quant, scales = "free_y", ncol = ncol, labeller = ggplot2::as_labeller(lab)) +
+    ggplot2::expand_limits(y = 0) + ggplot2::labs(x = "Year", y = NULL) + scale_x_year() + theme_ss3()
 }

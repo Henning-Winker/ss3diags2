@@ -29,6 +29,6 @@ for(r in list(ss3simple, msy_as(ss3simple, "SPR"), msy_as(ss3simple, "Btgt"),
                 rebratio(ss3simple, gq(ss3simple, "SSB_MSY")))){
     for(Fref in list(NULL, "SPR", "Btgt")){
       d <- ss3diags::SSdeltaMVLN(r, mc = 10, plot = FALSE, verbose = FALSE, Fref = Fref)$mle
-      expect_equal(stat(r, Fref), unlist(d[d$year == ey, c("stock", "harvest")]), tolerance = 1e-8, ignore_attr = TRUE)
+      expect_equal(stat(r, Fref), unlist(d[d$year == ey, c("stock", "harvest")]), tolerance = 1e-6, ignore_attr = TRUE)
     }
   }

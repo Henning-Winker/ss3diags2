@@ -38,7 +38,8 @@ lagged Kobe plot)}
 \item{virgin}{(\code{"annual"} only) B/B0 relative to virgin rather than unfished SSB}
 }
 \value{
-list of class \code{ss3mvln}: \code{kb} (data.table: year, type, iter, stock = B/Btgt, harvest = F/Ftgt, F,
+list of class \code{ss3mvln}: \code{flqs} (FLQuants with the draws as iterations: SSB, F, Rec, Catch,
+B/Btgt, F/Ftgt, B/B0, Catch/MSY; plot with \code{\link{ss3plot_flqs}()}), \code{kb} (data.table: year, type, iter, stock = B/Btgt, harvest = F/Ftgt, F,
 SSB, Recr, Catch), \code{mle} (the same at the MLE), \code{refpts} (FLPar at the MLE: Ftgt, Btgt, MSY, B0, R0),
 \code{refpts.iter} (FLPar with iterations, \code{"joint"}), \code{basis} (B and F reference labels), \code{method}
 }

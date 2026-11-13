@@ -19,7 +19,7 @@
 | Observation plots | `ss3plot_data()`, `ss3plot_catch()`, `ss3plot_indices()`, `ss3plot_comps()`, `ss3plot_nsamp()`, `ss3plot_growth()`, `ss3plot_ridges()` |
 | Residuals | `ss3_resid()`, `ss3plot_resid()`, `ss3_runs()`, `ss3plot_runs()`, `ss3plot_jres()`, `ss3_iresid()` |
 | Retro and hindcast | `ss3_retro()`, `ss3_mohn()`, `ss3plot_retro()`, `ss3_hindcast()`, `ss3plot_hcxval()` |
-| Status | `ss3stk()`, `ss3mvln()`, `ss3_flqs()`, `ss3plot()`, `ss3plot_trj()`, `ss3plot_kobe()` |
+| Status | `ss3stk()`, `ss3mvln()`, `ss3_flqs()`, `ss3plot_flqs()`, `ss3plot()`, `ss3plot_trj()`, `ss3plot_kobe()` |
 | Production | `ss3_eqcurve()`, `ss3_spm()`, `ss3plot_production()` |
 | Structure | `ss3_sel()`, `ss3plot_sel()`, `ss3_byarea()`, `ss3plot_byarea()`, `ss3plot_sr()` |
 | F and impact | `ss3_fa()`, `ss3plot_fa()`, `ss3_partialF()`, `ss3plot_partialF()`, `ss3_impact()`, `ss3plot_impact()` |

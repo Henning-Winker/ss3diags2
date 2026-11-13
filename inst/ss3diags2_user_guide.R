@@ -540,12 +540,35 @@ ss3plot_impact(imp, type = "prop")
 # | stock status | ss3stk() | FLStockR (@refpts) |
 # | retrospective peels | ss3_retro() | FLStocks |
 # | key quantities | ss3_flqs() | FLQuants |
+# | MVLN draws | ss3mvln()$flqs, ss3_flqs(mvln) | FLQuants with iterations |
 
 # long2flq(), long2flqs() and flqs2long() convert between the long tables and FLR objects. The
 # stock objects work with FLRef and ggplotFL:
 
 library(ggplotFL)
 plot(ss3_flqs(ss3stk(ss3sma), c("SSB", "F", "Catch")))
+
+# ---- MVLN draws as FLQuants with iterations --------------------------------------------------
+
+# ss3mvln() returns the draws as FLQuants with one iteration per draw ($flqs): SSB, F,
+# recruitment, catch, B/Btgt and F/Ftgt, and B/B0 and Catch/MSY where the reference points are
+# reported. ss3_flqs() selects quantities from it, and ss3plot_flqs() plots the median with 50%
+# and 90% bands, with the ratio panels named after the benchmark and a few single draws ("worms")
+# if wanted:
+
+mv <- ss3mvln(ss3sma, mc = 1000)              # joint MVLN draws
+mv$flqs
+dim(mv$flqs$SSB)                              # 1000 iterations
+ss3plot_flqs(ss3_flqs(mv, c("SSB", "F", "B/Btgt", "F/Ftgt")), worms = 5)
+
+# The year-by-year delta-MVLN draws (method = "annual") as FLQuants, for Pandalus with the B30
+# and F30 targets:
+
+mp <- ss3mvln(pra, mc = 1000, method = "annual")
+ss3plot_flqs(ss3_flqs(mp, c("SSB", "Rec", "B/Btgt", "F/Ftgt")))
+
+# The same FLQuants come from the stock with iterations, ss3_flqs(ss3stk(ss3sma, output =
+# "iters")), and work with ggplotFL (plot(mv$flqs)).
 
 ####################################################################################################
 # SUMMARY OF CHECKS AND FUNCTIONS
@@ -568,7 +591,7 @@ plot(ss3_flqs(ss3stk(ss3sma), c("SSB", "F", "Catch")))
 # | Observation plots | ss3plot_data(), ss3plot_catch(), ss3plot_indices(), ss3plot_comps(), ss3plot_nsamp(), ss3plot_growth(), ss3plot_ridges() |
 # | Residuals | ss3_resid(), ss3plot_resid(), ss3_runs(), ss3plot_runs(), ss3plot_jres(), ss3_iresid() |
 # | Retro and hindcast | ss3_retro(), ss3_mohn(), ss3plot_retro(), ss3_hindcast(), ss3plot_hcxval() |
-# | Status | ss3stk(), ss3mvln(), ss3_flqs(), ss3plot(), ss3plot_trj(), ss3plot_kobe() |
+# | Status | ss3stk(), ss3mvln(), ss3_flqs(), ss3plot_flqs(), ss3plot(), ss3plot_trj(), ss3plot_kobe() |
 # | Production | ss3_eqcurve(), ss3_spm(), ss3plot_production() |
 # | Structure | ss3_sel(), ss3plot_sel(), ss3_byarea(), ss3plot_byarea(), ss3plot_sr() |
 # | F and impact | ss3_fa(), ss3plot_fa(), ss3_partialF(), ss3plot_partialF(), ss3_impact(), ss3plot_impact() |

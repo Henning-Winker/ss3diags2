@@ -3,7 +3,7 @@
 \name{ss3cols}
 \alias{ss3cols}
 \alias{ss3seascols}
-\alias{ss3unitcols}
+\alias{.obsfill}
 \alias{ss3bubblecols}
 \title{r4ss colours}
 \usage{
@@ -11,7 +11,7 @@ ss3cols(n, alpha = 1)
 
 ss3seascols(n, alpha = 1)
 
-ss3unitcols
+.obsfill
 
 ss3bubblecols
 }

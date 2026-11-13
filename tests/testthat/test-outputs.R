@@ -84,3 +84,18 @@ test_that("fwd adds the forecast years and the Kobe plot takes lag = 1", {
   expect_warning(ss3plot_kobe(ss3stk(ss3mvln(r, mc = 50, method = "annual", fwd = TRUE)), lag = 1), "not linked")
   expect_error(ss3plot_kobe(s, lag = 2), "lag")
 })
+
+test_that("ss3mvln returns FLQuants with the draws as iterations", {
+  data(ss3sma, package = "ss3diags2", envir = environment())
+  m <- ss3mvln(ss3sma, mc = 50)
+  expect_s4_class(m$flqs, "FLQuants")
+  expect_equal(dim(m$flqs$SSB)[6], 50)
+  kb <- m$kb[year == 2015]
+  expect_equal(c(m$flqs[["B/Btgt"]][, "2015"]), kb$stock)
+  q <- ss3_flqs(m, c("SSB", "F/Ftgt"))
+  expect_equal(names(q), c("SSB", "F/Ftgt"))
+  expect_equal(attr(q, "basis")$F, "Fmsy")
+  expect_s3_class(ss3plot_flqs(q, worms = 3), "ggplot")
+  a <- ss3mvln(ss3sma, mc = 20, method = "annual")
+  expect_equal(dim(a$flqs[["F/Ftgt"]])[6], 20)
+})

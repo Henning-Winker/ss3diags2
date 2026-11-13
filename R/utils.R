@@ -107,7 +107,7 @@ flqs2long <- function(x, na.rm = TRUE){
 utils::globalVariables(c(".", "name", "fleet", "year", "unit", "season", "area", "iter", "data", "len", "age",
   "obs", "exp", "se", "se_input", "nsamp", "nsamp_adj", "nsamp_in", "part", "sexes", "sex", "bin", "ageerr",
   "use", "month", "pearson", "type", "i.fleet", "i.name", "i.part", "i.units", "Yr", "Seas", "Fleet", "n", "w", "partname", "qname", "nexp", "np", "ne",
-  "used", "effN", "units", "se_total", "nlen", "time", "dev", "q", ".frow", ".fcol", "Era", "Area", "Sex", "Morph", "Type", "group", "impact", "prop", "scenario", "ssb", "SpawnBio", "Label", "annual_F", "a", "value", "s", "ss3_dynB0", "dynB0", "projected", "ss3", "v", "Factor", "Recruit_0", "Bio_all", "pred_recr", "R", "block", "lt", "what", "x", "h", "keep", "V1", "quant", "c", "M", "sc", "lo", "hi", "Value", "Parm_StDev", "lab", "label"))
+  "used", "effN", "units", "se_total", "nlen", "time", "dev", "q", ".frow", ".fcol", "Era", "Area", "Sex", "Morph", "Type", "group", "impact", "prop", "scenario", "ssb", "SpawnBio", "Label", "annual_F", "a", "value", "s", "ss3_dynB0", "dynB0", "projected", "ss3", "v", "Factor", "Recruit_0", "Bio_all", "pred_recr", "R", "block", "lt", "what", "x", "h", "keep", "V1", "quant", "c", "M", "sc", "lo", "hi", "Value", "Parm_StDev", "lab", "label", "lo2", "hi2", "med", "quant"))
 
 # an r4ss::SS_output() list
 .is_ss3rep <- function(x) is.list(x) && !is.data.frame(x) && !is.null(x$FleetNames)
