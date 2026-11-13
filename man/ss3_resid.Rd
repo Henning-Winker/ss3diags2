@@ -10,6 +10,7 @@ ss3_resid(
   type = c("osa", "pearson"),
   fleets = NULL,
   seed = 1,
+  min.exp = 0.01,
   long = FALSE
 )
 }
@@ -26,6 +27,10 @@ an age x year cell are combined (Stouffer), \code{long = TRUE} keeps the length 
 \item{fleets}{fleet numbers or names (default all)}
 
 \item{seed}{random seed for the OSA randomisation}
+
+\item{min.exp}{OSA residuals of bins with zero observations and an expected count (proportion x N) below
+\code{min.exp} are set to NA: the randomised residual of a bin that cannot be observed is pure noise (e.g. old
+ages in small length bins of conditional age-at-length data, empty tails of length compositions); 0 keeps all}
 
 \item{long}{return the long data.table instead of FLQuants}
 }

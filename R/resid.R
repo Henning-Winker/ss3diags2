@@ -50,6 +50,9 @@
 #'   \code{\link{ss3plot_caal}()}) or \code{"size"} (generalised size compositions)
 #' @param type \code{"osa"} (default) or \code{"pearson"}
 #' @param fleets fleet numbers or names (default all)
+#' @param min.exp OSA residuals of bins with zero observations and an expected count (proportion x N) below
+#'   \code{min.exp} are set to NA: the randomised residual of a bin that cannot be observed is pure noise (e.g. old
+#'   ages in small length bins of conditional age-at-length data, empty tails of length compositions); 0 keeps all
 #' @param seed random seed for the OSA randomisation
 #' @param long return the long data.table instead of FLQuants
 #' @return FLQuants of residuals (one per fleet and partition, as \code{\link{ss3_lencomp}()}: len/age x year x unit x
@@ -61,7 +64,7 @@
 #' names(r)
 #' @export
 ss3_resid <- function(ss3rep, quant = c("len", "age", "con", "size"), type = c("osa", "pearson"), fleets = NULL,
-                      seed = 1, long = FALSE){
+                      seed = 1, min.exp = 0.01, long = FALSE){
   quant <- match.arg(quant); type <- match.arg(type)
   db <- .comp_db(ss3rep, quant)
   qn <- if(quant == "con") "age" else quant
@@ -91,6 +94,9 @@ ss3_resid <- function(ss3rep, quant = c("len", "age", "con", "size"), type = c("
     on.exit(if(!is.null(old)) assign(".Random.seed", old, envir = globalenv()), add = TRUE)
     set.seed(seed)
     d[, data := .osa_comp(obs, pexp, a0[1]), by = comp]
+    # cells with nothing observed and (almost) nothing expected carry no information: their randomised residual
+    # is pure noise (u ~ U(0, 1)), so it is dropped
+    if(min.exp > 0) d[obs == 0 & exp < min.exp, data := NA_real_]
   } else d[, data := pearson]
   setnames(d, "q", qn)
   if(quant == "con" && long){
