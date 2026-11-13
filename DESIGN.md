@@ -220,6 +220,21 @@ area-structured models"). Retro and hindcast for Pandalus to follow (needs the p
 Still missing from the r4ss tabs: numbers at age / mean age by area (Numbers), hermaphroditism transition and
 maturity/fecundity at age (Bio), SPR curves (SPR), parameter table with priors (Pars), discard fits plot (Discard).
 
+## Reference point basis, stock by area, data and guide (v0.9, 13 Nov)
+
+- Basis logic cross-checked with `ss3diags::SSdeltaMVLN()` / `SSsettingsBratioF()`: status identical for ss3simple,
+  pra, sma, phk, her and for synthetic variants (MSY set to F(SPR) or F(Btgt), B ratio B/Bmsy, Fref overrides).
+  Differences: F basis matched by pattern (SPR target from `sprtarg`; SSdeltaMVLN uses `btarg` and fails on
+  F/F_at_B40% and F/F50%SPR), benchmarks compared only when estimated (non-zero), bref falls back to 0.4.
+- Labels by benchmark: Bmsy/Fmsy/MSY; B40/F40 (Y40 when MSY is the Btgt proxy); Bspr40/Fspr40 (Yspr40); BF0.1/F0.1.
+  Used in ss3plot_trj panels and reference lines, Kobe axes, retro panels.
+- `ss3stk(area = TRUE)`: FLStocks (stock + area FLStockR, MLE). Area F = Fbar of the area's fleets (local F);
+  B0/R0 by area from the virgin time series, Btgt scaled by area share of B0, stock Ftgt, no MSY.
+- Data: ss3simple (test), cookbook ss3sma/retro.sma/aspm.sma and ss3phk/retro.phk/aspm.phk (slimmed; retro and
+  MASE unchanged), Pandalus rds. ss3ank dropped. Pandalus retro summary and three-model ensemble to come (Max).
+- Vignettes replaced by the user guide in inst/guide (JABBA3 style: chapters, checks, summary table, function
+  reference).
+
 ## Flagged for later: NUTS (11 Nov)
 
 - `ss3nuts(dir, ...)`: wrapper of `adnuts::sample_nuts()` on the SS3 executable (after an `-hbf` MLE run), chains,

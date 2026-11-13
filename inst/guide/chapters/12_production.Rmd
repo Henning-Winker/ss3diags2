@@ -1,0 +1,17 @@
+# Production function and equilibrium
+
+`ss3_eqcurve()` extracts the SS3 equilibrium yield curve and `ss3_spm()` fits a Pella-Tomlinson production
+function to it, as a surplus production model equivalent of the age-structured model (the "production function"
+of JABBA3), and checks it against the SS3 benchmarks.
+
+```{r prod}
+sp <- ss3_spm(ss3sma)
+sp
+ss3plot_production(ss3stk(ss3sma))
+ss3plot_production(ss3stk(ss3sma), type = "dyn")
+```
+
+> **Which unfished state?** SS3 holds several: SSB_Virgin (start-year biology), SSB_unfished (benchmark years) and
+> the dynamic B0 of each year. With time-varying weight-at-age or M (empirical `wtatage`, as for Pacific hake) these
+> differ, and the equilibrium table can rest on yet another biology. `ss3_spm()` warns when its fit and the SS3
+> benchmarks differ by more than 5%.

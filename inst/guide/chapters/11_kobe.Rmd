@@ -1,0 +1,27 @@
+# Kobe plots and the timing of F and SSB
+
+> **Critical for advice.** SS3 reports SSB at spawning (typically at the start of the year), and F of year *y*
+> acts during year *y*. The SSB that results from the fishing in year *y* is therefore SSB in year *y + 1*. The
+> usual Kobe plot pairs F(*y*) with SSB(*y*): it shows the biomass the fishery in *y* started from, not the biomass
+> it led to. When F is well above Fmsy, the stock status that follows from the current exploitation can be markedly
+> worse than the plot of F(*y*) against SSB(*y*) suggests. Advice should state which convention is used and, when
+> the two differ, show both.
+
+`ss3plot_kobe(lag = 1)` plots F(*y*) against B/Btgt(*y + 1*). The uncertainty cloud then pairs F(*Y*) with
+B(*Y + 1*) within each draw, which needs draws linked across years: use `method = "joint"`. Build the stock with
+`fwd = TRUE` so that SSB at the start of the year after the last assessment year (an SS3 forecast quantity) is
+available; F is used up to the end year only.
+
+```{r kobe, fig.width = 10, fig.height = 4.5}
+k0 <- ss3plot_kobe(stk) + ggtitle("lag = 0: F(y) against B(y)")
+k1 <- ss3plot_kobe(stk, lag = 1) + ggtitle("lag = 1: F(y) against B(y + 1)")
+patchwork::wrap_plots(k0, k1)
+```
+
+For North Atlantic shortfin mako the probability of being in the red quadrant (overfished and subject to
+overfishing) in 2015 is about 78% with F(2015) against SSB(2015) and about 93% with F(2015) against SSB(2016).
+
+> **Before using the lagged plot for advice.** SSB(*y + 1*) for the last assessment year is a one-year forecast: it
+> depends on the SS3 forecast settings (`forecast.ss`) and, where recruits mature within a year, on the forecast
+> recruitment. Kell et al. (2023) pair F and SSB both ways in their figures; the convention is not standardised,
+> which is why it must be stated with the advice.

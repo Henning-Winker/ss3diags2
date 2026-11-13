@@ -1,0 +1,60 @@
+# Stock status: FLStockR and MVLN
+
+`ss3stk()` builds a simplified `FLStockR` (as `FLRef::ss2FLStockR()`): SSB, F, recruitment and catch, with the
+reference points in `@refpts`. `output = "mle"` gives the maximum likelihood estimates with their standard errors,
+`output = "iters"` draws from a multivariate lognormal (MVLN) approximation (`ss3mvln()`):
+
+- `method = "joint"` (default) draws SSB, recruitment and F of all years and the reference points from one MVLN
+  with the full correlation matrix of the SS3 derived quantities (Kell et al. 2023; the `ss3om::ssmvln()`
+  approach). Each draw is a coherent trajectory and the reference points have draws.
+- `method = "annual"` is the delta-MVLN of `ss3diags::SSdeltaMVLN()` (Walter and Winker 2020; Winker et al. 2019),
+  drawn year by year from the B ratio, F and the F reference.
+
+```{r stat-stk, fig.height = 6, fig.width = 9}
+stk <- ss3stk(ss3sma, output = "iters", iters = 1000, fwd = TRUE)
+ss3plot_trj(stk)
+```
+
+> **SSdeltaMVLN understates the B-F correlation.** For the example models the year-by-year delta-MVLN gives a
+> correlation between B/Bmsy and F/Fmsy in the terminal year of -0.24 for shortfin mako (SS3 covariance: -0.86) and
+> -0.26 for Pacific hake (-0.76), so its Kobe clouds are rounder than the estimated uncertainty. The joint method
+> keeps the estimated correlation; use it for advice.
+
+## Which targets: the reference point basis
+
+SS3 can report stock status relative to different benchmarks, set in `starter.ss` (the B ratio denominator and the
+F report basis) and `forecast.ss` (the benchmarks; the MSY option can be set to the F at a biomass target or at an
+SPR target). The SS3 labels of the derived quantities also changed between versions. `ss3stk()` works out the
+basis with the logic of `ss3diags::SSdeltaMVLN()` and `SSsettingsBratioF()`:
+
+1. **B ratio**: the SS3 `Bratio` of the end year is compared with SSB relative to SSB virgin, SSB_MSY and SSB_Btgt
+   (or SSB at F0.1); the closest defines the B target.
+2. **F basis**: from `F_std_basis` (SS 3.30) or `F_report_basis` (3.24): absolute F, F/Fmsy, F/F at the B target,
+   or F/F at the SPR target.
+3. **F reference**: MSY, unless the MSY benchmark is the B target benchmark (then the F at the B target) or the SPR
+   benchmark (then the SPR F); `Fref =` overrides it.
+
+The status values agree with `SSdeltaMVLN()` for all example models and for the SS3 benchmark options. The labels
+name the benchmark behind each target rather than the SS3 label, because "MSY" in SS3 output may be a proxy:
+
+| Basis | B target | F target | Catch reference |
+|---|---|---|---|
+| MSY benchmark | `Bmsy` | `Fmsy` | `MSY` |
+| B ratio relative to B0, target fraction 40% | `B40` | (from the F basis) | |
+| biomass target 40% (or MSY set to F(B40)) | `B40` | `F40` | `Y40` (yield at B40) when MSY is the proxy |
+| SPR target 40% (or MSY set to F(SPR40)) | `Bspr40` | `Fspr40` | `Yspr40` when MSY is the proxy |
+| F0.1 | `BF0.1` | `F0.1` | |
+
+The catch reference stays `MSY` when SS3 estimated MSY. The basis is stored in `attr(stk, "basis")`:
+
+```{r stat-basis}
+str(attr(ss3stk(ss3sma), "basis")[c("B", "F", "C", "bbasis", "fbasis")])
+str(attr(ss3stk(ss3simple), "basis")[c("B", "F", "C", "bbasis", "fbasis")])
+```
+
+## Key quantities as FLQuants
+
+```{r stat-flqs}
+q <- ss3_flqs(stk, c("SSB", "F", "B/Btgt", "F/Ftgt"))
+names(q)
+```

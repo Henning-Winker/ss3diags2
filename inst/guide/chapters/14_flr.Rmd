@@ -1,0 +1,24 @@
+# FLR outputs
+
+| Output | Function | Class |
+|---|---|---|
+| catch, discards by fleet | `ss3_catch()`, `ss3_discards()` | `FLQuants` |
+| indices | `ss3_indices()` | `FLIndices` (`FLIndexBiomass`) |
+| length, age compositions | `ss3_lencomp()`, `ss3_agecomp()` | `FLQuants` |
+| OSA / Pearson residuals | `ss3_resid()` | `FLQuants` |
+| life history | `ss3_lhpar()` | `FLPar` (unit by sex) |
+| selectivity, retention | `ss3_sel()` | `FLQuants` |
+| F-at-age by fleet | `ss3_fa()` | `FLQuants` (age, year, unit, season, area) |
+| partial F | `ss3_partialF()` | `FLQuants` (total F as attribute) |
+| stock by area | `ss3_byarea()`; `ss3stk(area = TRUE)` | `FLQuants`; `FLStocks` |
+| stock status | `ss3stk()` | `FLStockR` (`@refpts`) |
+| retrospective peels | `ss3_retro()` | `FLStocks` |
+| key quantities | `ss3_flqs()` | `FLQuants` |
+
+`long2flq()`, `long2flqs()` and `flqs2long()` convert between the long tables and FLR objects. The stock objects
+work with FLRef and ggplotFL:
+
+```{r flr, eval = requireNamespace("ggplotFL", quietly = TRUE)}
+library(ggplotFL)
+plot(ss3_flqs(ss3stk(ss3sma), c("SSB", "F", "Catch")))
+```

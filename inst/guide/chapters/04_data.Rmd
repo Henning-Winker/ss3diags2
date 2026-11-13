@@ -1,0 +1,57 @@
+# Data: observations as FLR objects
+
+The extraction functions return the observations of an SS3 run, and with `what = "exp"` the model fit, as FLR
+objects. Each fleet is one element of an `FLQuants`; the SS3 structure goes into the FLQuant dimensions:
+
+| SS3 | FLQuant dimension | note |
+|---|---|---|
+| length or age bin | `len` / `age` | data bins; empty bins of sampled compositions are filled with 0 |
+| year | `year` | |
+| sex (data `Sexes` 1-3) | `unit` | `F`, `M`; combined-sex data stay `unique` |
+| season | `season` | seasons stay seasons |
+| area | `area` | the area of the fleet |
+| partition 0/1/2 | fleet name | `fleet.all`, `fleet.discard`, `fleet.retained` |
+
+```{r data-extract}
+ct  <- ss3_catch(ss3simple)                  # FLQuants: catch by fleet
+idx <- ss3_indices(ss3simple)                # FLIndices of FLIndexBiomass: index, index.var (input SE)
+lfd <- ss3_lencomp(ss3simple)                # FLQuants: length compositions by fleet, sex as unit
+afd <- ss3_agecomp(ss3simple)
+lfd
+```
+
+Every extractor also returns the long `data.table` (`long = TRUE`), with the FLQuant dimension columns:
+
+```{r data-long}
+head(ss3_lencomp(ss3simple, long = TRUE), 3)
+```
+
+## Data overview
+
+```{r data-plot, fig.height = 4}
+ss3plot_data(catch = ct, indices = idx, lencomp = lfd, agecomp = afd)
+```
+
+## Compositions
+
+`ss3plot_comps()` shows compositions pooled over years, by year, as bubbles (only the years with data) or as mean
+length or age over time, split by `unit`, `season` or `area` (`by = `), for a subset of `fleets` and `units`:
+
+```{r data-comps, fig.height = 5}
+ss3plot_comps(afd, type = "bubble", by = "unit")
+ss3plot_comps(lfd, type = "mean", by = "unit")
+```
+
+## Inputs for JABBA3 and FLicc
+
+`ss2jabba3()` returns catch in weight by fleet and annual indices with input SEs, the inputs of JABBA3;
+`ss2flicc()` returns length compositions by gear on common bins, with `ss3_lhpar()`, the inputs of FLicc.
+
+```{r data-models}
+j <- ss2jabba3(ss3simple)
+names(j)
+```
+
+> **Check 1: data.** Look for contrast in the indices (a one-way trip gives little information on productivity),
+> conflicting trends between indices, and compositions with few samples or gaps. `ss3plot_nsamp()` shows the input
+> and effective sample sizes.

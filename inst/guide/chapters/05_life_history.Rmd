@@ -1,0 +1,18 @@
+# Life history and growth
+
+`ss3_lhpar()` returns an `FLPar` of growth, maturity, length-weight and natural mortality, with a `unit`
+dimension when the model has two sexes; this is the `lhpar` of FLicc. Growth other than von Bertalanffy is
+approximated by a von Bertalanffy curve fitted to the SS3 growth at the end year.
+
+```{r lh}
+lh <- ss3_lhpar(ss3simple)
+lh
+ss3plot_growth(ss3simple, lfd = lfd)
+```
+
+Ridge plots show the length compositions by year, observed (filled) and expected (lines), with the growth curves
+by sex tracking cohorts through the bins:
+
+```{r lh-ridges, fig.height = 7}
+ss3plot_ridges(lfd, fit = ss3_lencomp(ss3simple, what = "exp"), type = "both", fleets = "SURVEY1", lhpar = lh)
+```

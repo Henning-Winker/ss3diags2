@@ -1,0 +1,13 @@
+# Check 2: model fits
+
+```{r fits-idx, fig.height = 4}
+ss3plot_indices(idx, fit = ss3_indices(ss3simple, what = "exp"))
+```
+
+```{r fits-comps, fig.height = 5}
+ss3plot_comps(lfd, fit = ss3_lencomp(ss3simple, what = "exp"), by = "unit")
+```
+
+> **Check 2: fits.** The fitted index should follow the trend of each index; systematic misfits at the start or
+> end of a series, or an index fitted only where it agrees with another, point to conflicts between data
+> sources. Pooled compositions should be fitted without systematic misfit of the small or large bins.

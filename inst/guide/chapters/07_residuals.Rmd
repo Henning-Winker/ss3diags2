@@ -1,0 +1,45 @@
+# Check 3: residual diagnostics
+
+## One-step-ahead residuals for compositions
+
+Pearson residuals of multinomial compositions are correlated across bins (they must add up), so their patterns can
+mislead. **One-step-ahead (OSA) residuals** (Trijoulet et al. 2023) condition each bin on the bins before it; under
+a correct model they are independent N(0, 1). `ss3_resid()` computes them for the SS3 likelihood: multinomial with
+the adjusted sample size, or Dirichlet-multinomial with the precision implied by the SS3 effective sample size.
+Growth curves by sex (`lhpar`) track cohorts.
+
+```{r res-osa, fig.height = 5}
+rl <- ss3_resid(ss3simple)                   # length; ss3_resid(ss3simple, "age") for ages
+ss3plot_resid(rl, lhpar = lh)
+ss3plot_resid(rl, type = "qq")
+```
+
+Pacific hake uses the Dirichlet-multinomial for its age compositions:
+
+```{r res-phk, fig.height = 4}
+data(ss3phk)
+ss3plot_resid(ss3_resid(ss3phk, "age"), cohorts = FALSE)
+```
+
+> **Reading OSA residuals.** Bins are conditioned on the smaller bins: too few small fish gives negative residuals
+> at small sizes and positive residuals at larger sizes. Diagonal patterns that follow the growth curves are year
+> classes the model does not fit.
+
+## Runs tests and joint residuals
+
+The runs test checks the log residuals of each index (or the mean length or age) for randomness; the 3-sigma
+limits come from the average moving range (Carvalho et al. 2021). North Atlantic shortfin mako:
+
+```{r res-runs, fig.height = 5}
+data(ss3sma)
+ss3_runs(ss3sma)
+ss3plot_runs(ss3sma)
+```
+
+```{r res-jres, fig.height = 4}
+ss3plot_jres(ss3sma)
+```
+
+> **Check 3: residuals.** Red flags: a failed runs test (p < 0.05), residuals outside the 3-sigma limits, trends
+> in the joint residuals (lowess line), RMSE above 30%. Actions: look for conflicts between indices, changes in
+> catchability, selectivity or growth; never drop data only to pass a test.

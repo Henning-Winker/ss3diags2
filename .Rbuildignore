@@ -3,3 +3,4 @@
 ^DESIGN\.md$
 ^\.github$
 ^vignettes/.*\.html$
+^inst/guide/.*\.html$

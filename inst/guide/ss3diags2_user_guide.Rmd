@@ -1,0 +1,82 @@
+---
+title: "ss3diags2 user guide"
+subtitle: "Diagnostics, stock status and fleet impacts for Stock Synthesis, with FLR inputs and outputs"
+author: "Henning Winker, Massimiliano Cardinale, Laurence T. Kell, Iago Mosqueira"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+    math_method: mathml
+    highlight: tango
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.align = "center",
+                      fig.width = 7, fig.height = 4.5, message = FALSE, warning = FALSE)
+```
+
+```{css, echo = FALSE}
+/* notes in block quotes: same size as the text, muted */
+blockquote {
+  font-size: 0.9em;
+  color: #555;
+  background: none;
+  margin: 0.5em 0;
+  padding: 0.3em 0.9em;
+  border-left: 3px solid #ddd;
+}
+blockquote p { margin-bottom: 0.4em; }
+```
+
+<!-- The chapters are in chapters/; edit them there. -->
+
+```{r child = "chapters/01_introduction.Rmd"}
+```
+
+```{r child = "chapters/02_installation.Rmd"}
+```
+
+```{r child = "chapters/03_quick_start.Rmd"}
+```
+
+```{r child = "chapters/04_data.Rmd"}
+```
+
+```{r child = "chapters/05_life_history.Rmd"}
+```
+
+```{r child = "chapters/06_fits.Rmd"}
+```
+
+```{r child = "chapters/07_residuals.Rmd"}
+```
+
+```{r child = "chapters/08_retro.Rmd"}
+```
+
+```{r child = "chapters/09_hindcast.Rmd"}
+```
+
+```{r child = "chapters/10_status.Rmd"}
+```
+
+```{r child = "chapters/11_kobe.Rmd"}
+```
+
+```{r child = "chapters/12_production.Rmd"}
+```
+
+```{r child = "chapters/13_structured.Rmd"}
+```
+
+```{r child = "chapters/14_flr.Rmd"}
+```
+
+```{r child = "chapters/15_summary.Rmd"}
+```
+
+```{r child = "chapters/16_references.Rmd"}
+```

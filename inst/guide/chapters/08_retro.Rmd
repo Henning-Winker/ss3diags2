@@ -1,0 +1,20 @@
+# Check 4: retrospective analysis
+
+Retrospective runs refit the model with the last years of data removed (peels; `r4ss::retro()`), read with
+`r4ss::SSgetoutput()` (and optionally `r4ss::SSsummarize()`). `ss3_retro()` turns them into `FLStocks` (one
+`FLStockR` per peel); `ss3_mohn()` gives Mohn's rho and the forecast rho (the one-year-ahead projection of each peel
+against the reference run), as `ss3diags::SShcbias()`.
+
+```{r retro}
+data(retro.sma)
+rt <- ss3_retro(retro.sma)
+ss3_mohn(rt, c("SSB", "F"))
+```
+
+```{r retro-plot, fig.height = 4.5, fig.width = 9}
+ss3plot_retro(rt, type = c("SSB", "F"))
+```
+
+> **Check 4: retrospective.** Mohn's rho outside -0.15 to 0.20 (long-lived species; -0.22 to 0.30 for
+> short-lived species; Hurtado-Ferro et al. 2015) is a red flag, as are forecasts outside the confidence interval
+> of the reference run. Actions: look at recent data, time-varying catchability or selectivity.

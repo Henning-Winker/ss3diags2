@@ -1,0 +1,23 @@
+# Check 5: hindcast cross-validation
+
+The hindcast compares the observations of the peeled years with their one-year-ahead predictions from the
+retrospective runs (Kell et al. 2016). The mean absolute scaled error (MASE) scales the prediction error by that
+of a naive random-walk forecast: MASE < 1 means the model predicts better than the naive forecast. `ss3_hindcast()`
+does indices, mean length and mean age, as `ss3diags::SSmase()`.
+
+```{r hc}
+data(retro.phk)
+hc <- ss3_hindcast(retro.phk)
+hc$mase
+```
+
+```{r hc-plot, fig.height = 4}
+ss3plot_hcxval(hc)
+```
+
+```{r hc-sma, fig.height = 5}
+ss3plot_hcxval(ss3_hindcast(retro.sma))
+```
+
+> **Check 5: prediction skill.** MASE > 1 for an index means the model has no prediction skill for it. With
+> indices that vary little the naive error is small and `MAE.base.adj` (default 0.1) limits the scaling.

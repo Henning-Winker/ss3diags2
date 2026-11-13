@@ -1,0 +1,39 @@
+# Quick start
+
+An SS3 run is read with `r4ss::SS_output()`; the report list is the input of ss3diags2. The simulated
+`ss3simple` model ships with the package (its SS3 files are in `system.file("extdata", "simple_small",
+package = "r4ss")`):
+
+```{r qs-read, eval = FALSE}
+ss3rep <- r4ss::SS_output("path/to/run", verbose = FALSE, printstats = FALSE)
+```
+
+```{r qs-data}
+data(ss3simple)
+ss3_fleets(ss3simple)
+```
+
+## Quick output: `ss3plot()`
+
+`ss3plot()` is the one-page summary of an assessment, as the JABBA3 summary plot:
+
+- **top row:** SSB (with the observed indices scaled to SSB as points), F and catch, with the reference points
+  (unfished in blue, targets in green, Bpa orange, Blim red);
+- **middle row:** SSB and F relative to their targets, and the Kobe plot with the uncertainty of the terminal year;
+- **bottom row:** the stock-recruitment curve, the recruitment deviations with 95% intervals and the production
+  phase plot (catch against SSB on the Kobe colours, with the equilibrium yield curve).
+
+```{r qs-plot, fig.height = 9, fig.width = 10}
+ss3plot(ss3simple, iters = 500)
+```
+
+Uncertainty comes from MVLN draws of the SS3 Hessian. The targets are named after the benchmark SS3 used
+(here `B40`: 40% of unfished SSB, with `Fmsy`; section [Stock status]).
+
+## Stock status as FLR
+
+```{r qs-stk}
+stk <- ss3stk(ss3simple)                     # FLStockR at the MLE, reference points in @refpts
+stk@refpts
+ss3plot_trj(stk)
+```

@@ -1,0 +1,108 @@
+# Season-, sex- and area-structured models
+
+The Stock Synthesis assessment of northern shrimp (*Pandalus borealis*) in Skagerrak and the Norwegian Deep
+(pra.27.3a4a, SS 3.30.22, 1970-2024) uses most of the structure SS3 offers: four seasons (spawning in season 1),
+two sexes with protandric hermaphroditism (born male, change to female), two areas (1: Skagerrak 3.a, 2: Norwegian
+Deep 4.a) with time-varying recruitment distribution, six area-specific fleets (Denmark, Norway, Sweden in each
+area) with retention and discards, and two surveys with sex-specific length compositions. F is reported as Fbar
+over ages 1-3 (Z - M) and the MSY benchmark is set to the F at B30%. The report and the SS3 input files ship with
+the package.
+
+```{r pra-data}
+dir <- system.file("extdata", "pra.27.3a4a", package = "ss3diags2")
+pra <- readRDS(file.path(dir, "pra.27.3a4a.rds"))
+ss3_fleets(pra)
+```
+
+## Observations by season, sex and area
+
+Because each fleet fishes in one area, the observations need no area split: the area is a property of the fleet.
+
+```{r pra-catch, fig.height = 6}
+ss3plot_catch(ss3_catch(pra), by = c("season", "area"))
+```
+
+```{r pra-comps, fig.height = 6}
+lfp <- ss3_lencomp(pra)
+ss3plot_comps(lfp, fit = ss3_lencomp(pra, what = "exp"), fleets = c("NORSURVEY3a", "NORSURVEY4a"), by = "unit")
+ss3plot_resid(ss3_resid(pra, fleets = c("NORSURVEY3a", "NORSURVEY4a")), lhpar = ss3_lhpar(pra))
+```
+
+## Selectivity, retention and the stock by area
+
+```{r pra-sel, fig.height = 6}
+ss3plot_sel(ss3_sel(pra), ret = ss3_sel(pra, "ret"))
+```
+
+```{r pra-byarea, fig.height = 6}
+ss3plot_byarea(ss3_byarea(pra))
+```
+
+## Summary and status
+
+The MSY benchmark is set to the F at B30%, so the targets are `B30` and `F30` and the catch reference is the yield
+at B30 (`Y30`):
+
+```{r pra-plot, fig.height = 9, fig.width = 10}
+ss3plot(pra, iters = 500, lag = 1)
+```
+
+## F-at-age, partial F and F by area
+
+`ss3_fa()` returns F-at-age by fleet with the full structure (age, year, unit, season, area); F-at-age is on an
+annual scale within each season, and `annual = TRUE` sums the seasons weighted by their duration.
+
+```{r pra-fa, fig.height = 5}
+fa <- ss3_fa(pra)
+ss3plot_fa(fa)
+```
+
+Partial F splits the reported F (Fbar 1-3) among fleets, gears or countries by their catch in numbers over the F
+ages, so it adds up to F:
+
+```{r pra-pf}
+countries <- list(Denmark = c("DK3a", "DK4a"), Norway = c("NOR3a", "NOR4a"), Sweden = c("SWE3a", "SWE4a"))
+ss3plot_partialF(ss3_partialF(pra, groups = countries))
+ss3plot_partialF(ss3_partialF(pra), type = "line")
+```
+
+> **Two notions of F by area.** The partial F by area (`groups = "area"`, `method = "catch"`) is each area's share
+> of the stock F and adds up to it. The F experienced by the fish in an area (`method = "fbar"`, the Fbar of the
+> fleets of that area) is the F of a stock by area; F's of different areas do not add up to the stock F when the
+> stock is spread over the areas.
+
+```{r pra-farea}
+ss3plot_partialF(ss3_partialF(pra, groups = "area", method = "fbar"))
+```
+
+## Stock by area
+
+`ss3stk(area = TRUE)` returns `FLStocks` with the stock and one `FLStockR` per area: SSB, recruitment and catch by
+area, and the F experienced in each area. Area reference points are approximations: B0 and R0 are the unfished
+values of the area, the B target is scaled by the area's share of B0 and the F target is that of the stock.
+
+```{r pra-area, fig.height = 6, fig.width = 9}
+sa <- ss3stk(pra, area = TRUE)
+ss3plot_trj(sa)
+```
+
+## Partial impact of fleets
+
+`ss3_impact()` follows Wang et al. (2009): SSB is projected without fishing and with the fleet groups added one by
+one, so the impact of a group is the SSB it removes, and all impacts add up to the dynamic B0 minus SSB. It runs
+on the SS3 report without re-running SS3: annual total mortality from the SS3 numbers at age (seasons, areas and
+sexes pooled), fishing mortality $Z - M$ split among fleets by their catch at age, the SS3 spawning output at age
+and recruitment deviations, and each scenario starting from the initial equilibrium under the initial F of its
+fleets. The run with all fleets reproduces the SS3 SSB and the run without fishing the SS3 dynamic B0:
+
+```{r pra-impact}
+imp <- ss3_impact(pra, groups = countries)
+imp
+ss3plot_impact(imp)
+ss3plot_impact(imp, type = "prop")
+```
+
+> **Approximations.** When fleets are removed, movement, sex change and the timing within the year stay at their
+> fitted values. The order in which the groups are added matters for the share of each group when the
+> stock-recruit relationship is not flat; `type = "remove"` gives the loss of SSB caused by each group with all
+> others fishing.

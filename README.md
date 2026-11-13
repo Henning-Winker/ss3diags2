@@ -20,8 +20,8 @@ remotes::install_github("Henning-Winker/ss3diags2")
   runs on it.
 - Northern shrimp pra.27.3a4a (SS 3.30.22): four seasons, protandric hermaphrodite (two sexes), two areas, six
   area-specific fleets with retention. Report and SS3 input files:
-  `readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))`; vignette
-  "Season-, sex- and area-structured models" (F-at-age, partial F, F by area, partial impact).
+  `readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))`; user guide section
+  "Season-, sex- and area-structured models" (F-at-age, partial F, F by area, stock by area, partial impact).
 - Cookbook examples (Carvalho et al. 2021, copied from ss3diags): North Atlantic shortfin mako (`ss3sma`,
   `retro.sma`, `aspm.sma`) and Pacific hake (`ss3phk`, `retro.phk`, `aspm.phk`), to replicate the paper.
 
@@ -86,12 +86,13 @@ sp$priors                    # c(median, log.sd, on) for JABBA3::jb3_priors(r = 
 See [DESIGN.md](DESIGN.md) for the data model, decisions and roadmap (life-history `FLPar`, MLE `FLStockR`, MVLN
 without dplyr, ggplot2 diagnostics, OSA residuals and posterior predictive checks).
 
-## Guide
+## User guide
 
-`vignette("ss3diags2_guide")` walks through the workflow and flags points that matter for advice, in particular the
-timing of F and SSB in Kobe plots (`ss3plot_kobe(lag = 1)`). `vignette("pandalus")` covers season-, sex- and
-area-structured models: F-at-age by fleet (`ss3_fa()`), partial F and F by area (`ss3_partialF()`), and the partial
-impact of fleets on SSB after Wang et al. (2009) (`ss3_impact()`).
+The user guide (`inst/guide/ss3diags2_user_guide.Rmd`, rendered with `inst/guide/updguide.R`) follows the JABBA3
+guide: Part I goes through the diagnostics with checks (data, fits, OSA residuals, runs tests, retrospective,
+hindcast; cookbook examples), Part II covers stock status and the reference point basis, the timing of F and SSB in
+Kobe plots (`ss3plot_kobe(lag = 1)`), the production function, season-, sex- and area-structured models (F by area,
+stock by area, partial impact of fleets after Wang et al. 2009) and the FLR outputs.
 
 ## Acknowledgements
 

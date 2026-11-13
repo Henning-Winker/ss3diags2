@@ -1,0 +1,41 @@
+# Installation
+
+## Required
+
+ss3diags2 needs `FLCore`, `data.table` and `ggplot2`. Install from r-universe (the same repositories provide the
+FLR packages):
+
+```{r install, eval = FALSE}
+repos <- c(
+  hw   = "https://henning-winker.r-universe.dev",
+  flr  = "https://flr.r-universe.dev",
+  CRAN = "https://cloud.r-project.org"
+)
+install.packages("ss3diags2", repos = repos)
+```
+
+Or the development version from GitHub:
+
+```{r install-github, eval = FALSE}
+remotes::install_github("Henning-Winker/ss3diags2")
+```
+
+## Optional
+
+| Package | Needed for | Install |
+|---|---|---|
+| `r4ss` | reading SS3 output (`SS_output()`, `SSgetoutput()`, `SSsummarize()`) | `install.packages("r4ss")` |
+| `mvtnorm`, `MASS` | MVLN draws (`ss3mvln()`, `output = "iters"`) and Kobe contours | `install.packages(c("mvtnorm", "MASS"))` |
+| `patchwork` | the summary page `ss3plot()` and side-by-side plots | `install.packages("patchwork")` |
+| `ss3diags` | comparing with the original functions | `remotes::install_github("jabbamodel/ss3diags")` |
+| `JABBA3`, `FLicc`, `FLRef` | the models fed by the extracted inputs | see the packages |
+
+## Check the installation
+
+```{r load}
+library(ss3diags2)
+library(ggplot2)
+packageVersion("ss3diags2")
+opt <- c("r4ss", "mvtnorm", "MASS", "patchwork", "ss3diags")
+data.frame(package = opt, installed = vapply(opt, requireNamespace, logical(1), quietly = TRUE), row.names = NULL)
+```

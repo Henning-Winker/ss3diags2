@@ -1,0 +1,50 @@
+# ss3diags2: Stock Synthesis diagnostics in FLR and ggplot2
+
+ss3diags2 is the successor of ss3diags (Winker et al.; Carvalho et al. 2021). It reads the output of Stock
+Synthesis (SS3; Methot and Wetzel 2013) as returned by `r4ss::SS_output()` and provides:
+
+- **Observations as FLR objects.** Catch, discards and length and age compositions as `FLQuants` by fleet, indices
+  as `FLIndices`, life-history parameters as `FLPar`, all with the SS3 structure in the FLQuant dimensions
+  (sex as `unit`, `season`, `area`). The same objects are the inputs of JABBA3 and FLicc.
+- **Residual diagnostics.** One-step-ahead (OSA) residuals for compositions (Trijoulet et al. 2023), runs tests,
+  joint residual plots, retrospective analysis (Mohn's rho) and hindcast cross-validation (MASE), as in the
+  diagnostics cookbook (Carvalho et al. 2021).
+- **Stock status with uncertainty.** `FLStockR` objects with reference points, maximum likelihood estimates or
+  draws from a multivariate lognormal (MVLN) approximation of the SS3 Hessian (Kell et al. 2023; Walter and Winker
+  2020), trajectories, Kobe plots and the production function.
+- **Fishing mortality and impacts.** F-at-age by fleet, partial F by fleet, gear or area, F and stock by area, and
+  the partial impact of fleets on the spawning stock (Wang et al. 2009), from the SS3 report without re-running
+  SS3.
+- **data.table and ggplot2.** Long tables with FLQuant dimension columns (`len`/`age`, `year`, `unit`, `season`,
+  `area`, `iter`, `data`) that convert directly to FLR; no dplyr.
+
+How ss3diags functions map to ss3diags2:
+
+| ss3diags | ss3diags2 |
+|---|---|
+| `SSplotRunstest()`, `SSrunstest()` | `ss3_runs()`, `ss3plot_runs()` (indices, mean length, mean age) |
+| `SSplotJABBAres()`, `SSrmse()` | `ss3plot_jres()` |
+| `SSplotRetro()`, `SShcbias()` | `ss3_retro()`, `ss3_mohn()`, `ss3plot_retro()` |
+| `SSplotHCxval()`, `SSmase()` | `ss3_hindcast()`, `ss3plot_hcxval()` |
+| `SSdeltaMVLN()`, `SSplotKobe()` | `ss3mvln()`, `ss3stk()`, `ss3plot_trj()`, `ss3plot_kobe()`, `ss3plot()` |
+| `SSsettingsBratioF()` | reference point basis in `ss3stk()` (same logic, benchmark labels) |
+| `SSplot_eqcurves()` | `ss3_eqcurve()`, `ss3_spm()`, `ss3plot_production()` |
+| `SSgetComps()` | `ss3_lencomp()`, `ss3_agecomp()` |
+| (Pearson residuals in r4ss) | `ss3_resid()` (OSA), `ss3plot_resid()` |
+
+## About this guide
+
+**Part I** (sections 3-9) goes through the diagnostics of an assessment, from the data to the prediction skill,
+with **checks** at each step (what to look at, what is a red flag, what to do about it), following the
+diagnostics cookbook. **Part II** (sections 10-14) covers stock status and its uncertainty, the timing of F and
+SSB in Kobe plots, the production function, season-, sex- and area-structured models (F by area, stock by area,
+partial impact of fleets) and the FLR outputs. Section 15 summarises the checks and the functions.
+
+The examples ship with the package:
+
+| Data | Model | Used for |
+|---|---|---|
+| `ss3simple` | simulated two-sex model, one fishery and two surveys (r4ss "simple_small"; the example of the PIFSC ss3diags) | quick start, data, residuals |
+| `ss3sma`, `retro.sma`, `aspm.sma` | North Atlantic shortfin mako (cookbook) | runs tests, retrospective, status, Kobe |
+| `ss3phk`, `retro.phk`, `aspm.phk` | Pacific hake (cookbook) | Dirichlet-multinomial OSA residuals, hindcast |
+| `pra.27.3a4a.rds` | northern shrimp, four seasons, hermaphrodite, two areas, six area-specific fleets | structured models, F by area, impact |
