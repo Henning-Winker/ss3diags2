@@ -24,6 +24,6 @@ test_that("diagnostic plots build", {
   expect_silent(ggplot2::ggplot_build(ss3plot_runs(e$ss3phk)))
   p <- ss3plot_jres(e$ss3phk); expect_silent(suppressWarnings(ggplot2::ggplot_build(p)))
   expect_true("Combined" %in% attr(p, "rmse")$index)
-  data(ss3ank, package = "ss3diags2", envir = environment())
-  expect_silent(ggplot2::ggplot_build(ss3plot_runs(ss3ank)))
+  pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+  expect_silent(ggplot2::ggplot_build(ss3plot_runs(pra)))
 })

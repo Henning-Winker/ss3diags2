@@ -67,9 +67,9 @@
 #'   without these units are dropped (default: all)
 #' @return ggplot
 #' @examples
-#' data(ss3ank)
-#' r <- ss3_resid(ss3ank)
-#' ss3plot_resid(r, lhpar = ss3_lhpar(ss3ank))
+#' data(ss3simple)
+#' r <- ss3_resid(ss3simple)
+#' ss3plot_resid(r, lhpar = ss3_lhpar(ss3simple))
 #' ss3plot_resid(r, type = "len")
 #' ss3plot_resid(r, type = "qq")
 #' @export

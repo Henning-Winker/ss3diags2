@@ -56,9 +56,9 @@ residuals at small lengths and positive ones at larger lengths (the conditional 
 so read patterns along length as conditional, not as a direct excess or deficit of large fish.
 }
 \examples{
-data(ss3ank)
-r <- ss3_resid(ss3ank)
-ss3plot_resid(r, lhpar = ss3_lhpar(ss3ank))
+data(ss3simple)
+r <- ss3_resid(ss3simple)
+ss3plot_resid(r, lhpar = ss3_lhpar(ss3simple))
 ss3plot_resid(r, type = "len")
 ss3plot_resid(r, type = "qq")
 }

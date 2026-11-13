@@ -23,8 +23,8 @@ iterations where the stock has them), for plotting with \code{ggplotFL} (\code{p
 iteration-specific reference points for the joint MVLN.
 }
 \examples{
-data(ss3ank)
-ss3_flqs(ss3stk(ss3ank, btgt = 0.4), c("SSB", "F", "B/Btgt"))
+data(ss3simple)
+ss3_flqs(ss3stk(ss3simple), c("SSB", "F", "B/Btgt"))
 \dontrun{
 data(natl.sma, package = "ss3diags")
 ggplotFL::plot(ss3_flqs(ss3sma, output = "iters"))

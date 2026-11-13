@@ -22,16 +22,14 @@ remotes::install_github("Henning-Winker/ss3diags2")
   area-specific fleets with retention. Report and SS3 input files:
   `readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))`; vignette
   "Season-, sex- and area-structured models" (F-at-age, partial F, F by area, partial impact).
-- `ss3ank`: black anglerfish in ICES 7 and 8abd (two sexes, one season, two fleets with discard/retained length
-  compositions, two surveys), with the SS3 input files in `system.file("extdata", "ank.27.78abd", package = "ss3diags2")`.
-
-Some examples below also use the `ss3diags` data.
+- Cookbook examples (Carvalho et al. 2021, copied from ss3diags): North Atlantic shortfin mako (`ss3sma`,
+  `retro.sma`, `aspm.sma`) and Pacific hake (`ss3phk`, `retro.phk`, `aspm.phk`), to replicate the paper.
 
 ## Observations from an SS3 report
 
 ```r
 library(ss3diags2)
-data(natl.sma, package = "ss3diags")   # ss3sma: r4ss::SS_output() of ICCAT N Atlantic shortfin mako
+data(ss3sma)                          # r4ss::SS_output() of ICCAT N Atlantic shortfin mako (cookbook)
 
 ss3_fleets(ss3sma)                      # fleet table: type, area, units, data available
 
@@ -39,7 +37,7 @@ catch <- ss3_catch(ss3sma)              # FLQuants by fleet
 idx   <- ss3_indices(ss3sma)            # FLIndices of FLIndexBiomass (index, index.var, index.q, timing)
 lfd   <- ss3_lencomp(ss3sma)            # FLQuants by fleet: len x year x unit (sex) x season x area
 
-data(pac.hke, package = "ss3diags")
+data(ss3phk); data(retro.phk)
 afd   <- ss3_agecomp(ss3phk, scale = "prop")
 
 # every extractor can return the long table behind the FLR object
@@ -79,7 +77,7 @@ ss3plot_production(stk, type = "phase")                  # or "dyn"; Pella-Tomli
 ## Production function and JABBA3 priors
 
 ```r
-data(pac.hke, package = "ss3diags")
+data(ss3phk); data(retro.phk)
 sp <- ss3_spm(ss3phk)        # Pella-Tomlinson fit to the SS3 equilibrium curve, checked against SS3 MSY, Bmsy, B0
 sp$pars                      # r, K, m, MSY, Bmsy, BmsyK, Hmsy
 sp$priors                    # c(median, log.sd, on) for JABBA3::jb3_priors(r = , K = , m = )

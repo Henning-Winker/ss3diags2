@@ -36,9 +36,9 @@
 #' @param maxage maximum age shown
 #' @return ggplot
 #' @examples
-#' data(ss3ank)
-#' ss3plot_growth(ss3ank, lfd = ss3_lencomp(ss3ank))
-#' ss3plot_growth(ss3_lhpar(ss3ank))
+#' data(ss3simple)
+#' ss3plot_growth(ss3simple, lfd = ss3_lencomp(ss3simple))
+#' ss3plot_growth(ss3_lhpar(ss3simple))
 #' @export
 ss3plot_growth <- function(x, lhpar = NULL, lfd = NULL, maxage = NULL){
   d <- .growth_curves(x, maxage)
@@ -89,10 +89,10 @@ ss3plot_growth <- function(x, lhpar = NULL, lfd = NULL, maxage = NULL){
 #'   without these units are dropped (default: all)
 #' @return ggplot
 #' @examples
-#' data(ss3ank)
-#' lfd <- ss3_lencomp(ss3ank)["FR_IE_IBTS"]
-#' ss3plot_ridges(lfd, fit = ss3_lencomp(ss3ank, what = "exp")["FR_IE_IBTS"], type = "both",
-#'                lhpar = ss3_lhpar(ss3ank))
+#' data(ss3simple)
+#' lfd <- ss3_lencomp(ss3simple)
+#' ss3plot_ridges(lfd, fit = ss3_lencomp(ss3simple, what = "exp"), type = "both", fleets = "SURVEY1",
+#'                lhpar = ss3_lhpar(ss3simple))
 #' @export
 ss3plot_ridges <- function(comps, fit = NULL, type = c("obs", "exp", "both"), by = "unit", lhpar = NULL,
                            cohort_by = 2, years = NULL, scale = 0.9, ncol = NULL,

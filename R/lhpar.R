@@ -17,8 +17,8 @@
 #' @param year year of the (possibly time-varying) parameters (default: last year with parameters)
 #' @return FLPar (params x unit with two sexes)
 #' @examples
-#' data(ss3ank)
-#' ss3_lhpar(ss3ank)
+#' data(ss3simple)
+#' ss3_lhpar(ss3simple)
 #' @export
 ss3_lhpar <- function(ss3rep, year = NULL){
   gp <- as.data.table(ss3rep$Growth_Parameters)

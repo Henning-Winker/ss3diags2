@@ -80,7 +80,7 @@ ss3plot_retro <- function(x, type = c("SSB", "F"), fcast = TRUE, ci = 0.95, xmin
   if(!is(x, "FLStocks")) x <- ss3_retro(x)
   ey <- vapply(seq_along(x), function(i) attr(x[[i]], "endyr") %||% as.numeric(names(x)[i]), 0)
   rho <- ss3_mohn(x, type, ey)[peel == "Combined"]
-  lab <- stats::setNames(paste0(.ylab_quant(type), ": rho = ", sprintf("%.2f", rho$rho),
+  lab <- stats::setNames(paste0(.ylab_quant(type, attr(x[[1]], "basis")), ": rho = ", sprintf("%.2f", rho$rho),
                                 ifelse(fcast & is.finite(rho$fcrho), sprintf(" (%.2f)", rho$fcrho), "")), type)
   pl <- names(x)
   d <- rbindlist(lapply(seq_along(x), function(i) rbindlist(lapply(type, function(q){

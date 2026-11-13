@@ -22,6 +22,7 @@ and age compositions); Hessian available (CoVar reduced to the derived quantitie
 stock-recruitment. The SS3 input and output files are in \code{system.file("extdata", "simple_small", package = "r4ss")}.
 }
 \details{
+Further examples: the two cookbook models (\code{\link{ss3sma}}, \code{\link{ss3phk}}) with retrospective runs.
 A season-, sex- and area-structured example (northern shrimp pra.27.3a4a: four seasons, hermaphrodite, two areas,
 six area-specific fleets) is shipped as an rds file with its SS3 input files:
 \code{readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))}; see the

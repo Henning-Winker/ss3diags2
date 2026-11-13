@@ -53,8 +53,8 @@ fleet and unit (sex), season or area with data, as \code{FLicc::plot_growth_lfd(
 \code{lhpar} (length; diagonals for ages) to follow year classes through the compositions.
 }
 \examples{
-data(ss3ank)
-lfd <- ss3_lencomp(ss3ank)["FR_IE_IBTS"]
-ss3plot_ridges(lfd, fit = ss3_lencomp(ss3ank, what = "exp")["FR_IE_IBTS"], type = "both",
-               lhpar = ss3_lhpar(ss3ank))
+data(ss3simple)
+lfd <- ss3_lencomp(ss3simple)
+ss3plot_ridges(lfd, fit = ss3_lencomp(ss3simple, what = "exp"), type = "both", fleets = "SURVEY1",
+               lhpar = ss3_lhpar(ss3simple))
 }

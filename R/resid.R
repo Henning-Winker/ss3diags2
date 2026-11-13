@@ -53,8 +53,8 @@
 #'   season x area), or a data.table with the FLQuant dimension columns, \code{data} (residual), \code{obs}, \code{exp}
 #'   (counts), \code{n}, \code{a0}, \code{fleet}, \code{name}, \code{partname}; attribute \code{type}
 #' @examples
-#' data(ss3ank)
-#' r <- ss3_resid(ss3ank)
+#' data(ss3simple)
+#' r <- ss3_resid(ss3simple)
 #' names(r)
 #' @export
 ss3_resid <- function(ss3rep, quant = c("len", "age"), type = c("osa", "pearson"), fleets = NULL, seed = 1,

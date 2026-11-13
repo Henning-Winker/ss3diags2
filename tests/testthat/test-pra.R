@@ -79,3 +79,27 @@ test_that("ss3plot summary page", {
   expect_s3_class(p, "patchwork")
   for(i in 1:9) expect_silent(ggplot2::ggplot_build(p[[i]]))
 })
+
+test_that("discards and kill >= retained; time-series fallback without the Hessian", {
+  expect_true(length(ss3_discards(ss3pra)) > 0)
+  kb <- ss3_catch(ss3pra, what = "kill_bio", long = TRUE)
+  expect_true(all(kb$data >= ss3_catch(ss3pra, what = "ret_bio", long = TRUE)$data - 1e-6))
+  r <- ss3pra; r$CoVar <- NULL
+  expect_error(ss3stk(r, output = "iters", iters = 10), "CoVar")
+  stk <- suppressMessages(ss3stk(r, source = "timeseries"))
+  ts <- data.table::as.data.table(r$timeseries)[Yr == 2020 & Seas == 1, sum(SpawnBio)]
+  expect_equal(c(FLCore::ssb(stk)[, "2020"]), ts, tolerance = 1e-6)
+})
+
+test_that("stock by area", {
+  s <- ss3stk(ss3pra, area = TRUE)
+  expect_equal(names(s), c("stock", "area 1", "area 2"))
+  y <- "2020"
+  expect_equal(c(FLCore::ssb(s[["area 1"]])[, y]) + c(FLCore::ssb(s[["area 2"]])[, y]), c(FLCore::ssb(s$stock)[, y]),
+               tolerance = 1e-4)
+  expect_equal(c(FLCore::catch(s[["area 1"]])[, y]) + c(FLCore::catch(s[["area 2"]])[, y]),
+               c(FLCore::catch(s$stock)[, y]), tolerance = 1e-4)
+  fa <- ss3_partialF(ss3pra, groups = "area", method = "fbar")
+  expect_equal(c(FLCore::fbar(s[["area 2"]])), c(fa[["area 2"]]), tolerance = 1e-8)
+  expect_s3_class(ss3plot_trj(s), "ggplot")
+})

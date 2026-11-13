@@ -28,6 +28,6 @@ von Bertalanffy curve fitted to the SS3 mean length at age (\code{endgrowth}), w
 length-logistic leaves \code{L50} and \code{mat.slope} as NA.
 }
 \examples{
-data(ss3ank)
-ss3_lhpar(ss3ank)
+data(ss3simple)
+ss3_lhpar(ss3simple)
 }

@@ -102,8 +102,8 @@ ss3plot_jres(ss3simple)
 Retrospective analysis and hindcast cross-validation need a set of SS3 runs with peels, read with
 `r4ss::SSgetoutput()` and `r4ss::SSsummarize()`:
 
-```{r retro, eval = has_ss3diags}
-data(natl.sma, package = "ss3diags")         # retro.sma: shortfin mako peels
+```{r retro, eval = TRUE}
+data(retro.sma)                              # shortfin mako peels (cookbook)
 rt <- ss3_retro(retro.sma)
 ss3_mohn(rt, quants = c("SSB", "F"))
 ss3plot_retro(rt, type = c("SSB", "F"))

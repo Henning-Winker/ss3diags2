@@ -27,7 +27,7 @@ an \code{FLPar} (\code{\link{ss3_lhpar}()}, or FLicc \code{lhpar}) the von Berta
 at age interpolated between \code{CVmin} (at L1) and \code{CVmax} (at L2).
 }
 \examples{
-data(ss3ank)
-ss3plot_growth(ss3ank, lfd = ss3_lencomp(ss3ank))
-ss3plot_growth(ss3_lhpar(ss3ank))
+data(ss3simple)
+ss3plot_growth(ss3simple, lfd = ss3_lencomp(ss3simple))
+ss3plot_growth(ss3_lhpar(ss3simple))
 }

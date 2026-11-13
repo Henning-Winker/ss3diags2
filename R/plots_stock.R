@@ -64,9 +64,17 @@
   setnames(d, "data", "est"); d[, iter := NULL]; d
 }
 
-.ylab_quant <- function(type){
-  c(SSB = "SSB", F = "F", Rec = "Recruitment", Catch = "Catch", `B/Btgt` = "B/Btgt", `F/Ftgt` = "F/Ftgt",
-    `B/B0` = "B/B0", `Catch/MSY` = "Catch/MSY")[type]
+# panel labels; with a basis (attr "basis" of ss3stk) the targets are named by their benchmark (Bmsy, B40, Bspr40, ...)
+.ylab_quant <- function(type, basis = NULL){
+  B <- basis$B %||% "Btgt"; F <- basis$F %||% "Ftgt"; C <- basis$C %||% "MSY"
+  stats::setNames(c(SSB = "SSB", F = "F", Rec = "Recruitment", Catch = "Catch", `B/Btgt` = paste0("B/", B),
+                    `F/Ftgt` = paste0("F/", F), `B/B0` = "B/B0", `Catch/MSY` = paste0("Catch/", C))[type], type)
+}
+
+# display name of a reference point
+.rplab <- function(name, basis){
+  m <- c(Btgt = basis$B %||% "Btgt", Ftgt = basis$F %||% "Ftgt", MSY = basis$C %||% "MSY")
+  ifelse(name %in% names(m), m[name], name)
 }
 
 #' Plot stock trajectories
@@ -118,10 +126,11 @@ ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftg
     if(nrow(dr)) p <- p + ggplot2::geom_ribbon(data = dr, ggplot2::aes(ymin = lci, ymax = uci, fill = run), alpha = 0.15) +
       ggplot2::geom_ribbon(data = dr, ggplot2::aes(ymin = lo1, ymax = hi1, fill = run), alpha = 0.25)
     p <- p + ggplot2::geom_line(ggplot2::aes(colour = run), linewidth = 0.7) +
-      ggplot2::scale_colour_manual(values = cols) + ggplot2::scale_fill_manual(values = cols)
+      ggplot2::scale_colour_manual(values = cols) + ggplot2::scale_fill_manual(values = cols, guide = "none")
   }
+  bs <- attr(sl[[1]], "basis")
   p <- p + ggplot2::facet_wrap(~ quant, scales = "free_y", ncol = ncol,
-                               labeller = ggplot2::as_labeller(.ylab_quant(type))) +
+                               labeller = ggplot2::as_labeller(.ylab_quant(type, bs))) +
     ggplot2::expand_limits(y = 0) + ggplot2::labs(x = "Year", y = NULL) + scale_x_year() + theme_ss3()
   # forecast years (fwd = TRUE): dotted line after the assessment end year
   ey <- attr(sl[[1]], "endyr")
@@ -140,6 +149,7 @@ ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftg
                                 .rp(s1, "MSY"), .rp(s1, "R0")))
     refs <- if(nr == 1) rbind(rel, abs) else rel[name != "Btgt" | quant != "B/B0"]
     refs <- refs[quant %in% type & is.finite(value)]
+    refs[, label := .rplab(name, bs)]
     if(nrow(refs)){
       refs[, quant := factor(quant, levels = type)]
       lty <- c(B0 = 2, Btgt = 2, Ftgt = 2, MSY = 2, R0 = 3, Blim = 2, Bpa = 2)
@@ -149,7 +159,7 @@ ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftg
         rk <- refs[name == k]; ck <- .rpcols[[k]] %||% "grey30"
         p <- p + ggplot2::geom_hline(data = rk, ggplot2::aes(yintercept = value), colour = ck, linewidth = 0.6,
                                      linetype = lty[[k]] %||% 2) +
-          ggplot2::geom_text(data = rk, ggplot2::aes(x = min(d$year), y = value, label = name), hjust = 0,
+          ggplot2::geom_text(data = rk, ggplot2::aes(x = min(d$year), y = value, label = label), hjust = 0,
                              vjust = -0.4, size = label.size, colour = ck, inherit.aes = FALSE)
       }
     }

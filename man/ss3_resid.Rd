@@ -45,7 +45,7 @@ under a correct model; the last bin of each composition has no residual. Counts 
 residuals are those reported by SS3 (\code{Pearson}), correlated within a composition and best read as bubbles.
 }
 \examples{
-data(ss3ank)
-r <- ss3_resid(ss3ank)
+data(ss3simple)
+r <- ss3_resid(ss3simple)
 names(r)
 }

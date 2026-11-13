@@ -18,7 +18,8 @@ ss3stk(
   bpa = NULL,
   name = "ss3",
   source = c("auto", "derived", "timeseries"),
-  btgt = NULL
+  btgt = NULL,
+  area = FALSE
 )
 }
 \arguments{
@@ -43,6 +44,14 @@ ss3stk(
 \item{source}{\code{"auto"}, \code{"derived"} or \code{"timeseries"} (MLE only)}
 
 \item{btgt}{biomass target as a fraction of B0 for \code{source = "timeseries"} (default the SS3 \code{btarg})}
+
+\item{area}{for area-structured models: return \code{FLStocks} with the stock (as \code{output = "mle"}) and one
+FLStockR per area (MLE). By area, SSB is the spawning output at spawning time, recruitment and catch (expected
+catch of the fleets of the area) are summed over seasons, and F is the F experienced in the area: the Fbar over the
+F ages of the area's fleets (\code{ss3_partialF(groups = "area", method = "fbar")}; apical F if the F basis is not
+age-based). This F does not add up to the stock F. Area reference points are approximations: B0 and R0 are the
+unfished SSB and recruitment of the area, Btgt (and Blim, Bpa) are scaled by the area's share of B0, Ftgt is
+the stock Ftgt, and MSY is not defined.}
 }
 \value{
 FLStockR
@@ -66,8 +75,10 @@ With \code{rel = TRUE} the stock holds B/Btgt in place of SSB and F/Ftgt in plac
 \code{FLRef::ss2FLStockR(rel = TRUE)}).
 }
 \examples{
-data(ss3ank)
-stk <- ss3stk(ss3ank, btgt = 0.4)          # MLE, from the time series (run without hessian)
+data(ss3simple)
+stk <- ss3stk(ss3simple)                    # MLE
+sa <- ss3stk(readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2")),
+             area = TRUE)                   # FLStocks: stock and areas
 \dontrun{
 data(natl.sma, package = "ss3diags")
 stk  <- ss3stk(ss3sma)                      # MLE with SEs

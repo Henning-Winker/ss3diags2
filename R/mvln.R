@@ -17,7 +17,7 @@
   B0 <- pick(c("SSB_unfished", "SSB_Unfished"))
   Bl <- switch(as.character(b$bb), "2" = "SSB_MSY", "3" = "SSB_Btgt", NA_character_)
   list(B0 = B0, Btgt = if(is.na(Bl) || !Bl %in% hatlab) NA_character_ else Bl, Bmult = if(is.na(Bl)) b$bref else 1,
-       Ftgt = paste0(b$Fname, b$Fquant), MSY = pick(c("Dead_Catch_MSY", "Ret_Catch_MSY")),
+       Ftgt = paste0(b$Fname, b$Fquant), MSY = pick(c("Dead_Catch_MSY", "TotYield_MSY", "Ret_Catch_MSY")),
        R0 = pick(c("Recr_unfished", "Recr_Unfished", "Recr_Virgin")))
 }
 
@@ -149,7 +149,7 @@ ss3mvln <- function(ss3rep, mc = 1000, method = c("joint", "annual"), Fref = NUL
                                                 dimnames = list(params = c("Ftgt", "Btgt", "MSY", "B0", "R0"),
                                                                 iter = seq_len(mc)))) else NULL
   structure(list(kb = j$kb, mle = j$mle, refpts = rp(j$rp.mle), refpts.iter = rpi,
-                 basis = list(B = b$Bref, F = b$Fref, bbasis = b$bbasis, fbasis = b$fbasis, Btgtref = b$bref,
+                 basis = list(B = b$Bref, F = b$Fref, C = b$Cref, bbasis = b$bbasis, fbasis = b$fbasis, Btgtref = b$bref,
                               ssbunits = ss3rep$SpawnOutputUnits %||% "biomass"),
                  method = "joint"), class = "ss3mvln")
 }
@@ -220,7 +220,7 @@ print.ss3mvln <- function(x, ...){
   ftgt <- mle$F[1]/mle$harvest[1]; btgt <- mle$SSB[1]/mle$stock[1]
   refpts <- FLCore::FLPar(Ftgt = ftgt, Btgt = btgt, MSY = b$msy, B0 = b$b0, R0 = b$r0)
   structure(list(kb = kb[], mle = mle[], refpts = refpts,
-                 basis = list(B = b$Bref, F = b$Fref, bbasis = b$bbasis, fbasis = b$fbasis, Btgtref = b$bref,
+                 basis = list(B = b$Bref, F = b$Fref, C = b$Cref, bbasis = b$bbasis, fbasis = b$fbasis, Btgtref = b$bref,
                               ssbunits = ss3rep$SpawnOutputUnits %||% "biomass")),
             class = "ss3mvln")
 }
@@ -255,11 +255,20 @@ print.ss3mvln <- function(x, ...){
 #' @param name stock name
 #' @param source \code{"auto"}, \code{"derived"} or \code{"timeseries"} (MLE only)
 #' @param btgt biomass target as a fraction of B0 for \code{source = "timeseries"} (default the SS3 \code{btarg})
+#' @param area for area-structured models: return \code{FLStocks} with the stock (as \code{output = "mle"}) and one
+#'   FLStockR per area (MLE). By area, SSB is the spawning output at spawning time, recruitment and catch (expected
+#'   catch of the fleets of the area) are summed over seasons, and F is the F experienced in the area: the Fbar over the
+#'   F ages of the area's fleets (\code{ss3_partialF(groups = "area", method = "fbar")}; apical F if the F basis is not
+#'   age-based). This F does not add up to the stock F. Area reference points are approximations: B0 and R0 are the
+#'   unfished SSB and recruitment of the area, Btgt (and Blim, Bpa) are scaled by the area's share of B0, Ftgt is
+#'   the stock Ftgt, and MSY is not defined.
 #' @return FLStockR
 #' @author Henning Winker, Laurence T. Kell
 #' @examples
-#' data(ss3ank)
-#' stk <- ss3stk(ss3ank, btgt = 0.4)          # MLE, from the time series (run without hessian)
+#' data(ss3simple)
+#' stk <- ss3stk(ss3simple)                    # MLE
+#' sa <- ss3stk(readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2")),
+#'              area = TRUE)                   # FLStocks: stock and areas
 #' \dontrun{
 #' data(natl.sma, package = "ss3diags")
 #' stk  <- ss3stk(ss3sma)                      # MLE with SEs
@@ -270,8 +279,14 @@ print.ss3mvln <- function(x, ...){
 #' @export
 ss3stk <- function(x, output = NULL, iters = 1000, method = c("joint", "annual"), rel = FALSE, thin = 1, Fref = NULL,
                    fwd = FALSE, catch = c("Exp", "Obs", "kill_bio", "dead_bio", "ret_bio"), blim = NULL,
-                   bpa = NULL, name = "ss3", source = c("auto", "derived", "timeseries"), btgt = NULL){
+                   bpa = NULL, name = "ss3", source = c("auto", "derived", "timeseries"), btgt = NULL, area = FALSE){
   method <- match.arg(method); catch <- match.arg(catch); source <- match.arg(source)
+  if(area){
+    if(!.is_ss3rep(x)) stop("area = TRUE needs the SS3 report (r4ss::SS_output())", call. = FALSE)
+    tot <- ss3stk(x, output = "mle", Fref = Fref, catch = catch, blim = blim, bpa = bpa, name = "stock",
+                  source = source, btgt = btgt)
+    return(.ss3stk_area(x, tot, blim, bpa))
+  }
   if(catch == "dead_bio") catch <- "kill_bio"
   ss3rep <- NULL; se <- NULL
   if(inherits(x, "ss3mvln")){
@@ -289,7 +304,7 @@ ss3stk <- function(x, output = NULL, iters = 1000, method = c("joint", "annual")
         j <- .mvln_joint(ss3rep, Fref = Fref, mc = 0, forecast = fwd, catch = catch)
         mv <- list(mle = j$mle, refpts = FLCore::FLPar(Ftgt = j$rp.mle$Ftgt, Btgt = j$rp.mle$Btgt, MSY = j$rp.mle$MSY,
                                                        B0 = j$rp.mle$B0, R0 = j$rp.mle$R0),
-                   basis = list(B = j$b$Bref, F = j$b$Fref, bbasis = j$b$bbasis, fbasis = j$b$fbasis,
+                   basis = list(B = j$b$Bref, F = j$b$Fref, C = j$b$Cref, bbasis = j$b$bbasis, fbasis = j$b$fbasis,
                                 Btgtref = j$b$bref, ssbunits = ss3rep$SpawnOutputUnits %||% "biomass"), method = "mle")
         se <- .se_log(ss3rep, mv$mle$year)
       }
@@ -304,15 +319,7 @@ ss3stk <- function(x, output = NULL, iters = 1000, method = c("joint", "annual")
   }
   if(rel) d[, `:=`(SSB = stock, F = harvest)]
   mk <- function(v, u) long2flq(d[, .(age = "1", year, iter, data = get(v))], quant = "age", units = u)
-  R <- mk("Recr", "1000"); C <- mk("Catch", "t"); H <- mk("F", "f")
-  mat <- long2flq(d[, .(age = "1", year, iter, data = SSB/Recr)], quant = "age", units = "")
-  one <- FLCore::FLQuant(1, dimnames = dimnames(R)); zero <- one*0
-  stk <- FLCore::FLStock(name = name, stock.n = R, catch.n = C, landings.n = C, discards.n = zero, stock.wt = one,
-                         catch.wt = one, landings.wt = one, discards.wt = one, mat = mat, m = one*0.0001, harvest = H,
-                         m.spwn = zero, harvest.spwn = zero)
-  FLCore::units(FLCore::harvest(stk)) <- "f"
-  FLCore::catch(stk) <- FLCore::computeCatch(stk); FLCore::landings(stk) <- FLCore::computeLandings(stk)
-  FLCore::stock(stk) <- FLCore::computeStock(stk)
+  stk <- .stk_build(d, name)
   # reference points: with iterations for the joint MVLN, else at the MLE
   rp <- if(output == "iters" && !is.null(mv$refpts.iter)){
     r <- mv$refpts.iter
@@ -362,8 +369,8 @@ ss3stk <- function(x, output = NULL, iters = 1000, method = c("joint", "annual")
 #' @param ... passed to \code{ss3stk()} when \code{x} is not an FLStockR
 #' @return FLQuants
 #' @examples
-#' data(ss3ank)
-#' ss3_flqs(ss3stk(ss3ank, btgt = 0.4), c("SSB", "F", "B/Btgt"))
+#' data(ss3simple)
+#' ss3_flqs(ss3stk(ss3simple), c("SSB", "F", "B/Btgt"))
 #' \dontrun{
 #' data(natl.sma, package = "ss3diags")
 #' ggplotFL::plot(ss3_flqs(ss3sma, output = "iters"))
@@ -388,3 +395,56 @@ ss3_flqs <- function(x, quants = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftgt
 }
 
 utils::globalVariables(c("Ftgt", "Btgt", "MSY", "B0", "R0"))
+
+# simplified (age "1") FLStock from a data.table year, iter, SSB, Recr, Catch, F
+.stk_build <- function(d, name){
+  mk <- function(v, u) long2flq(d[, .(age = "1", year, iter, data = get(v))], quant = "age", units = u)
+  R <- mk("Recr", "1000"); C <- mk("Catch", "t"); H <- mk("F", "f")
+  mat <- long2flq(d[, .(age = "1", year, iter, data = SSB/Recr)], quant = "age", units = "")
+  one <- FLCore::FLQuant(1, dimnames = dimnames(R)); zero <- one*0
+  stk <- FLCore::FLStock(name = name, stock.n = R, catch.n = C, landings.n = C, discards.n = zero, stock.wt = one,
+                         catch.wt = one, landings.wt = one, discards.wt = one, mat = mat, m = one*0.0001, harvest = H,
+                         m.spwn = zero, harvest.spwn = zero)
+  FLCore::units(FLCore::harvest(stk)) <- "f"
+  FLCore::catch(stk) <- FLCore::computeCatch(stk); FLCore::landings(stk) <- FLCore::computeLandings(stk)
+  FLCore::stock(stk) <- FLCore::computeStock(stk)
+  stk
+}
+
+# stock by area: SSB, recruitment and catch by area, F experienced in each area (Fbar of the area fleets)
+.ss3stk_area <- function(ss3rep, tot, blim = NULL, bpa = NULL){
+  na <- ss3rep$nareas %||% 1
+  if(na < 2) stop("the model has one area", call. = FALSE)
+  yrs <- as.numeric(dimnames(tot)$year)
+  ba <- ss3_byarea(ss3rep, years = yrs)
+  long <- function(q, v) { x <- as.data.table(methods::as(ba[[q]], "data.frame"))[, .(year = as.numeric(as.character(year)), area = as.character(area), data)]
+                           setnames(x, "data", v); x }
+  d <- Reduce(function(a, b) merge(a, b, by = c("year", "area")), list(long("SSB", "SSB"), long("Rec", "Recr")))
+  fl <- ss3_fleets(ss3rep)
+  ct <- ss3_catch(ss3rep, what = "exp", long = TRUE)
+  ct <- merge(ct[, .(c = sum(data)), by = .(name, year)], fl[, .(name, area = as.character(area))], by = "name")
+  d <- merge(d, ct[, .(Catch = sum(c)), by = .(year, area)], by = c("year", "area"), all.x = TRUE)
+  meth <- if(is.null(.fbar_ages(ss3rep))) "apical" else "fbar"
+  fa <- ss3_partialF(ss3rep, groups = "area", method = meth, years = yrs, long = TRUE)
+  d <- merge(d, fa[, .(year, area = sub("area ", "", name), F = data)], by = c("year", "area"), all.x = TRUE)
+  d[is.na(Catch), Catch := 0][is.na(F), F := 0][, iter := 1L]
+  # area reference points: unfished SSB and recruitment by area (virgin), Btgt in proportion to B0, stock Ftgt
+  ts <- as.data.table(ss3rep$timeseries); sp <- ss3rep$spawnseas %||% 1
+  v <- ts[Era == "VIRG"]
+  b0a <- v[Seas == sp, .(b0 = sum(SpawnBio)), by = Area]; r0a <- v[, .(r0 = sum(Recruit_0)), by = Area]
+  rp0 <- tot@refpts; bt <- .rp(tot, "Btgt"); B0 <- .rp(tot, "B0"); R0 <- .rp(tot, "R0")
+  out <- lapply(sort(unique(d$area)), function(a){
+    sh <- b0a[Area == as.numeric(a)]$b0/sum(b0a$b0); shr <- r0a[Area == as.numeric(a)]$r0/sum(r0a$r0)
+    pv <- c(Ftgt = .rp(tot, "Ftgt"), Btgt = bt*sh, MSY = NA, B0 = B0*sh, R0 = R0*shr)
+    ex <- c(Blim = blim %||% NA, Bpa = bpa %||% NA); ex <- ex[is.finite(ex)]*bt*sh
+    pv <- c(pv, ex)
+    st <- FLCore::FLStockR(.stk_build(d[area == a], paste("area", a)),
+                           refpts = FLCore::FLPar(array(pv, dim = c(length(pv), 1),
+                                                        dimnames = list(params = names(pv), iter = 1))))
+    attr(st, "basis") <- c(attr(tot, "basis"), list(area = TRUE, Fmethod = meth))
+    attr(st, "endyr") <- attr(tot, "endyr")
+    st
+  })
+  names(out) <- paste("area", sort(unique(d$area)))
+  FLCore::FLStocks(c(list(stock = tot), out))
+}
