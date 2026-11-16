@@ -30,7 +30,8 @@
 
 #' Plot growth curves by sex
 #'
-#' Mean length at age with \eqn{\pm} 2 SD bands by sex (unit; r4ss colours, F red, M blue, combined green), with
+#' Mean length at age with \eqn{\pm} 2 SD bands by sex (unit; r4ss colours, F red, M blue, combined green; a
+#' two-sex model with the same growth for both sexes is drawn as one grey curve, "F = M"), with
 #' Linf (dashed) and length at 50\% maturity (dotted), and optionally the largest observed length by fleet, as
 #' \code{FLicc::plot_growth()}. From an SS3 report the SS3 mean length and SD at age (\code{endgrowth}) are used; from
 #' an \code{FLPar} (\code{\link{ss3_lhpar}()}, or FLicc \code{lhpar}) the von Bertalanffy curve with the CV of length
@@ -51,6 +52,14 @@ ss3plot_growth <- function(x, lhpar = NULL, lfd = NULL, maxage = NULL){
   d <- .growth_curves(x, maxage)
   lh <- lhpar %||% (if(.is_ss3rep(x)) ss3_lhpar(x) else x)
   if(!is.null(maxage)) d <- d[age <= maxage]
+  # two-sex model with the same growth for both sexes (e.g. male offsets of zero): one curve, labelled "F = M"
+  same <- FALSE
+  if(all(c("F", "M") %in% d$unit)){
+    a <- d[unit == "F"]; b <- d[unit == "M"]
+    same <- nrow(a) == nrow(b) && isTRUE(all.equal(a$L, b$L, tolerance = 1e-6)) &&
+      isTRUE(all.equal(a$sd, b$sd, tolerance = 1e-6))
+    if(same) d <- d[unit == "F"]
+  }
   units <- unique(d$unit)
   ref <- rbindlist(lapply(units, function(u){
     vb <- .vb_unit(lh, u)
@@ -58,6 +67,10 @@ ss3plot_growth <- function(x, lhpar = NULL, lfd = NULL, maxage = NULL){
     data.table(unit = u, what = c("Linf", "L50"), L = c(vb[["linf"]], if(u %in% c("F", "unique")) l50 else NA))
   }))[is.finite(L)]
   cols <- ss3unitcols[units]
+  if(same){
+    d[, unit := "F = M"]; ref[, unit := "F = M"]
+    cols <- c(`F = M` = "grey30")
+  }
   p <- ggplot2::ggplot(d, ggplot2::aes(age, L, colour = unit, fill = unit))
   if(any(is.finite(d$sd))) p <- p + ggplot2::geom_ribbon(ggplot2::aes(ymin = pmax(L - 2*sd, 0), ymax = L + 2*sd),
                                                         colour = NA, alpha = 0.15)
@@ -66,6 +79,7 @@ ss3plot_growth <- function(x, lhpar = NULL, lfd = NULL, maxage = NULL){
     ggplot2::scale_linetype_manual(values = c(Linf = 2, L50 = 3, `largest fish` = 1), name = NULL)
   if(!is.null(lfd)){
     ml <- .flq_long(lfd, 1, "lfd")[is.finite(data) & data > 0, .(L = max(as.numeric(as.character(quant)))), by = name]
+    ml <- ml[, .(name = paste(unique(name), collapse = ", ")), by = L]        # one label for fleets with the same max
     p <- p + ggplot2::geom_hline(data = ml, ggplot2::aes(yintercept = L), colour = "grey50", linewidth = 0.3) +
       ggplot2::annotate("text", x = 0, y = ml$L, label = paste("max", ml$name), hjust = 0, vjust = -0.3, size = 2.5,
                         colour = "grey40")

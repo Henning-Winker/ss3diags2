@@ -20,7 +20,8 @@ ss3plot_growth(x, lhpar = NULL, lfd = NULL, maxage = NULL)
 ggplot
 }
 \description{
-Mean length at age with \eqn{\pm} 2 SD bands by sex (unit; r4ss colours, F red, M blue, combined green), with
+Mean length at age with \eqn{\pm} 2 SD bands by sex (unit; r4ss colours, F red, M blue, combined green; a
+two-sex model with the same growth for both sexes is drawn as one green curve, "F = M"), with
 Linf (dashed) and length at 50\\% maturity (dotted), and optionally the largest observed length by fleet, as
 \code{FLicc::plot_growth()}. From an SS3 report the SS3 mean length and SD at age (\code{endgrowth}) are used; from
 an \code{FLPar} (\code{\link{ss3_lhpar}()}, or FLicc \code{lhpar}) the von Bertalanffy curve with the CV of length
