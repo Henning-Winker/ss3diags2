@@ -1,6 +1,10 @@
 # Render the user guide, write the commented R script and update the GitHub pages copy.
 # Run from the package root: source("inst/guide/updguide.R")
 
+# 0. The guide runs library(ss3diags2), i.e. the INSTALLED package: install the local source first, so the guide
+#    shows the functions and example data of this checkout (git pull first to get the latest version)
+install.packages(".", repos = NULL, type = "source", quiet = TRUE)
+
 # 1. R script of the guide: prose as comments, code as is (chunks with eval = FALSE inside if(FALSE))
 guide2script <- function(dir = "inst/guide/chapters", out = "inst/ss3diags2_user_guide.R", width = 100){
   wrap <- function(x, prefix = "# "){
