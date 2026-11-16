@@ -35,7 +35,8 @@ ss3stk(
 
 \item{thin}{keep every \code{thin}-th iteration}
 
-\item{Fref, fwd, catch}{passed to \code{\link{ss3mvln}()} (\code{fwd = TRUE}: add the SS3 forecast years)}
+\item{Fref, fwd, catch}{passed to \code{\link{ss3mvln}()} (\code{fwd = TRUE}: add the year after the end year, for
+SSB(y + 1) in Kobe plots with \code{lag = 1})}
 
 \item{blim, bpa}{optional Blim and Bpa as fractions of Btgt, added to the reference points}
 
@@ -82,7 +83,7 @@ sa <- ss3stk(readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", pa
 \dontrun{
 data(natl.sma, package = "ss3diags")
 stk  <- ss3stk(ss3sma)                      # MLE with SEs
-stkf <- ss3stk(ss3sma, output = "iters", fwd = TRUE)   # with forecast years
+stkf <- ss3stk(ss3sma, output = "iters", fwd = TRUE)   # with the year after the end year
 stki <- ss3stk(ss3sma, output = "iters")    # joint MVLN iterations
 stki <- ss3stk(ss3mvln(ss3sma, method = "annual"))
 }

@@ -94,6 +94,9 @@
 #' @param colour band colour for a single run
 #' @param ncol facet columns
 #' @param label.size size of the reference point labels
+#' @param fwd show the years after the assessment end year (default \code{FALSE}: a stock built with
+#'   \code{ss3stk(fwd = TRUE)} for the lagged Kobe plot is shown up to the end year; F and catch of the next year are
+#'   SS3 forecast values)
 #' @return ggplot
 #' @examples
 #' \dontrun{
@@ -104,8 +107,10 @@
 #' @export
 ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftgt"),
                         probs = c(0.05, 0.2, 0.5, 0.8, 0.95), refpts = TRUE, colours = NULL, colour = "grey45",
-                        ncol = NULL, label.size = 2.5){
-  sl <- .stklist(x); nr <- length(sl)
+                        ncol = NULL, label.size = 2.5, fwd = FALSE){
+  sl <- .stklist(x)
+  if(!fwd) sl <- lapply(sl, .trim_endyr)
+  nr <- length(sl)
   d <- rbindlist(lapply(names(sl), function(n) .stk_summary(sl[[n]], type, probs)[, run := n]), fill = TRUE)
   miss <- d[, .(ok = any(is.finite(est))), by = quant][ok == FALSE]$quant
   if(length(miss)){
@@ -374,3 +379,17 @@ ss3plot_production <- function(x, eq = NULL, type = c("phase", "dyn"), rel = FAL
 
 utils::globalVariables(c("est", "lci", "uci", "lo1", "hi1", "run", "i.data", "xmin", "xmax", "ymin", "ymax", "zone",
                          "lab", "B", "C", "SP", "b", "sp", "grp", "z", "x", "y", "yield", "what", "ok"))
+
+# drop the years after the assessment end year (SS3 forecast years) of a stock, keeping the ss3diags2 attributes
+.trim_endyr <- function(s){
+  ey <- attr(s, "endyr"); yrs <- as.numeric(dimnames(s)$year)
+  if(is.null(ey) || max(yrs) <= ey) return(s)
+  at <- attributes(s)[intersect(c("basis", "endyr", "mle", "se.log", "eqcurve", "status"), names(attributes(s)))]
+  w <- FLCore::window(s, end = ey)
+  if(!is.null(at$status)) at$status <- lapply(at$status, function(q) FLCore::window(q, end = ey))
+  if(!is.null(at$mle) && is.data.frame(at$mle) && "year" %in% names(at$mle)) at$mle <- at$mle[at$mle$year <= ey, ]
+  if(!is.null(at$se.log) && is.data.frame(at$se.log) && "year" %in% names(at$se.log))
+    at$se.log <- at$se.log[at$se.log$year <= ey, ]
+  for(n in names(at)) attr(w, n) <- at[[n]]
+  w
+}

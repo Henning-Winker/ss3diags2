@@ -28,7 +28,7 @@
   lab <- .col(hat, c("Label", "LABEL")); val <- .col(hat, c("Value", "VALUE")); sdv <- .col(hat, c("StdDev", "STDDEV"))
   allyrs <- suppressWarnings(as.numeric(sub("Bratio_", "", lab[grep("^Bratio_", lab)])))
   allyrs <- allyrs[!is.na(allyrs)]
-  yrs <- if(!is.null(years)) years[years %in% allyrs] else if(forecast) allyrs else allyrs[allyrs <= ss3rep$endyr]
+  yrs <- if(!is.null(years)) years[years %in% allyrs] else allyrs[allyrs <= ss3rep$endyr + forecast]
   rl <- .ref_labels(b, lab)
   refl <- unique(stats::na.omit(c(rl$Btgt, rl$B0, rl$Ftgt, rl$MSY, rl$R0)))
   labs <- c(paste0("SSB_", yrs), paste0("Recr_", yrs), paste0("F_", yrs), refl)
@@ -100,9 +100,10 @@
 #' @param mc number of draws
 #' @param method \code{"joint"} (default) or \code{"annual"}
 #' @param Fref reference for F: \code{"MSY"}, \code{"Btgt"}, \code{"SPR"} or \code{"F01"} (default from F_report_basis)
-#' @param years years (default up to the end year; \code{fwd = TRUE} adds the forecast years)
-#' @param fwd include the SS3 forecast years (e.g. SSB at the start of the year after the end year, needed for the
-#'   lagged Kobe plot)
+#' @param years years (default up to the end year; \code{fwd = TRUE} adds the year after the end year; give
+#'   \code{years} to include further SS3 forecast years)
+#' @param fwd add the year after the end year (SSB at its start, needed for the lagged Kobe plot; F and catch of that
+#'   year are SS3 forecast values)
 #' @param catch catch column of \code{ss3rep$catch} summed over fleets (\code{"Exp"} default, \code{"Obs"},
 #'   \code{"kill_bio"}/\code{"dead_bio"}, \code{"ret_bio"}); forecast catch from \code{ForeCatch_}
 #' @param seed random seed
@@ -176,7 +177,7 @@ print.ss3mvln <- function(x, ...){
   hv <- function(l) val[match(l, lab)]; hs <- function(l) sdv[match(l, lab)]
   allyrs <- suppressWarnings(as.numeric(sub("Bratio_", "", lab[grep("^Bratio_", lab)])))
   allyrs <- allyrs[!is.na(allyrs)][-1]
-  yrs <- if(!is.null(years)) years[years %in% allyrs] else if(forecast) allyrs else allyrs[allyrs <= ss3rep$endyr]
+  yrs <- if(!is.null(years)) years[years %in% allyrs] else allyrs[allyrs <= ss3rep$endyr + forecast]
   cv <- as.data.table(ss3rep$CoVar)
   cv[label.j == "_", label.j := label.i]
   fr <- paste0(b$Fname, b$Fquant)
@@ -251,7 +252,8 @@ print.ss3mvln <- function(x, ...){
 #' @param method MVLN method, \code{"joint"} (default) or \code{"annual"}
 #' @param rel relative quantities (B/Btgt, F/Ftgt) in the stock
 #' @param thin keep every \code{thin}-th iteration
-#' @param Fref,fwd,catch passed to \code{\link{ss3mvln}()} (\code{fwd = TRUE}: add the SS3 forecast years)
+#' @param Fref,fwd,catch passed to \code{\link{ss3mvln}()} (\code{fwd = TRUE}: add the year after the end year, for
+#'   SSB(y + 1) in Kobe plots with \code{lag = 1})
 #' @param blim,bpa optional Blim and Bpa as fractions of Btgt, added to the reference points
 #' @param name stock name
 #' @param source \code{"auto"}, \code{"derived"} or \code{"timeseries"} (MLE only)
@@ -273,7 +275,7 @@ print.ss3mvln <- function(x, ...){
 #' \dontrun{
 #' data(natl.sma, package = "ss3diags")
 #' stk  <- ss3stk(ss3sma)                      # MLE with SEs
-#' stkf <- ss3stk(ss3sma, output = "iters", fwd = TRUE)   # with forecast years
+#' stkf <- ss3stk(ss3sma, output = "iters", fwd = TRUE)   # with the year after the end year
 #' stki <- ss3stk(ss3sma, output = "iters")    # joint MVLN iterations
 #' stki <- ss3stk(ss3mvln(ss3sma, method = "annual"))
 #' }

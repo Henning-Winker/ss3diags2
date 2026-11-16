@@ -12,7 +12,8 @@ ss3plot_trj(
   colours = NULL,
   colour = "grey45",
   ncol = NULL,
-  label.size = 2.5
+  label.size = 2.5,
+  fwd = FALSE
 )
 }
 \arguments{
@@ -31,6 +32,10 @@ ss3plot_trj(
 \item{ncol}{facet columns}
 
 \item{label.size}{size of the reference point labels}
+
+\item{fwd}{show the years after the assessment end year (default \code{FALSE}: a stock built with
+\code{ss3stk(fwd = TRUE)} for the lagged Kobe plot is shown up to the end year; F and catch of the next year are
+SS3 forecast values)}
 }
 \value{
 ggplot
