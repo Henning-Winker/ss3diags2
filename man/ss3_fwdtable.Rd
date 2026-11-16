@@ -12,7 +12,8 @@ ss3_fwdtable(x, year = NULL, unc = NULL, blim = NULL)
 \item{year}{advice year (default: the first year in which the scenarios differ in F, after the intermediate
 years)}
 
-\item{unc}{optional FLStocks with iterations for the probabilities (default \code{x} when it has iterations)}
+\item{unc}{optional FLStocks with iterations for the probabilities (default \code{x} when it has iterations;
+otherwise lognormal with the MLE standard error of SSB)}
 
 \item{blim}{Blim (default the \code{Blim} reference point of the stocks)}
 }

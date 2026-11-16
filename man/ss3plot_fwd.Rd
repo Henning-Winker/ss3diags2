@@ -12,6 +12,7 @@ ss3plot_fwd(
   end = NULL,
   ci = TRUE,
   vlines = NULL,
+  refnames = c("Btgt", "Bpa", "Blim", "Btrigger", "Ftgt"),
   colours = NULL,
   probs = c(0.05, 0.2, 0.5, 0.8, 0.95),
   ncol = 2,
@@ -33,6 +34,9 @@ ss3plot_fwd(
 
 \item{vlines}{years after the end year for the vertical dashed lines (default: the end year and the last
 intermediate year, i.e. before the first year in which the scenarios differ)}
+
+\item{refnames}{reference points drawn (default the advice benchmarks Btgt, Bpa, Blim, Btrigger, Ftgt; NULL for
+all, including B0, R0 and MSY)}
 
 \item{colours}{scenario colours (default r4ss colours)}
 

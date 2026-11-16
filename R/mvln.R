@@ -2,9 +2,9 @@
 
 # catch by year: summed fleet column of ss3rep$catch, forecast catch from ForeCatch_
 .ss3_catch_year <- function(ss3rep, catch = "Exp"){
-  ct <- as.data.table(ss3rep$catch)
+  ct <- as.data.table(ss3rep$catch %||% data.frame())
   col <- if(catch %in% names(ct)) catch else sub("^kill_", "dead_", catch)
-  C <- ct[, .(C = sum(get(col), na.rm = TRUE)), by = .(year = Yr)]
+  C <- if(nrow(ct)) ct[, .(C = sum(get(col), na.rm = TRUE)), by = .(year = Yr)] else data.table(year = numeric(0), C = numeric(0))
   hat <- ss3rep$derived_quants; lab <- .col(hat, c("Label", "LABEL")); val <- .col(hat, c("Value", "VALUE"))
   fy <- suppressWarnings(as.numeric(sub("ForeCatch_", "", lab[grep("^ForeCatch_", lab)])))
   if(length(fy)) C <- rbind(C[!year %in% fy], data.table(year = fy, C = val[match(paste0("ForeCatch_", fy), lab)]))

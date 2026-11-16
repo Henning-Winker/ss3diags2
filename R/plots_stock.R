@@ -89,11 +89,13 @@
 #' @param x FLStockR, FLStocks or a named list of FLStockR
 #' @param type quantities, any of "SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftgt", "B/B0", "Catch/MSY"
 #' @param probs five probabilities: outer band, inner band, median, inner, outer
-#' @param refpts draw reference points (several runs: relative quantities only)
+#' @param refpts draw reference points: \code{TRUE} (with several runs absolute reference points only when the runs share
+#'   them), \code{"first"} (those of the first run, e.g. the assessment in forecast plots) or \code{FALSE}
 #' @param colours run colours (several runs; default \code{ss3cols()})
 #' @param colour band colour for a single run
 #' @param ncol facet columns
 #' @param label.size size of the reference point labels
+#' @param refnames reference points to draw (default all: B0, Btgt, Bpa, Blim, Btrigger, Ftgt, MSY, R0)
 #' @param ci draw the uncertainty bands (quantiles of the iterations, or the MLE standard errors)
 #' @param fwd show the years after the assessment end year (default \code{FALSE}: a stock built with
 #'   \code{ss3stk(fwd = TRUE)} for the lagged Kobe plot is shown up to the end year; F and catch of the next year are
@@ -108,7 +110,7 @@
 #' @export
 ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftgt"),
                         probs = c(0.05, 0.2, 0.5, 0.8, 0.95), refpts = TRUE, colours = NULL, colour = "grey45",
-                        ncol = NULL, label.size = 2.5, fwd = FALSE, ci = TRUE){
+                        ncol = NULL, label.size = 2.5, fwd = FALSE, ci = TRUE, refnames = NULL){
   sl <- .stklist(x)
   if(!fwd) sl <- lapply(sl, .trim_endyr)
   nr <- length(sl)
@@ -143,7 +145,7 @@ ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftg
   if(!is.null(ey) && max(d$year) > ey)
     p <- p + ggplot2::geom_vline(xintercept = ey + 0.5, linetype = 3, colour = "grey40") +
       ggplot2::labs(caption = paste0("dotted line: forecast years after ", ey))
-  if(refpts){
+  if(!isFALSE(refpts)){
     s1 <- sl[[1]]
     rel <- data.table(quant = c("B/Btgt", "F/Ftgt", "B/B0", "Catch/MSY", "B/Btgt", "B/Btgt"),
                       name = c("Btgt", "Ftgt", "Btgt", "MSY", "Blim", "Bpa"),
@@ -154,8 +156,13 @@ ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftg
                       value = c(.rp(s1, "B0"), .rp(s1, "Btgt"), .rp(s1, "Blim"), .rp(s1, "Bpa"), .rp(s1, "Btrigger"),
                                 .rp(s1, "Ftgt"), .rp(s1, "MSY"), .rp(s1, "R0")))
     if(isTRUE(all.equal(.rp(s1, "Btrigger"), .rp(s1, "Bpa")))) abs <- abs[name != "Btrigger"]
-    refs <- if(nr == 1) rbind(rel, abs) else rel[name != "Btgt" | quant != "B/B0"]
+    # absolute reference points also with several runs when they share them (e.g. forecast scenarios)
+    same <- nr == 1 || identical(refpts, "first") ||
+      all(vapply(sl[-1], function(z) isTRUE(all.equal(c(FLCore::iterMedians(z@refpts)), c(FLCore::iterMedians(s1@refpts)),
+                                                      tolerance = 1e-3)), TRUE))
+    refs <- if(same) rbind(rel, abs) else rel[name != "Btgt" | quant != "B/B0"]
     refs <- refs[quant %in% type & is.finite(value)]
+    if(!is.null(refnames)) refs <- refs[name %in% refnames]
     refs[, label := .rplab(name, bs)]
     if(nrow(refs)){
       refs[, quant := factor(quant, levels = type)]

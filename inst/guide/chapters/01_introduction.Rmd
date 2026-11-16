@@ -50,5 +50,5 @@ The examples ship with the package:
 | `ss3sma`, `retro.sma`, `aspm.sma` | North Atlantic shortfin mako (cookbook) | runs tests, retrospective, status, Kobe |
 | `ss3phk`, `retro.phk`, `aspm.phk` | Pacific hake (cookbook) | Dirichlet-multinomial OSA residuals, hindcast |
 | `hke.37.17-18.rds` | European hake in the Adriatic Sea (GFCM benchmark 2024), two sexes, eight fleets, three surveys, conditional age-at-length | worked example: growth by sex, sex ratios, conditional age-at-length, impact by gear |
-| `hke.37.12-16_fwd.rds` | European hake GSAs 12-16, SS3 forecast runs for three F scenarios | short-term forecasts |
+| `hke.37.17-18_fwd.rds` | Adriatic hake, SS3 forecast runs for three F scenarios (`SSsummarize()` summary) | short-term forecasts |
 | `pra.27.3a4a.rds` | northern shrimp, four seasons, hermaphrodite, two areas, six area-specific fleets | structured models, F by area, impact |

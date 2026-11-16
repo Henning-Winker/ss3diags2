@@ -14,7 +14,8 @@ ss3plot_trj(
   ncol = NULL,
   label.size = 2.5,
   fwd = FALSE,
-  ci = TRUE
+  ci = TRUE,
+  refnames = NULL
 )
 }
 \arguments{
@@ -24,7 +25,8 @@ ss3plot_trj(
 
 \item{probs}{five probabilities: outer band, inner band, median, inner, outer}
 
-\item{refpts}{draw reference points (several runs: relative quantities only)}
+\item{refpts}{draw reference points: \code{TRUE} (with several runs absolute reference points only when the runs share
+them), \code{"first"} (those of the first run, e.g. the assessment in forecast plots) or \code{FALSE}}
 
 \item{colours}{run colours (several runs; default \code{ss3cols()})}
 
@@ -39,6 +41,8 @@ ss3plot_trj(
 SS3 forecast values)}
 
 \item{ci}{draw the uncertainty bands (quantiles of the iterations, or the MLE standard errors)}
+
+\item{refnames}{reference points to draw (default all: B0, Btgt, Bpa, Blim, Btrigger, Ftgt, MSY, R0)}
 }
 \value{
 ggplot

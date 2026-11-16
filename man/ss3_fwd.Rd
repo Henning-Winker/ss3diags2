@@ -14,7 +14,9 @@ ss3_fwd(
 )
 }
 \arguments{
-\item{x}{named list of SS3 reports (one per scenario)}
+\item{x}{named list of SS3 reports (one per scenario), or their summary from \code{r4ss::SSsummarize()} (much
+smaller; MLE with standard errors only, and catch for the forecast years only, so pass the assessment to
+\code{ss3plot_fwd(stk = )})}
 
 \item{refpts}{optional FLPar of benchmarks (e.g. \code{Ftgt}, \code{Btgt}, \code{Bpa}, \code{Blim},
 \code{Btrigger}) replacing the SS3 reference points (labels then Btgt / Ftgt)}
@@ -37,9 +39,11 @@ Builds FLStockR objects for a set of SS3 forecast runs, e.g. F scenarios (Fadv, 
 over the assessment and forecast years, and the agreed benchmarks can replace the SS3 reference points.
 }
 \examples{
-fw <- readRDS(system.file("extdata", "hke.37.12-16", "hke.37.12-16_fwd.rds", package = "ss3diags2"))
-fs <- ss3_fwd(fw)
-ss3plot_fwd(fs)
+fw <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18_fwd.rds", package = "ss3diags2"))
+fs <- ss3_fwd(fw, Fref = "Btgt", bpa = 0.5, blim = 0.25)
+hke <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))
+ss3plot_fwd(fs, stk = ss3stk(hke, Fref = "Btgt", bpa = 0.5, blim = 0.25))
+ss3_fwdtable(fs)
 }
 \seealso{
 \code{\link{ss3plot_fwd}()}, \code{\link{ss3_fwdtable}()}
