@@ -392,10 +392,11 @@ ss3plot_sexratio(lfh, fit = lxh, type = "year")
 
 # Reading sex ratios. Hake males grow more slowly and die faster (M 0.5 against 0.25), so the
 # share of females rises with length to 100% above about 45 cm. The model follows this switch in
-# all fleets. Where the observed points rise earlier than the line (about 25-40 cm in HRV_OTB_17,
-# MEDITS_ITA, MEDITS_HRV), there are more females at intermediate lengths than the model expects:
-# males drop out of the larger lengths faster than modelled (lower male growth or higher male
-# mortality), or females are more selected at these lengths. A sex ratio that drifts over years,
+# all fleets, but in the Croatian trawl and surveys (HRV_OTB_17, MEDITS_HRV, and MEDITS_ITA above
+# 25 cm) the observed switch is steeper: fewer females than expected at about 15-28 cm and more
+# at about 30-40 cm. Males are more common among small fish and drop out of the intermediate
+# lengths faster than modelled: male growth or male mortality differ from the model, selectivity
+# differs between the sexes, or small hake are hard to sex. A sex ratio that drifts over years,
 # away from the expected line, points to a time-varying process or a change in sampling.
 
 # ---- Conditional age-at-length ---------------------------------------------------------------
