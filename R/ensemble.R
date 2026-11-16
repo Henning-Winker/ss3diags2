@@ -116,7 +116,7 @@ ss3plot_ensemble <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "
   nm <- names(x); mods <- setdiff(nm, "Joint")
   sel <- c(if(models) mods, if(joint && "Joint" %in% nm) "Joint")
   if(!length(sel)) stop("nothing to plot", call. = FALSE)
-  cols <- c(stats::setNames(colours %||% ss3cols(length(mods)), mods), Joint = "black")[sel]
+  cols <- c(stats::setNames(colours %||% ss3runcols(length(mods)), mods), Joint = "black")[sel]
   p <- ss3plot_trj(FLCore::FLStocks(as.list(x)[sel]), type = type, probs = probs, colours = cols, ...)
   w <- attr(x, "weights")
   if(!is.null(w)) p <- p + ggplot2::labs(subtitle = paste0("weights: ", paste0(w$model, " ", round(w$weight, 2),

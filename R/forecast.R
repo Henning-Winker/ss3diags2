@@ -85,7 +85,7 @@ ss3plot_fwd <- function(x, stk = NULL, type = c("Rec", "SSB", "F", "Catch"), sta
   attr(a, "endyr") <- ey
   sc <- lapply(as.list(x), function(s){ w <- .win_stk(s, start = ey, end = end); attr(w, "endyr") <- ey; w })
   st <- FLCore::FLStocks(c(list(Assessment = a), sc))
-  cols <- c(Assessment = "black", stats::setNames(colours %||% ss3cols(length(sc)), names(sc)))
+  cols <- c(Assessment = "black", stats::setNames(colours %||% ss3runcols(length(sc)), names(sc)))
   p <- ss3plot_trj(st, type = type, probs = probs, colours = cols, ncol = ncol, fwd = TRUE, ci = ci, ...)
   # replace the generic forecast marker by the advice lines
   p$layers <- Filter(function(l) !inherits(l$geom, "GeomVline"), p$layers)

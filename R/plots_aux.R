@@ -22,6 +22,8 @@ theme_ss3 <- function(base_size = 11, legend.position = "bottom"){
 #' \itemize{
 #'   \item \code{ss3cols(n)}: fleets and other categories, \code{r4ss::rich.colors.short()} (first colour dropped
 #'     for n > 2, as \code{r4ss::SSplotCatch()})
+#'   \item \code{ss3runcols(n)}: model runs, scenarios and ensemble members (\code{r4ss::SSplotComparisons()}:
+#'     blue, red, green3 for three runs, otherwise as \code{ss3cols})
 #'   \item \code{ss3seascols(n)}: seasons, black for one season, blue4, green3, orange2, red3 for four
 #'     (\code{r4ss::SSplotIndices()})
 #'   \item \code{ss3unitcols}: units (sexes) as r4ss composition fits: combined ("unique") green, F red, M blue
@@ -38,7 +40,16 @@ ss3cols <- function(n, alpha = 1){
     b <- stats::dnorm(x, 0.25, 0.15)/max(stats::dnorm(x, 0.25, 0.15))
     grDevices::rgb(r, g, b, alpha = alpha)
   }
+  # as r4ss::SSplotCatch(): first (near black) colour dropped for more than two fleets
   if(n > 2) rich(n + 1)[-1] else rich(n)
+}
+
+#' @rdname ss3cols
+#' @export
+ss3runcols <- function(n, alpha = 1){
+  # as r4ss::SSplotComparisons(): blue, red, green3 for three runs, rich.colors.short(n + 1)[-1] for more
+  if(n == 3) return(grDevices::adjustcolor(c("blue", "red", "green3"), alpha.f = alpha))
+  ss3cols(n, alpha)
 }
 
 #' @rdname ss3cols

@@ -2,12 +2,15 @@
 % Please edit documentation in R/plots_aux.R
 \name{ss3cols}
 \alias{ss3cols}
+\alias{ss3runcols}
 \alias{ss3seascols}
 \alias{.obsfill}
 \alias{ss3bubblecols}
 \title{r4ss colours}
 \usage{
 ss3cols(n, alpha = 1)
+
+ss3runcols(n, alpha = 1)
 
 ss3seascols(n, alpha = 1)
 
@@ -25,6 +28,8 @@ Colour conventions of \code{r4ss}, so ss3diags2 plots look like the familiar SS3
 \itemize{
 \item \code{ss3cols(n)}: fleets and other categories, \code{r4ss::rich.colors.short()} (first colour dropped
 for n > 2, as \code{r4ss::SSplotCatch()})
+\item \code{ss3runcols(n)}: model runs, scenarios and ensemble members (\code{r4ss::SSplotComparisons()}:
+blue, red, green3 for three runs, otherwise as \code{ss3cols})
 \item \code{ss3seascols(n)}: seasons, black for one season, blue4, green3, orange2, red3 for four
 (\code{r4ss::SSplotIndices()})
 \item \code{ss3unitcols}: units (sexes) as r4ss composition fits: combined ("unique") green, F red, M blue
