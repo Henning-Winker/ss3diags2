@@ -45,9 +45,8 @@ Observed indices with lognormal confidence intervals from \code{index.var} (log-
 per index, colours by unit, season or area (r4ss season colours).
 }
 \examples{
-\dontrun{
-data(natl.sma, package = "ss3diags")
-ss3plot_indices(ss3_indices(ss3sma), fit = ss3_indices(ss3sma, what = "exp"))
-ss3plot_indices(ss3_indices(ss3sma), combine = TRUE)
-}
+data(ss3sma)
+idx <- ss3_indices(ss3sma)
+ss3plot_indices(idx, fit = ss3_indices(ss3sma, what = "exp"))
+ss3plot_indices(idx, combine = TRUE, log = TRUE)
 }

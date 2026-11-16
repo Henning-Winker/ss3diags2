@@ -66,10 +66,11 @@ With \code{init = "virgin"}, the no-fishing projection reproduces the SS3 dynami
 reported in \code{$check}).
 }
 \examples{
-\dontrun{
-imp <- ss3_impact(ss3rep, groups = list(Denmark = 1:2, Norway = 3:4, Sweden = 5:6))
+pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+countries <- list(Denmark = c("DK3a", "DK4a"), Norway = c("NOR3a", "NOR4a"), Sweden = c("SWE3a", "SWE4a"))
+imp <- ss3_impact(pra, groups = countries)
 ss3plot_impact(imp)
-}
+ss3plot_impact(imp, type = "prop")
 }
 \references{
 Wang, S.-P., Maunder, M.N., Aires-da-Silva, A., Bayliff, W.H. (2009). Evaluating fishery impacts:

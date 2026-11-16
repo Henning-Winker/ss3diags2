@@ -35,10 +35,8 @@ SP(t) = SSB(t+1) - SSB(t) + C(t) against SSB with the equilibrium curve (\code{t
 \code{JABBA3::jbplot_spdyn()}).
 }
 \examples{
-\dontrun{
-data(natl.sma, package = "ss3diags")
+data(ss3sma)
 stk <- ss3stk(ss3sma)
 ss3plot_production(stk)
 ss3plot_production(stk, type = "dyn")
-}
 }

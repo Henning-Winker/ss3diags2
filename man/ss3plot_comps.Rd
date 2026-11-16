@@ -49,12 +49,10 @@ dimension, e.g. \code{\link{ss3_lencomp}()}, \code{\link{ss3_agecomp}()} or the 
 by unit (e.g. sex), season or area; dimensions not in \code{by} are summed (numbers).
 }
 \examples{
-\dontrun{
-data(natl.sma, package = "ss3diags")
-lfd <- ss3_lencomp(ss3sma)
-ss3plot_comps(lfd, by = "unit")
-ss3plot_comps(lfd["Fishery_4"], type = "annual", by = "unit", fit = ss3_lencomp(ss3sma, what = "exp")["Fishery_4"])
+data(ss3simple)
+lfd <- ss3_lencomp(ss3simple)
+ss3plot_comps(lfd)
+ss3plot_comps(lfd["SURVEY1"], fit = ss3_lencomp(ss3simple, what = "exp")["SURVEY1"], type = "annual")
 ss3plot_comps(lfd, type = "bubble")
-ss3plot_comps(lfd, type = "mean", by = "unit")
-}
+ss3plot_comps(lfd, type = "mean")
 }

@@ -1,6 +1,13 @@
 # plots_growth.R - growth curves by sex and ridge plots of compositions with cohort growth tracks (as FLicc)
 
-# mean length and SD at age by unit: from SS3 endgrowth (exact) or from an FLPar (VB with CV linear in length)
+#' Mean length and SD at age by unit
+#'
+#' Mean length and SD at age by unit: from SS3 endgrowth (exact) or from an FLPar (VB with CV linear in length)
+#'
+#' @param x SS3 report (endgrowth, exact) or FLPar (Schnute or von Bertalanffy, CV linear in length)
+#' @param maxage maximum age
+#' @return data.table unit, age, L, sd
+#' @noRd
 .growth_curves <- function(x, maxage = NULL){
   if(.is_ss3rep(x)){
     eg <- as.data.table(x$endgrowth)[Seas == 1]
@@ -47,6 +54,8 @@
 #' data(ss3simple)
 #' ss3plot_growth(ss3simple, lfd = ss3_lencomp(ss3simple))
 #' ss3plot_growth(ss3_lhpar(ss3simple))
+#' hke <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))
+#' ss3plot_growth(hke)                               # two sexes, Richards (Schnute) growth
 #' @export
 ss3plot_growth <- function(x, lhpar = NULL, lfd = NULL, maxage = NULL){
   d <- .growth_curves(x, maxage)
@@ -112,7 +121,7 @@ ss3plot_growth <- function(x, lhpar = NULL, lfd = NULL, maxage = NULL){
 #' @examples
 #' data(ss3simple)
 #' lfd <- ss3_lencomp(ss3simple)
-#' ss3plot_ridges(lfd, fit = ss3_lencomp(ss3simple, what = "exp"), type = "both", fleets = "SURVEY1",
+#' ss3plot_ridges(lfd["SURVEY1"], fit = ss3_lencomp(ss3simple, what = "exp")["SURVEY1"], type = "both",
 #'                lhpar = ss3_lhpar(ss3simple))
 #' @export
 ss3plot_ridges <- function(comps, fit = NULL, type = c("obs", "exp", "both"), by = "unit", lhpar = NULL,
@@ -190,9 +199,9 @@ utils::globalVariables(c("qlo", "qhi", "tot", "p", "mx", "y", "what", "Len_Mid",
 #'   lengths, are nearly uninformative and their intervals span most of 0-1
 #' @return ggplot
 #' @examples
-#' \dontrun{
-#' ss3plot_sexratio(ss3_lencomp(ss3rep), fit = ss3_lencomp(ss3rep, what = "exp"))
-#' }
+#' hke <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))
+#' ss3plot_sexratio(ss3_lencomp(hke), fit = ss3_lencomp(hke, what = "exp"))
+#' ss3plot_sexratio(ss3_lencomp(hke), fit = ss3_lencomp(hke, what = "exp"), type = "year", ci = FALSE)
 #' @export
 ss3plot_sexratio <- function(comps, fit = NULL, type = c("len", "year"), fleets = NULL, ncol = NULL, ci = 0.95, min.n = 5){
   type <- match.arg(type)

@@ -80,17 +80,14 @@ With \code{rel = TRUE} the stock holds B/Btgt in place of SSB and F/Ftgt in plac
 \code{FLRef::ss2FLStockR(rel = TRUE)}).
 }
 \examples{
-data(ss3simple)
-stk <- ss3stk(ss3simple)                    # MLE
-sa <- ss3stk(readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2")),
-             area = TRUE)                   # FLStocks: stock and areas
-\dontrun{
-data(natl.sma, package = "ss3diags")
-stk  <- ss3stk(ss3sma)                      # MLE with SEs
-stkf <- ss3stk(ss3sma, output = "iters", fwd = TRUE)   # with the year after the end year
-stki <- ss3stk(ss3sma, output = "iters")    # joint MVLN iterations
-stki <- ss3stk(ss3mvln(ss3sma, method = "annual"))
-}
+data(ss3sma)
+stk <- ss3stk(ss3sma)                                     # MLE
+stk@refpts
+stki <- ss3stk(ss3sma, output = "iters", iters = 200)     # MVLN draws
+ss3plot_trj(stki)
+pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+sa <- ss3stk(pra, area = TRUE)                            # stock and areas
+ss3plot_trj(sa)
 }
 \author{
 Henning Winker, Laurence T. Kell

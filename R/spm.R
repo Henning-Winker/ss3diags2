@@ -1,18 +1,40 @@
 # spm.R - Pella-Tomlinson surplus production function fitted to the SS3 equilibrium yield curve
 
-# Pella-Tomlinson surplus production, with the Fox limit at m = 1
+#' Pella-Tomlinson surplus production
+#'
+#' Pella-Tomlinson surplus production, with the Fox limit at m = 1
+#'
+#' @param B biomass
+#' @param r intrinsic rate of increase
+#' @param K carrying capacity
+#' @param m Pella-Tomlinson shape
+#' @return surplus production (Fox at m = 1)
+#' @noRd
 .pt <- function(B, r, K, m){
   sp <- if(abs(m - 1) < 1e-6) r*B*log(K/pmax(B, 1e-12)) else r/(m - 1)*B*(1 - (B/K)^(m - 1))
   sp[B <= 0] <- 0
   sp
 }
 
-# shape m from Bmsy/K: Bmsy/K = m^(-1/(m-1)) (1/e at m = 1, Fox)
+#' Pella-Tomlinson shape from Bmsy/K
+#'
+#' Shape m from Bmsy/K: Bmsy/K = m^(-1/(m-1)) (1/e at m = 1, Fox)
+#'
+#' @param bk Bmsy/K
+#' @return shape m
+#' @noRd
 .m_from_bk <- function(bk){
   if(abs(bk - exp(-1)) < 1e-8) return(1)
   stats::uniroot(function(m) (if(abs(m - 1) < 1e-8) exp(-1) else m^(-1/(m - 1))) - bk, c(1e-4, 100), tol = 1e-10)$root
 }
 
+#' Pella-Tomlinson reference points
+#'
+#' @param r intrinsic rate of increase
+#' @param K carrying capacity
+#' @param m Pella-Tomlinson shape
+#' @return named numeric MSY, Bmsy, BmsyK, Hmsy
+#' @noRd
 .pt_refs <- function(r, K, m){
   bk <- if(abs(m - 1) < 1e-6) exp(-1) else m^(-1/(m - 1))
   msy <- .pt(bk*K, r, K, m)
@@ -45,12 +67,10 @@
 #'   (SS3 vs SPM benchmarks), \code{r2}, and \code{priors} (list of \code{c(median, log.sd, on)} for r, K and m, the
 #'   format of \code{JABBA3::jb3_priors()}; m is off by default; r and K are off when SSB is in numbers)
 #' @examples
-#' \dontrun{
-#' data(pac.hke, package = "ss3diags")
+#' data(ss3phk)
 #' sp <- ss3_spm(ss3phk)
 #' sp
 #' # JABBA3::jb3_priors(data, r = sp$priors$r, K = sp$priors$K, m = sp$priors$m)
-#' }
 #' @export
 ss3_spm <- function(x, K = c("free", "B0"), tol = 0.05, cv = NULL){
   K <- match.arg(K)

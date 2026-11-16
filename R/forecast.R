@@ -1,6 +1,12 @@
 # forecast.R - short-term forecast scenarios run with SS3 (forecast.ss with fixed F or catch by fleet)
 
-# r4ss::SSsummarize() output -> list of minimal SS3 reports (derived quantities, years, F basis, targets)
+#' Convert \code{r4ss::SSsummarize()} output to minimal SS3 reports
+#'
+#' R4ss::SSsummarize() output -> list of minimal SS3 reports (derived quantities, years, F basis, targets)
+#'
+#' @param x \code{SSsummarize()} list
+#' @return named list of minimal reports (derived quantities, years, F basis, targets)
+#' @noRd
 .summ2reps <- function(x){
   q <- x$quants; qs <- x$quantsSD
   nm <- x$modelnames %||% paste0("model", seq_len(x$n))
@@ -11,6 +17,11 @@
          nsexes = x$nsexes[i], summary = TRUE)), nm)
 }
 
+#' Is x an \code{r4ss::SSsummarize()} list?
+#'
+#' @param x object
+#' @return logical
+#' @noRd
 .is_summary <- function(x) is.list(x) && !is.null(x$quants) && !is.null(x$modelnames) && !is.null(x$n)
 
 #' Forecast scenarios from SS3 runs
@@ -34,8 +45,9 @@
 #' @examples
 #' fw <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18_fwd.rds", package = "ss3diags2"))
 #' fs <- ss3_fwd(fw, Fref = "Btgt", bpa = 0.5, blim = 0.25)
+#' names(fs)
 #' hke <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))
-#' ss3plot_fwd(fs, stk = ss3stk(hke, Fref = "Btgt", bpa = 0.5, blim = 0.25))
+#' ss3plot_fwd(fs, stk = ss3stk(hke, Fref = "Btgt", bpa = 0.5, blim = 0.25), ci = FALSE)
 #' ss3_fwdtable(fs)
 #' @export
 ss3_fwd <- function(x, refpts = NULL, output = c("mle", "iters"), iters = 1000, years = NULL, ...){
@@ -65,7 +77,14 @@ ss3_fwd <- function(x, refpts = NULL, output = c("mle", "iters"), iters = 1000, 
   out
 }
 
-# number of intermediate years: forecast years before the scenarios differ in F (0 with one scenario)
+#' Number of intermediate years of forecast scenarios
+#'
+#' Number of intermediate years: forecast years before the scenarios differ in F (0 with one scenario)
+#'
+#' @param x FLStocks of scenarios (\code{ss3_fwd()})
+#' @param ey assessment end year
+#' @return forecast years before the scenarios differ in F (0 with one scenario)
+#' @noRd
 .fwd_nint <- function(x, ey){
   if(length(x) < 2) return(0)
   yrs <- as.numeric(dimnames(x[[1]])$year)
@@ -97,6 +116,13 @@ ss3_fwd <- function(x, refpts = NULL, output = c("mle", "iters"), iters = 1000, 
 #' @param ncol facet columns
 #' @param ... further arguments to \code{\link{ss3plot_trj}()}
 #' @return ggplot
+#' @examples
+#' fw <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18_fwd.rds", package = "ss3diags2"))
+#' hke <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))
+#' fs <- ss3_fwd(fw, Fref = "Btgt", bpa = 0.5, blim = 0.25)
+#' stk <- ss3stk(hke, output = "iters", iters = 200, Fref = "Btgt", bpa = 0.5, blim = 0.25)
+#' ss3plot_fwd(fs, stk = stk)                 # with uncertainty
+#' ss3plot_fwd(fs, ci = FALSE, start = 2010)  # scenarios only
 #' @export
 ss3plot_fwd <- function(x, stk = NULL, type = c("Rec", "SSB", "F", "Catch"), start = NULL, end = NULL, ci = TRUE,
                         vlines = NULL, refnames = c("Btgt", "Bpa", "Blim", "Btrigger", "Ftgt"), colours = NULL, probs = c(0.05, 0.2, 0.5, 0.8, 0.95), ncol = 2, ...){
@@ -137,6 +163,11 @@ ss3plot_fwd <- function(x, stk = NULL, type = c("Rec", "SSB", "F", "Catch"), sta
 #'   otherwise lognormal with the MLE standard error of SSB)
 #' @param blim Blim (default the \code{Blim} reference point of the stocks)
 #' @return data.table with Basis, catch, F, SSB(year + 1), SSB change (\%) and P(SSB < Blim)
+#' @examples
+#' fw <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18_fwd.rds", package = "ss3diags2"))
+#' fs <- ss3_fwd(fw, Fref = "Btgt", bpa = 0.5, blim = 0.25)
+#' ss3_fwdtable(fs)
+#' ss3_fwdtable(fs, year = 2027, blim = 30000)
 #' @export
 ss3_fwdtable <- function(x, year = NULL, unc = NULL, blim = NULL){
   ey <- attr(x, "endyr") %||% attr(x[[1]], "endyr")

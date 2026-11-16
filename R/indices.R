@@ -25,12 +25,10 @@
 #'   \code{obs}, \code{exp}, \code{se}, \code{se_input}, \code{se_total}, \code{q}, \code{dev}, \code{use},
 #'   \code{units}
 #' @examples
-#' \dontrun{
-#' data(natl.sma, package = "ss3diags")
+#' data(ss3sma)
 #' idx <- ss3_indices(ss3sma)
 #' names(idx)
-#' index.var(idx[[1]])
-#' }
+#' ss3plot_indices(idx, fit = ss3_indices(ss3sma, what = "exp"))
 #' @export
 ss3_indices <- function(ss3rep, fleets = NULL, what = c("obs", "exp"), se = c("input", "total"),
                         excluded = c("drop", "keep"), long = FALSE){

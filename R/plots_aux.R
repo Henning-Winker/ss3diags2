@@ -6,6 +6,9 @@
 #' ss3diags2, JABBA3 and FLicc can be combined.
 #' @param base_size base font size
 #' @param legend.position legend position (default "bottom")
+#' @examples
+#' library(ggplot2)
+#' ggplot(data.frame(x = 1:10, y = (1:10)^2), aes(x, y)) + geom_line() + theme_ss3()
 #' @export
 theme_ss3 <- function(base_size = 11, legend.position = "bottom"){
   ggplot2::theme_bw(base_size = base_size) +
@@ -32,7 +35,8 @@ theme_ss3 <- function(base_size = 11, legend.position = "bottom"){
 #' @param n number of colours
 #' @param alpha transparency
 #' @examples
-#' ss3cols(5); ss3seascols(4); ss3unitcols
+#' ss3cols(5); ss3runcols(3); ss3seascols(4); ss3unitcols
+#' scales::show_col(ss3cols(8))
 #' @export
 ss3cols <- function(n, alpha = 1){
   rich <- function(n){
@@ -60,11 +64,12 @@ ss3seascols <- function(n, alpha = 1){
   col
 }
 
-#' @rdname ss3cols
-#' @export
 # fill of observed composition bars
 .obsfill <- "grey45"
 
+#' @rdname ss3cols
+#' @format \code{ss3unitcols}: named colours of the units (sexes): F red, M blue, combined ("unique") green
+#' @export
 ss3unitcols <- c(unique = "#008000", F = "#CC0000", M = "#0000CC")
 
 #' @rdname ss3cols
@@ -74,12 +79,24 @@ ss3bubblecols <- c(positive = "#FF0000B3", negative = "#0000FFB3", obs = "#1A1A1
 #' Integer year axis
 #' @param n approximate number of breaks
 #' @param ... passed to \code{scale_x_continuous()}
+#' @examples
+#' library(ggplot2)
+#' d <- data.frame(year = 1990:2020, y = cumsum(rnorm(31)))
+#' ggplot(d, aes(year, y)) + geom_line() + scale_x_year(n = 4) + theme_ss3()
 #' @export
 scale_x_year <- function(n = 5, ...) ggplot2::scale_x_continuous(breaks = function(x) unique(round(pretty(x, n = n))), ...)
 
 # --- FLR inputs -----------------------------------------------------------------------------------------------
 
-# FLQuant / FLQuants / list of FLQuant -> long data.table with column 'name' (one iteration)
+#' FLQuant, FLQuants or list of FLQuant to a long data.table
+#'
+#' FLQuant / FLQuants / list of FLQuant -> long data.table with column 'name' (one iteration)
+#'
+#' @param x FLQuant, FLQuants or list
+#' @param iter iteration to use
+#' @param what value of a column 'what'
+#' @return data.table with column 'name'
+#' @noRd
 .flq_long <- function(x, iter = 1, what = "x"){
   if(is(x, "FLQuant")) x <- FLCore::FLQuants(stats::setNames(list(x), what))
   if(is.list(x) && !is(x, "FLQuants")) x <- FLCore::FLQuants(x)
@@ -92,7 +109,14 @@ scale_x_year <- function(n = 5, ...) ggplot2::scale_x_continuous(breaks = functi
   d[]
 }
 
-# FLIndices / FLIndex(Biomass) -> long table: index (obs), index.var (se), timing
+#' FLIndices to a long table
+#'
+#' FLIndices / FLIndex(Biomass) -> long table: index (obs), index.var (se), timing
+#'
+#' @param x FLIndices or FLIndex(Biomass)
+#' @param iter iteration to use
+#' @return data.table with index (observed), index.var (se) and timing
+#' @noRd
 .fli_long <- function(x, iter = 1){
   if(is(x, "FLIndex") || is(x, "FLIndexBiomass")) x <- FLCore::FLIndices(stats::setNames(list(x), FLCore::name(x)))
   if(!is(x, "FLIndices")) stop("expected FLIndices or FLIndexBiomass", call. = FALSE)
@@ -114,6 +138,11 @@ scale_x_year <- function(n = 5, ...) ggplot2::scale_x_continuous(breaks = functi
 
 # --- grouping by unit / season / area -------------------------------------------------------------------------
 
+#' Validate the 'by' dimensions
+#'
+#' @param by any of \code{"unit"}, \code{"season"}, \code{"area"}
+#' @return character vector
+#' @noRd
 .bydims <- function(by){
   if(is.null(by) || !length(by)) return(character(0))
   bad <- setdiff(by, c("unit", "season", "area"))
@@ -122,7 +151,15 @@ scale_x_year <- function(n = 5, ...) ggplot2::scale_x_continuous(breaks = functi
   unique(by)
 }
 
-# sum over the dimensions not in 'keep' (numbers, catch); 'value' columns are summed
+#' Sum over the dimensions not kept
+#'
+#' Sum over the dimensions not in 'keep' (numbers, catch); 'value' columns are summed
+#'
+#' @param d long data.table
+#' @param keep columns to keep
+#' @param value columns to sum
+#' @return data.table
+#' @noRd
 .collapse <- function(d, keep, value = "data"){
   drop <- setdiff(c("unit", "season", "area"), keep)
   by <- setdiff(names(d), c(value, drop, "iter"))
@@ -131,7 +168,14 @@ scale_x_year <- function(n = 5, ...) ggplot2::scale_x_continuous(breaks = functi
   d
 }
 
-# 'group' column combining the 'by' dimensions, with readable labels and an ordered factor
+#' Add a 'group' column combining the 'by' dimensions
+#'
+#' 'group' column combining the 'by' dimensions, with readable labels and an ordered factor
+#'
+#' @param d long data.table
+#' @param dims the 'by' dimensions (\code{"unit"}, \code{"season"}, \code{"area"})
+#' @return data.table with an ordered factor 'group'
+#' @noRd
 .add_group <- function(d, dims){
   if(!length(dims)){ d[, group := factor("all")]; return(d) }
   lab1 <- function(k, v) switch(k, unit = as.character(v),
@@ -148,14 +192,26 @@ scale_x_year <- function(n = 5, ...) ggplot2::scale_x_continuous(breaks = functi
   d
 }
 
-# facets for the 'by' dimensions: rows for one dimension, a grid (first ~ second) for two, 'group' for three
+#' Facets for the 'by' dimensions
+#'
+#' Facets for the 'by' dimensions: rows for one dimension, a grid (first ~ second) for two, 'group' for three
+#'
+#' @param dims the 'by' dimensions (\code{"unit"}, \code{"season"}, \code{"area"})
+#' @param scales facet scales
+#' @return ggplot2 facet: rows for one dimension, a grid for two, 'group' for three
+#' @noRd
 .facet_by <- function(dims, scales = "free_y"){
   if(!length(dims)) return(NULL)
   if(length(dims) == 2) return(ggplot2::facet_grid(.frow ~ .fcol, scales = scales))
   ggplot2::facet_grid(group ~ ., scales = scales)
 }
 
-# r4ss colours for the groups
+#' r4ss colours for the groups
+#'
+#' @param d long data.table
+#' @param dims the 'by' dimensions (\code{"unit"}, \code{"season"}, \code{"area"})
+#' @return named colours
+#' @noRd
 .group_cols <- function(d, dims){
   lv <- levels(d$group)
   if(!length(dims)) return(stats::setNames("black", lv))
@@ -167,13 +223,27 @@ scale_x_year <- function(n = 5, ...) ggplot2::scale_x_continuous(breaks = functi
   stats::setNames(ss3cols(length(lv)), lv)
 }
 
-# break lines at gaps in the years: run id within each group
+#' Run id that breaks lines at gaps in the years
+#'
+#' Break lines at gaps in the years: run id within each group
+#'
+#' @param year years (sorted)
+#' @return integer run id
+#' @noRd
 .gap_run <- function(year) cumsum(c(1, diff(year) > 1))
 
 utils::globalVariables(c("seg", "group", "prop", "pexp", "mu", "mexp", "lo", "hi", "size", "dtype", "rel", "value",
                          "variable", "fit", "quant", "x", "timef", "t", "xval", "ntot", "bw", "yfac"))
 
-# select fleets (names or numbers) and units (sexes) of FLQuants; fleets without the units are dropped
+#' Select fleets and units of FLQuants
+#'
+#' Select fleets (names or numbers) and units (sexes) of FLQuants; fleets without the units are dropped
+#'
+#' @param x FLQuants by fleet
+#' @param fleets fleets (names or numbers); \code{NULL} for all
+#' @param units units (sexes)
+#' @return FLQuants; fleets without the units are dropped
+#' @noRd
 .subset_flqs <- function(x, fleets = NULL, units = NULL){
   if(is.null(fleets) && is.null(units)) return(x)
   one <- is(x, "FLQuant")

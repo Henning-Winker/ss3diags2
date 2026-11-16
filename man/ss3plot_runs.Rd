@@ -23,3 +23,9 @@ Residuals by index with the three-sigma limits shaded green (runs test passed) o
 limits in red, and the runs test p-value in the panel title, as \code{ss3diags::SSplotRunstest()} and
 \code{ggplotFL::plotRunstest()}.
 }
+\examples{
+data(ss3sma)
+ss3plot_runs(ss3sma)
+data(ss3simple)
+ss3plot_runs(ss3simple, quant = "len")
+}

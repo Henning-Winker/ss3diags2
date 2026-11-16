@@ -1,6 +1,13 @@
 # hindcast.R - hindcast cross-validation (one-year-ahead predictions of indices, mean length / age) and MASE
 
-# observations and fits of one run: index (cpue) or mean length / age by fleet and year
+#' Observations and fits of one run for the hindcast
+#'
+#' Observations and fits of one run: index (cpue) or mean length / age by fleet and year
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param quant data type: \code{"cpue"}, \code{"len"}, \code{"age"}, \code{"con"} (conditional age-at-length) or \code{"size"}
+#' @return data.table of index (cpue) or mean length / age by fleet and year
+#' @noRd
 .hc_obs <- function(ss3rep, quant){
   if(quant == "cpue"){
     cp <- as.data.table(ss3rep$cpue)
@@ -24,7 +31,15 @@
 }
 
 # composition data base: len, age, con (conditional age-at-length) or size; ghost = TRUE adds the excluded
-# (ghost) observations, e.g. the peeled years of retrospective runs
+#' Composition database of a data type, optionally with ghost observations
+#'
+#' (ghost) observations, e.g. the peeled years of retrospective runs
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param quant data type: \code{"cpue"}, \code{"len"}, \code{"age"}, \code{"con"} (conditional age-at-length) or \code{"size"}
+#' @param ghost include ghost observations (e.g. the peeled years of retrospective runs)
+#' @return data.table
+#' @noRd
 .comp_db <- function(ss3rep, quant, ghost = FALSE){
   nm <- c(len = "lendbase", age = "agedbase", con = "condbase", size = "sizedbase")[[quant]]
   db <- as.data.table(ss3rep[[nm]])
@@ -56,12 +71,10 @@
 #'   exp (peel fit), endyr, pred (TRUE for the one-year-ahead prediction)), \code{mase} (data.table: index, MASE,
 #'   MAE.PR, MAE.base, MASE.adj, n.eval, plus "joint")
 #' @examples
-#' \dontrun{
-#' data(natl.sma, package = "ss3diags")
+#' data(retro.sma)
 #' hc <- ss3_hindcast(retro.sma)
 #' hc$mase
 #' ss3plot_hcxval(hc)
-#' }
 #' @export
 ss3_hindcast <- function(retro, quant = c("cpue", "len", "age", "con", "size"), MAE.base.adj = 0.1, fleets = NULL){
   quant <- match.arg(quant)
@@ -130,6 +143,9 @@ print.ss3hc <- function(x, ...){
 #' @param xmin first year shown (default 5 years before the first peel end year)
 #' @param ncol facet columns
 #' @return ggplot
+#' @examples
+#' data(retro.sma)
+#' ss3plot_hcxval(ss3_hindcast(retro.sma), xmin = 2000)
 #' @export
 ss3plot_hcxval <- function(x, ci = 0.95, xmin = NULL, ncol = NULL){
   if(!inherits(x, "ss3hc")) x <- ss3_hindcast(x)

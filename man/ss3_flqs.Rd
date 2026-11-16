@@ -25,8 +25,6 @@ iteration-specific reference points for the joint MVLN.
 \examples{
 data(ss3simple)
 ss3_flqs(ss3stk(ss3simple), c("SSB", "F", "B/Btgt"))
-\dontrun{
-data(natl.sma, package = "ss3diags")
-ggplotFL::plot(ss3_flqs(ss3sma, output = "iters"))
-}
+fq <- ss3_flqs(ss3stk(ss3simple, output = "iters", iters = 100))
+ss3plot_flqs(fq)
 }

@@ -26,3 +26,8 @@ for the benchmarks (SPR target, B target, MSY, ...) and, in some versions, an ex
 (loop 7). By default the last F grid from F = 0 (the converged loop, which reproduces the SS3 MSY) is combined with
 the extension loops; earlier grids can differ (e.g. another F scale in loop 0).
 }
+\examples{
+data(ss3sma)
+eq <- ss3_eqcurve(ss3sma)
+head(eq)
+}

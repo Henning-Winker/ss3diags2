@@ -19,10 +19,11 @@
 #'   \code{year}, \code{unit}, \code{season}, \code{area}, \code{iter}, \code{data}
 #' @references Code adapted from getFa() in the GSA 17-18 hake advice (H. Winker).
 #' @examples
-#' \dontrun{
-#' fa <- ss3_fa(ss3rep)
+#' pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+#' fa <- ss3_fa(pra)
+#' fa
 #' ss3plot_fa(fa)
-#' }
+#' ss3_fa(pra, annual = TRUE, long = TRUE)[1:5, ]
 #' @export
 ss3_fa <- function(ss3rep, fleets = NULL, era = "TIME", annual = FALSE, long = FALSE){
   fa <- as.data.table(ss3rep$fatage)
@@ -48,14 +49,28 @@ ss3_fa <- function(ss3rep, fleets = NULL, era = "TIME", annual = FALSE, long = F
   long2flqs(d, quant = "age", units = "f", order = fleets)
 }
 
-# ages of the SS3 F_std basis ("..._for_ages_unweighted_1_3"); NULL if not age-based
+#' Ages of the SS3 F_std basis
+#'
+#' Ages of the SS3 F_std basis ("..._for_ages_unweighted_1_3"); NULL if not age-based
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @return numeric vector of ages (e.g. 1:3), or \code{NULL} if F is not age-based
+#' @noRd
 .fbar_ages <- function(ss3rep){
   b <- ss3rep$F_std_basis %||% ss3rep$F_report_basis %||% ""
   m <- regmatches(b, regexec("ages_[a-z_]*?([0-9]+)_([0-9]+)", b))[[1]]
   if(length(m) == 3) as.numeric(m[2]):as.numeric(m[3]) else NULL
 }
 
-# fleet groups: NULL (each fleet), "area" (fleets by area) or a named list of fleet names / numbers
+#' Fleet groups
+#'
+#' Fleet groups: NULL (each fleet), "area" (fleets by area) or a named list of fleet names / numbers
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param groups \code{NULL} (each fleet), \code{"area"} (fleets by area) or a named list of fleet names or numbers
+#' @param fleets fleets (names or numbers); \code{NULL} for all
+#' @return named list of fleet names
+#' @noRd
 .fleet_groups <- function(ss3rep, groups, fleets){
   nm <- .fleetnames(ss3rep)
   if(is.null(groups)) return(stats::setNames(as.list(fleets), fleets))
@@ -73,7 +88,15 @@ ss3_fa <- function(ss3rep, fleets = NULL, era = "TIME", annual = FALSE, long = F
   groups
 }
 
-# catch at age in numbers by fleet, summed over seasons, sexes and areas: data.table fleet, year, age, data
+#' Catch at age in numbers by fleet, summed over seasons, sexes and areas
+#'
+#' Catch at age in numbers by fleet, summed over seasons, sexes and areas: data.table fleet, year, age, data
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param era SS3 era (\code{"TIME"} or \code{"FORE"})
+#' @param sex sex (1 female, 2 male); \code{NULL} for all
+#' @return data.table fleet, year, age, data
+#' @noRd
 .catage_annual <- function(ss3rep, era = "TIME", sex = NULL){
   ca <- as.data.table(ss3rep$catage)
   ca <- ca[, !duplicated(names(ca)), with = FALSE]
@@ -117,11 +140,10 @@ ss3_fa <- function(ss3rep, fleets = NULL, era = "TIME", annual = FALSE, long = F
 #'   method as attribute \code{"method"}; or a data.table
 #' @seealso \code{\link{ss3plot_partialF}()}, \code{\link{ss3_fa}()}, \code{\link{ss3_impact}()}
 #' @examples
-#' \dontrun{
-#' pf <- ss3_partialF(ss3rep)                       # by fleet, adds up to F
+#' pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+#' pf <- ss3_partialF(pra)                                     # by fleet, adds up to F
 #' ss3plot_partialF(pf)
-#' ss3plot_partialF(ss3_partialF(ss3rep, groups = "area", method = "fbar"))   # F by area
-#' }
+#' ss3plot_partialF(ss3_partialF(pra, groups = "area", method = "fbar"), type = "line")   # F by area
 #' @export
 ss3_partialF <- function(ss3rep, groups = NULL, method = c("catch", "fbar", "apical"), ages = NULL,
                          season = FALSE, years = NULL, long = FALSE){
@@ -173,6 +195,10 @@ ss3_partialF <- function(ss3rep, groups = NULL, method = c("catch", "fbar", "api
 #' @param total add the total F (attribute \code{"total"}) as a black line
 #' @param ylab y-axis label
 #' @return ggplot
+#' @examples
+#' pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+#' pf <- ss3_partialF(pra, groups = "area")
+#' ss3plot_partialF(pf, type = "share")
 #' @export
 ss3plot_partialF <- function(x, type = NULL, total = TRUE, ylab = NULL){
   method <- attr(x, "method") %||% "catch"
@@ -208,6 +234,9 @@ ss3plot_partialF <- function(x, type = NULL, total = TRUE, ylab = NULL){
 #' @param years years to average (default: the last three)
 #' @param ncol number of panel columns
 #' @return ggplot
+#' @examples
+#' pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+#' ss3plot_fa(ss3_fa(pra), years = 2015:2024)
 #' @export
 ss3plot_fa <- function(fa, years = NULL, ncol = NULL){
   d <- .flq_long(fa, 1, "F")

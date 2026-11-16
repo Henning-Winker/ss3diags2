@@ -1,5 +1,14 @@
 # francis.R - Francis (2011) TA1.8 data weights for composition data
 
+#' Mean length or age by fleet and year for the Francis TA1.8 weights
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param quant data type: \code{"cpue"}, \code{"len"}, \code{"age"}, \code{"con"} (conditional age-at-length) or \code{"size"}
+#' @param fleets fleets (names or numbers); \code{NULL} for all
+#' @param part partitions (0 combined, 1 discard, 2 retained)
+#' @param seas \code{"comb"} or \code{"sep"} seasons
+#' @return data.table of observed and expected means with their variances, or \code{NULL}
+#' @noRd
 .ta18_comps <- function(ss3rep, quant, fleets, part, seas){
   db <- .comp_db(ss3rep, quant)
   nm <- .fleetnames(ss3rep)
@@ -51,8 +60,10 @@
 #'   Journal of Fisheries and Aquatic Sciences 68: 1124-1138.
 #' @examples
 #' data(ss3simple)
-#' ss3_francis(ss3simple)
+#' fr <- ss3_francis(ss3simple)
+#' fr
 #' ss3_francis(ss3simple, "age")
+#' ss3plot_francis(fr)
 #' @export
 ss3_francis <- function(ss3rep, quant = c("len", "age", "con", "size"), fleets = NULL, part = 0:2,
                         seas = c("comb", "sep"), boot = 1000, seed = 1){
@@ -94,6 +105,9 @@ ss3_francis <- function(ss3rep, quant = c("len", "age", "con", "size"), fleets =
 #' @param x output of \code{\link{ss3_francis}()}
 #' @param ncol number of panel columns
 #' @return ggplot
+#' @examples
+#' data(ss3simple)
+#' ss3plot_francis(ss3_francis(ss3simple, "age"))
 #' @export
 ss3plot_francis <- function(x, ncol = NULL){
   pl <- attr(x, "comps"); quant <- attr(x, "quant") %||% "len"

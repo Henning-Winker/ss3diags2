@@ -17,10 +17,8 @@
 #'   (numbers, biomass, F, ...), and counts \code{ncatch} (years with catch > 0), \code{nindex}, \code{nlen},
 #'   \code{nage} (number of composition samples)
 #' @examples
-#' \dontrun{
-#' data(natl.sma, package = "ss3diags")
+#' data(ss3sma)
 #' ss3_fleets(ss3sma)
-#' }
 #' @export
 ss3_fleets <- function(ss3rep){
   nm <- .fleetnames(ss3rep); nf <- length(nm); id <- seq_len(nf)
@@ -52,7 +50,15 @@ ss3_fleets <- function(ss3rep){
              nage = vapply(id, function(f) cnt(ss3rep$agedbase, f), 1L))
 }
 
-# resolve fleets given by number or name to names, restricted to 'avail'
+#' Resolve fleets given by number or name to names
+#'
+#' Resolve fleets given by number or name to names, restricted to 'avail'
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param fleets fleets (names or numbers); \code{NULL} for all
+#' @param avail available fleet names
+#' @return character vector of fleet names in \code{avail}
+#' @noRd
 .pick_fleets <- function(ss3rep, fleets, avail){
   nm <- .fleetnames(ss3rep)
   if(is.null(fleets)) return(intersect(nm, avail))

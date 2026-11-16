@@ -20,3 +20,7 @@ ggplot
 Selectivity curves by fleet from \code{\link{ss3_sel}()}, one line per time block (colour) and unit (line type),
 with an optional overlay of retention (dashed).
 }
+\examples{
+pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+ss3plot_sel(ss3_sel(pra, years = 2024), ret = ss3_sel(pra, "ret", years = 2024))
+}

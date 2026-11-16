@@ -18,3 +18,7 @@ ggplot; the RMSE table (by index and combined) in \code{attr(p, "rmse")}
 Residuals of all indices (or mean lengths) together by year, with boxplots across indices, a loess smoother of
 the mean residual and the overall RMSE (in percent) in the title, as \code{ss3diags::SSplotJABBAres()}.
 }
+\examples{
+data(ss3sma)
+ss3plot_jres(ss3sma)
+}

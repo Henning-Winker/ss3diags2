@@ -41,8 +41,9 @@ over the assessment and forecast years, and the agreed benchmarks can replace th
 \examples{
 fw <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18_fwd.rds", package = "ss3diags2"))
 fs <- ss3_fwd(fw, Fref = "Btgt", bpa = 0.5, blim = 0.25)
+names(fs)
 hke <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))
-ss3plot_fwd(fs, stk = ss3stk(hke, Fref = "Btgt", bpa = 0.5, blim = 0.25))
+ss3plot_fwd(fs, stk = ss3stk(hke, Fref = "Btgt", bpa = 0.5, blim = 0.25), ci = FALSE)
 ss3_fwdtable(fs)
 }
 \seealso{

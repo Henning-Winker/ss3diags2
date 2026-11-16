@@ -47,10 +47,8 @@ month), \code{distribution} ("lognormal"), \code{name} and \code{desc}. With \co
 is returned (observed, expected, SEs, deviations, catchability, use flag), the basis for residual diagnostics.
 }
 \examples{
-\dontrun{
-data(natl.sma, package = "ss3diags")
+data(ss3sma)
 idx <- ss3_indices(ss3sma)
 names(idx)
-index.var(idx[[1]])
-}
+ss3plot_indices(idx, fit = ss3_indices(ss3sma, what = "exp"))
 }

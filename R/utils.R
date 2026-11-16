@@ -1,13 +1,33 @@
 # utils.R - internal helpers: SS3 dimensions, labels and long table -> FLQuant conversion
 
+#' Default for NULL
+#'
+#' @param a value
+#' @param b default
+#' @return \code{a}, or \code{b} if \code{a} is \code{NULL}
+#' @noRd
 `%||%` <- function(a, b) if(is.null(a)) b else a
 
+#' Check that a package is installed
+#'
+#' @param pkg package name
+#' @param msg error message
+#' @return invisible TRUE, or an error
+#' @noRd
 .need <- function(pkg, msg = paste0("package '", pkg, "' is required")){
   if(!requireNamespace(pkg, quietly = TRUE)) stop(msg, call. = FALSE)
   invisible(TRUE)
 }
 
-# first column of x that exists, else NULL (r4ss renames columns across versions)
+#' First column of x that exists (r4ss renames columns across versions)
+#'
+#' First column of x that exists, else NULL (r4ss renames columns across versions)
+#'
+#' @param x data.frame
+#' @param cand candidate column names
+#' @param default value if none exists
+#' @return the column, or \code{default}
+#' @noRd
 .col <- function(x, cand, default = NULL){
   hit <- cand[cand %in% names(x)]
   if(length(hit)) x[[hit[1]]] else default
@@ -16,19 +36,50 @@
 # FLQuant dimension columns, in order
 .flqdims <- c("year", "unit", "season", "area", "iter")
 
+#' Season labels
+#'
+#' @param seas season
+#' @param ns number of seasons
+#' @return character ("all" with one season)
+#' @noRd
 .season_lab <- function(seas, ns) if(ns == 1) rep("all", length(seas)) else as.character(seas)
+#' Area labels
+#'
+#' @param area area
+#' @param na number of areas
+#' @return character ("unique" with one area)
+#' @noRd
 .area_lab   <- function(area, na) if(na == 1) rep("unique", length(area)) else as.character(area)
 
-# sex as FLR unit: "unique" for combined-sex data (SS3 data option Sexes = 0) or single-sex models, else F/M
+#' Sex as FLR unit
+#'
+#' Sex as FLR unit: "unique" for combined-sex data (SS3 data option Sexes = 0) or single-sex models, else F/M
+#'
+#' @param sex sex (1 female, 2 male); \code{NULL} for all
+#' @param sexes SS3 data sexes option
+#' @param nsexes number of sexes in the model
+#' @return "unique" for combined-sex data or single-sex models, else "F"/"M"
+#' @noRd
 .unit_lab <- function(sex, sexes, nsexes){
   if(nsexes == 1) return(rep("unique", length(sex)))
   ifelse(sexes == 0, "unique", c("F", "M")[sex])
 }
 
-# SS3 fleet names in model order
+#' SS3 fleet names in model order
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @return character
+#' @noRd
 .fleetnames <- function(ss3rep) as.character(ss3rep$FleetNames)
 
-# order labels: numeric if possible, FLR keywords first
+#' Order labels, FLR keywords first
+#'
+#' Order labels: numeric if possible, FLR keywords first
+#'
+#' @param x labels
+#' @param first labels to put first
+#' @return ordered unique labels
+#' @noRd
 .lev <- function(x, first = c("unique", "all", "F", "M")){
   u <- unique(as.character(x))
   num <- suppressWarnings(as.numeric(u))
@@ -52,6 +103,10 @@
 #' @examples
 #' d <- data.frame(len = c(5, 10, 15, 5, 10, 15), year = rep(c(2000, 2002), each = 3), data = 1:6)
 #' long2flq(d, quant = "len", units = "numbers")
+#' # several quantities: one FLQuant per name
+#' d2 <- data.frame(name = rep(c("a", "b"), each = 6), len = rep(c(5, 10, 15), 4),
+#'                  year = rep(rep(c(2000, 2002), each = 3), 2), data = 1:12)
+#' long2flqs(d2, quant = "len")
 #' @export
 long2flq <- function(x, quant = "age", units = "NA", years = NULL, fill = NA_real_){
   x <- as.data.table(x)
@@ -92,6 +147,10 @@ long2flqs <- function(x, quant = "age", units = "NA", by = "name", order = NULL,
 #' @param x FLQuants (or FLQuant)
 #' @param na.rm drop rows with \code{NA} data
 #' @return data.table
+#' @examples
+#' data(ss3simple)
+#' d <- flqs2long(ss3_flqs(ss3stk(ss3simple)))
+#' head(d)
 #' @export
 flqs2long <- function(x, na.rm = TRUE){
   if(is(x, "FLQuant")) x <- FLCore::FLQuants(x = x)
@@ -109,10 +168,22 @@ utils::globalVariables(c(".", "name", "fleet", "year", "unit", "season", "area",
   "use", "month", "pearson", "type", "i.fleet", "i.name", "i.part", "i.units", "Yr", "Seas", "Fleet", "n", "w", "partname", "qname", "nexp", "np", "ne",
   "used", "effN", "units", "se_total", "nlen", "time", "dev", "q", ".frow", ".fcol", "Era", "Area", "Sex", "Morph", "Type", "group", "impact", "prop", "scenario", "ssb", "SpawnBio", "Label", "annual_F", "a", "value", "s", "ss3_dynB0", "dynB0", "projected", "ss3", "v", "Factor", "Recruit_0", "Bio_all", "pred_recr", "R", "block", "lt", "what", "x", "h", "keep", "V1", "quant", "c", "M", "sc", "lo", "hi", "Value", "Parm_StDev", "lab", "label", "lo2", "hi2", "med", "quant", "lbin", "r", "Lbin_lo", "Lbin_hi", "Bin", "Obs", "Exp", "Nsamp_adj", "Like", "o", "e", "L", "std.res", "Factor", "Value", "lo.adj", "hi.adj", "xx", "panel", "grp", "w", "sea", "sexes", "Curr_Var_Adj", "Nadj", "v", "N", "wt", "xa", "nf", "pobs", "pF", "q"))
 
-# an r4ss::SS_output() list
+#' Is x an \code{r4ss::SS_output()} list?
+#'
+#' An r4ss::SS_output() list
+#'
+#' @param x object
+#' @return logical
+#' @noRd
 .is_ss3rep <- function(x) is.list(x) && !is.data.frame(x) && !is.null(x$FleetNames)
 
-# effective end year: retrospective runs keep endyr and report the peel end year in Retro_year
+#' Effective end year (retrospective runs report the peel end year in Retro_year)
+#'
+#' Effective end year: retrospective runs keep endyr and report the peel end year in Retro_year
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @return end year
+#' @noRd
 .endyr <- function(ss3rep){
   ry <- ss3rep$Retro_year
   if(!is.null(ry) && is.finite(ry) && ry < ss3rep$endyr) ry else ss3rep$endyr

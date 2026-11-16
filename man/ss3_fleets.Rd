@@ -21,8 +21,6 @@ select fleets for the extraction functions and to map them to JABBA3 (catch flee
 (gears with length compositions).
 }
 \examples{
-\dontrun{
-data(natl.sma, package = "ss3diags")
+data(ss3sma)
 ss3_fleets(ss3sma)
-}
 }

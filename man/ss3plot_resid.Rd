@@ -59,6 +59,6 @@ so read patterns along length as conditional, not as a direct excess or deficit 
 data(ss3simple)
 r <- ss3_resid(ss3simple)
 ss3plot_resid(r, lhpar = ss3_lhpar(ss3simple))
-ss3plot_resid(r, type = "len")
 ss3plot_resid(r, type = "qq")
+ss3plot_resid(ss3_resid(ss3simple, "age"), cohorts = FALSE)
 }

@@ -22,8 +22,6 @@ compositions come from \code{\link{ss3_lencomp}()} with \code{scale = "n"}), by 
 unit, season or area.
 }
 \examples{
-\dontrun{
-data(natl.sma, package = "ss3diags")
-ss3plot_nsamp(ss3_lencomp(ss3sma), by = "unit")
-}
+data(ss3sma)
+ss3plot_nsamp(ss3_lencomp(ss3sma))
 }

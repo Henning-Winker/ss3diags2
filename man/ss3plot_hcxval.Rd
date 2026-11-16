@@ -24,3 +24,7 @@ one-year-ahead prediction as a dashed segment ending in a point, and the predict
 MASE in the panel titles (MASE.adj in brackets when smaller), as \code{ss3diags::SSplotHCxval()} and
 \code{JABBA3::jbplot_hcxval()}.
 }
+\examples{
+data(retro.sma)
+ss3plot_hcxval(ss3_hindcast(retro.sma), xmin = 2000)
+}

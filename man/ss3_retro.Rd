@@ -24,10 +24,8 @@ one-year-ahead (forecast) Mohn's rho and the forecast segments of \code{\link{ss
 its end year in \code{attr(x, "endyr")}.
 }
 \examples{
-\dontrun{
-data(natl.sma, package = "ss3diags")
+data(retro.sma)
 rt <- ss3_retro(retro.sma)
 ss3_mohn(rt)
 ss3plot_retro(rt)
-}
 }

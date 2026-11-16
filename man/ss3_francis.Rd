@@ -47,8 +47,10 @@ adjustment of the fleet by \eqn{w}. The 95\\% interval is a bootstrap of the res
 }
 \examples{
 data(ss3simple)
-ss3_francis(ss3simple)
+fr <- ss3_francis(ss3simple)
+fr
 ss3_francis(ss3simple, "age")
+ss3plot_francis(fr)
 }
 \references{
 Francis, R.I.C.C. (2011). Data weighting in statistical fisheries stock assessment models. Canadian

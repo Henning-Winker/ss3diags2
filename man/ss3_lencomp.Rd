@@ -64,11 +64,12 @@ one partition (discards, retained) get one element each, named \code{fleet.disca
 Ageing-error definitions (often year-specific) are kept in the long table (column \code{ageerr}).
 }
 \examples{
-\dontrun{
-data(natl.sma, package = "ss3diags")
-lfd <- ss3_lencomp(ss3sma)                    # numbers at length, sexes as unit
-lfd <- ss3_lencomp(ss3sma, sex = "combine")   # sexes combined
-data(pac.hke, package = "ss3diags")
-afd <- ss3_agecomp(ss3phk, scale = "prop")
-}
+data(ss3simple)
+lfd <- ss3_lencomp(ss3simple)                          # numbers at length, sexes as unit
+names(lfd)
+ss3_lencomp(ss3simple, sex = "combine", scale = "prop")  # sexes combined, proportions
+ss3_lencomp(ss3simple, what = "exp")                    # expected
+data(ss3phk)
+afd <- ss3_agecomp(ss3phk, scale = "prop")             # age compositions
+names(afd)
 }

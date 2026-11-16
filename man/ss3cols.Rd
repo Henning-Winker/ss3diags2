@@ -4,9 +4,12 @@
 \alias{ss3cols}
 \alias{ss3runcols}
 \alias{ss3seascols}
-\alias{.obsfill}
+\alias{ss3unitcols}
 \alias{ss3bubblecols}
 \title{r4ss colours}
+\format{
+\code{ss3unitcols}: named colours of the units (sexes): F red, M blue, combined ("unique") green
+}
 \usage{
 ss3cols(n, alpha = 1)
 
@@ -14,7 +17,7 @@ ss3runcols(n, alpha = 1)
 
 ss3seascols(n, alpha = 1)
 
-.obsfill
+ss3unitcols
 
 ss3bubblecols
 }
@@ -37,5 +40,6 @@ blue, red, green3 for three runs, otherwise as \code{ss3cols})
 }
 }
 \examples{
-ss3cols(5); ss3seascols(4); ss3unitcols
+ss3cols(5); ss3runcols(3); ss3seascols(4); ss3unitcols
+scales::show_col(ss3cols(8))
 }

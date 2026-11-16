@@ -14,3 +14,8 @@ scale_x_year(n = 5, ...)
 \description{
 Integer year axis
 }
+\examples{
+library(ggplot2)
+d <- data.frame(year = 1990:2020, y = cumsum(rnorm(31)))
+ggplot(d, aes(year, y)) + geom_line() + scale_x_year(n = 4) + theme_ss3()
+}

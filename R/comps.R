@@ -2,7 +2,22 @@
 
 .part_lab <- c("0" = "all", "1" = "discard", "2" = "retained")
 
-# long table of one SS3 composition database (lendbase, agedbase)
+#' Long table or FLQuants of one SS3 composition database (lendbase, agedbase)
+#'
+#' Long table of one SS3 composition database (lendbase, agedbase)
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param db composition database (e.g. \code{ss3rep$lendbase})
+#' @param quant \code{"len"} or \code{"age"}
+#' @param fleets fleets (names or numbers); \code{NULL} for all
+#' @param what \code{"obs"}, \code{"exp"} or \code{"pearson"}
+#' @param scale \code{"n"} (numbers) or \code{"prop"}
+#' @param nsamp sample size: \code{"adj"} or \code{"input"}
+#' @param sex \code{"unit"} (sexes as unit) or \code{"combine"}
+#' @param part partitions (0 combined, 1 discard, 2 retained)
+#' @param long return a long data.table
+#' @return FLQuants by fleet (or a data.table with \code{long = TRUE})
+#' @noRd
 .ss3_comps <- function(ss3rep, db, quant, fleets, what, scale, nsamp, sex, part, long){
   db <- as.data.table(db)
   if(!nrow(db)) stop("no ", quant, " compositions in this SS3 report", call. = FALSE)
@@ -86,13 +101,14 @@
 #'   \code{fleet}, \code{name}, \code{partname}, \code{part}, \code{ageerr}, \code{month}, \code{obs}, \code{exp},
 #'   \code{pearson}, \code{nsamp}, \code{nsamp_adj}, \code{nsamp_in}, \code{effN}, \code{n}, \code{units}
 #' @examples
-#' \dontrun{
-#' data(natl.sma, package = "ss3diags")
-#' lfd <- ss3_lencomp(ss3sma)                    # numbers at length, sexes as unit
-#' lfd <- ss3_lencomp(ss3sma, sex = "combine")   # sexes combined
-#' data(pac.hke, package = "ss3diags")
-#' afd <- ss3_agecomp(ss3phk, scale = "prop")
-#' }
+#' data(ss3simple)
+#' lfd <- ss3_lencomp(ss3simple)                          # numbers at length, sexes as unit
+#' names(lfd)
+#' ss3_lencomp(ss3simple, sex = "combine", scale = "prop")  # sexes combined, proportions
+#' ss3_lencomp(ss3simple, what = "exp")                    # expected
+#' data(ss3phk)
+#' afd <- ss3_agecomp(ss3phk, scale = "prop")             # age compositions
+#' names(afd)
 #' @export
 ss3_lencomp <- function(ss3rep, fleets = NULL, what = c("obs", "exp", "pearson"), scale = c("n", "prop"),
                         nsamp = c("adj", "input"), sex = c("unit", "combine"), part = NULL, long = FALSE){

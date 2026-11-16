@@ -50,3 +50,8 @@ year, for one fleet: bubbles sized by the absolute residual, blue for observed >
 expected. Growth curves (\code{lhpar}) show the mean length at age with \eqn{\pm} 2 SD bands; diamonds and bars
 give the observed and expected mean length at age of the aged fish.
 }
+\examples{
+hke <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))
+cl <- ss3_resid(hke, quant = "con", long = TRUE, nsamp = "input")
+ss3plot_caal(cl, fleet = "ITA_OTB_18", years = 2018:2023, lhpar = ss3_lhpar(hke))
+}

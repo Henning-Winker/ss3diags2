@@ -52,11 +52,10 @@ summed within groups.}
 }
 }
 \examples{
-\dontrun{
-pf <- ss3_partialF(ss3rep)                       # by fleet, adds up to F
+pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+pf <- ss3_partialF(pra)                                     # by fleet, adds up to F
 ss3plot_partialF(pf)
-ss3plot_partialF(ss3_partialF(ss3rep, groups = "area", method = "fbar"))   # F by area
-}
+ss3plot_partialF(ss3_partialF(pra, groups = "area", method = "fbar"), type = "line")   # F by area
 }
 \seealso{
 \code{\link{ss3plot_partialF}()}, \code{\link{ss3_fa}()}, \code{\link{ss3_impact}()}

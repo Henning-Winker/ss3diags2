@@ -1,6 +1,15 @@
 # resid.R - Pearson and one-step-ahead (OSA) residuals of the SS3 compositions
 
-# beta-binomial cdf at x for N trials, shapes a, b (as FLicc)
+#' Beta-binomial cdf (as FLicc)
+#'
+#' Beta-binomial cdf at x for N trials, shapes a, b (as FLicc)
+#'
+#' @param x counts
+#' @param N number of trials
+#' @param a shape a
+#' @param b shape b
+#' @return probabilities
+#' @noRd
 .pbetabinom <- function(x, N, a, b){
   if(N <= 0) return(rep(1, length(x)))
   k <- 0:N
@@ -9,7 +18,15 @@
   ifelse(x < 0, 0, ifelse(x >= N, 1, cdf[pmin(floor(x), N) + 1]))
 }
 
-# OSA residuals of one composition: counts o, expected proportions p, DM precision a0 (Inf = multinomial)
+#' OSA residuals of one composition
+#'
+#' OSA residuals of one composition: counts o, expected proportions p, DM precision a0 (Inf = multinomial)
+#'
+#' @param o observed counts
+#' @param p expected proportions
+#' @param a0 Dirichlet-multinomial precision (Inf = multinomial)
+#' @return numeric residuals
+#' @noRd
 .osa_comp <- function(o, p, a0 = Inf){
   K <- length(o); r <- rep(NA_real_, K)
   p <- pmax(p, 1e-12); p <- p/sum(p)
@@ -66,6 +83,8 @@
 #' data(ss3simple)
 #' r <- ss3_resid(ss3simple)
 #' names(r)
+#' ss3plot_resid(r)
+#' ss3_resid(ss3simple, "age", type = "pearson")
 #' @export
 ss3_resid <- function(ss3rep, quant = c("len", "age", "con", "size"), type = c("osa", "pearson"), fleets = NULL,
                       seed = 1, min.exp = 0.01, nsamp = c("adj", "input"), long = FALSE){
@@ -150,6 +169,10 @@ utils::globalVariables(c("comp", "a0", "neff", "N", "pobs", "repl", "np"))
 #' @param cap residuals capped at this absolute value for the bubble size
 #' @param ncol number of panel columns
 #' @return ggplot
+#' @examples
+#' hke <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))
+#' cl <- ss3_resid(hke, quant = "con", long = TRUE, nsamp = "input")
+#' ss3plot_caal(cl, fleet = "ITA_OTB_18", years = 2018:2023, lhpar = ss3_lhpar(hke))
 #' @export
 ss3plot_caal <- function(x, fleet = NULL, years = NULL, units = NULL, lhpar = NULL, timing = 0.5, band = TRUE,
                          means = TRUE, cap = 4, ncol = NULL){

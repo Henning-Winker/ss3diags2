@@ -43,7 +43,7 @@ compositions (units "F" and "M"). The proportions use the numbers of the composi
 years and bins are weighted by their sample sizes.
 }
 \examples{
-\dontrun{
-ss3plot_sexratio(ss3_lencomp(ss3rep), fit = ss3_lencomp(ss3rep, what = "exp"))
-}
+hke <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))
+ss3plot_sexratio(ss3_lencomp(hke), fit = ss3_lencomp(hke, what = "exp"))
+ss3plot_sexratio(ss3_lencomp(hke), fit = ss3_lencomp(hke, what = "exp"), type = "year", ci = FALSE)
 }

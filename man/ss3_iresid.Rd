@@ -22,3 +22,9 @@ the mean length / age by fleet and year (sexes and partitions pooled, as \code{s
 \code{FLQuants} by fleet, the input of \code{\link{ss3_runs}()}, \code{\link{ss3plot_runs}()} and
 \code{\link{ss3plot_jres}()}.
 }
+\examples{
+data(ss3simple)
+r <- ss3_iresid(ss3simple)
+head(r)
+head(ss3_iresid(ss3simple, "len"))
+}

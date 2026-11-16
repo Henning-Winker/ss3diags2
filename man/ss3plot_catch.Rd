@@ -32,9 +32,7 @@ Catch by fleet from an \code{FLQuants} (one \code{FLQuant} per fleet, e.g. \code
 JABBA3 / FLicc catch input), as stacked bars, lines or shares, optionally split by unit, season or area.
 }
 \examples{
-\dontrun{
-data(natl.sma, package = "ss3diags")
+data(ss3sma)
 ss3plot_catch(ss3_catch(ss3sma))
 ss3plot_catch(ss3_catch(ss3sma), type = "share")
-}
 }

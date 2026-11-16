@@ -45,10 +45,10 @@ ensemble pools them. Ratios to the targets (B/Btgt, F/Ftgt) are computed within 
 reference points, before pooling, so models with different benchmarks combine on the relative scale.
 }
 \examples{
-\dontrun{
-ens <- ss3_ensemble(list(base = ss3rep1, highM = ss3rep2, lowh = ss3rep3), weights = c(0.5, 0.25, 0.25))
-ss3plot_ensemble(ens)
-}
+her <- readRDS(system.file("extdata", "her.27.25-2932", "her.27.25-2932.rds", package = "ss3diags2"))
+ens <- ss3_ensemble(her, weights = c(1.5, 1, 0.5), iters = 200)
+attr(ens, "weights")
+ss3plot_ensemble(ens, start = 1960)
 }
 \seealso{
 \code{\link{ss3plot_ensemble}()}

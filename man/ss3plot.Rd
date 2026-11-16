@@ -40,10 +40,8 @@ deviations and the production phase plot (bottom). Biomass is SSB. Uncertainty c
 ratio over the years of each index), as a visual check of the trend only.
 }
 \examples{
-\dontrun{
 pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
-ss3plot(pra, lag = 1)
-}
+ss3plot(pra, iters = 200, lag = 1)
 }
 \seealso{
 \code{\link{ss3plot_trj}()}, \code{\link{ss3plot_kobe}()}, \code{\link{ss3plot_sr}()},

@@ -16,6 +16,11 @@
 #'   selectivity are dropped)
 #' @param long return the long data.table
 #' @return FLQuants (named by fleet) or data.table
+#' @examples
+#' data(ss3simple)
+#' sel <- ss3_sel(ss3simple)
+#' ss3plot_sel(sel)
+#' ss3plot_sel(ss3_sel(ss3simple, "age"))
 #' @export
 ss3_sel <- function(ss3rep, what = c("len", "ret", "keep", "dead", "mort", "age"), fleets = NULL, years = NULL,
                     long = FALSE){
@@ -57,6 +62,9 @@ ss3_sel <- function(ss3rep, what = c("len", "ret", "keep", "dead", "mort", "age"
 #' @param ret optional FLQuants of retention (\code{ss3_sel(ss3rep, "ret")}), drawn dashed
 #' @param ncol number of panel columns
 #' @return ggplot
+#' @examples
+#' pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+#' ss3plot_sel(ss3_sel(pra, years = 2024), ret = ss3_sel(pra, "ret", years = 2024))
 #' @export
 ss3plot_sel <- function(sel, ret = NULL, ncol = NULL){
   prep <- function(x, lab){
@@ -90,6 +98,12 @@ ss3plot_sel <- function(sel, ret = NULL, ncol = NULL){
 #' @param ss3rep output of \code{r4ss::SS_output()}
 #' @param years years to keep (default: model years)
 #' @return FLQuants \code{SSB}, \code{B} and \code{Rec} (quant "all", area dimension)
+#' @examples
+#' pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+#' ba <- ss3_byarea(pra)
+#' ba
+#' ss3plot_byarea(ba)
+#' ss3plot_byarea(ba, type = "share")
 #' @export
 ss3_byarea <- function(ss3rep, years = NULL){
   ts <- as.data.table(ss3rep$timeseries)
@@ -112,6 +126,9 @@ ss3_byarea <- function(ss3rep, years = NULL){
 #' @param x FLQuants from \code{\link{ss3_byarea}()}
 #' @param type \code{"area"} (default) or \code{"share"}
 #' @return ggplot
+#' @examples
+#' pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+#' ss3plot_byarea(ss3_byarea(pra))
 #' @export
 ss3plot_byarea <- function(x, type = c("area", "share")){
   type <- match.arg(type)
@@ -134,6 +151,10 @@ ss3plot_byarea <- function(x, type = c("area", "share")){
 #' @param ss3rep output of \code{r4ss::SS_output()}
 #' @param type \code{"sr"} (stock-recruit, default) or \code{"devs"} (recruitment deviations)
 #' @return ggplot
+#' @examples
+#' data(ss3sma)
+#' ss3plot_sr(ss3sma)
+#' ss3plot_sr(ss3sma, type = "devs")
 #' @export
 ss3plot_sr <- function(ss3rep, type = c("sr", "devs")){
   type <- match.arg(type)

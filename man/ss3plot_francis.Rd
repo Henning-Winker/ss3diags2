@@ -19,3 +19,7 @@ Observed mean length (or age) of each composition with \eqn{\pm 2} SE from the a
 and after the Francis weighting (thin bars), and the expected mean (line), by fleet over years, with the Francis
 weight and its interval in the panel title.
 }
+\examples{
+data(ss3simple)
+ss3plot_francis(ss3_francis(ss3simple, "age"))
+}

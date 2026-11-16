@@ -1,6 +1,13 @@
 # ss3plot.R - one-page summary of an SS3 assessment (as JABBA3's jbplot summary)
 
-# observed indices scaled to SSB (geometric mean ratio over the index years), for the SSB and B/Btgt panels
+#' Observed indices scaled to SSB
+#'
+#' Observed indices scaled to SSB (geometric mean ratio over the index years), for the SSB and B/Btgt panels
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param ssb SSB by year
+#' @return data.table of indices scaled by the geometric mean ratio over the index years
+#' @noRd
 .idx2ssb <- function(ss3rep, ssb){
   idx <- tryCatch(ss3_indices(ss3rep, long = TRUE), error = function(e) NULL)
   if(is.null(idx) || !nrow(idx)) return(NULL)
@@ -10,7 +17,13 @@
   idx[, .(name, year, value = obs*sc)]
 }
 
-# recruitment deviations with 95% intervals from the SS3 parameter SEs
+#' Recruitment deviations with 95% intervals
+#'
+#' Recruitment deviations with 95% intervals from the SS3 parameter SEs
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @return data.table year, dev, lower, upper
+#' @noRd
 .recdevs <- function(ss3rep){
   rp <- as.data.table(ss3rep$recruitpars)
   if(!nrow(rp)) return(NULL)
@@ -19,6 +32,12 @@
          type = sub("_RecrDev", "", type))]
 }
 
+#' Panel strip label for a ggplot
+#'
+#' @param p ggplot
+#' @param lab label
+#' @return ggplot
+#' @noRd
 .strip <- function(p, lab) p + ggplot2::facet_wrap(ggplot2::vars(!!lab)) +
   ggplot2::theme(plot.title = ggplot2::element_blank(), plot.subtitle = ggplot2::element_blank())
 
@@ -41,10 +60,8 @@
 #' @seealso \code{\link{ss3plot_trj}()}, \code{\link{ss3plot_kobe}()}, \code{\link{ss3plot_sr}()},
 #'   \code{\link{ss3plot_production}()}
 #' @examples
-#' \dontrun{
 #' pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
-#' ss3plot(pra, lag = 1)
-#' }
+#' ss3plot(pra, iters = 200, lag = 1)
 #' @export
 ss3plot <- function(ss3rep, stk = NULL, iters = 1000, lag = 0, indices = TRUE, fwd = FALSE,
                     probs = c(0.05, 0.2, 0.5, 0.8, 0.95)){

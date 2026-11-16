@@ -29,10 +29,11 @@ annual F of a fleet is the sum over seasons weighted by the season durations (\c
 Platoons / morphs within a sex are averaged.
 }
 \examples{
-\dontrun{
-fa <- ss3_fa(ss3rep)
+pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+fa <- ss3_fa(pra)
+fa
 ss3plot_fa(fa)
-}
+ss3_fa(pra, annual = TRUE, long = TRUE)[1:5, ]
 }
 \references{
 Code adapted from getFa() in the GSA 17-18 hake advice (H. Winker).

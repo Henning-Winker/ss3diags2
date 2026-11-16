@@ -33,3 +33,9 @@ Selectivity at length (\code{"len"}), retention (\code{"ret"}), discard mortalit
 \code{Asel2}) from \code{ss3rep$sizeselex} / \code{ss3rep$ageselex}, as \code{FLQuants} by fleet with
 len or age, year (the years in which SS3 reports a change, i.e. time blocks) and unit (sex) dimensions.
 }
+\examples{
+data(ss3simple)
+sel <- ss3_sel(ss3simple)
+ss3plot_sel(sel)
+ss3plot_sel(ss3_sel(ss3simple, "age"))
+}

@@ -1,6 +1,13 @@
 # mvln.R - multivariate lognormal (MVLN) draws of SS3 stock status, FLStockR (ss3stk) and FLQuants (ss3_flqs)
 
-# catch by year: summed fleet column of ss3rep$catch, forecast catch from ForeCatch_
+#' Catch by year
+#'
+#' Catch by year: summed fleet column of ss3rep$catch, forecast catch from ForeCatch_
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param catch column of \code{ss3rep$catch} (\code{"Exp"}, \code{"Obs"}, ...)
+#' @return data.table year, Catch (forecast catch from ForeCatch_)
+#' @noRd
 .ss3_catch_year <- function(ss3rep, catch = "Exp"){
   ct <- as.data.table(ss3rep$catch %||% data.frame())
   col <- if(catch %in% names(ct)) catch else sub("^kill_", "dead_", catch)
@@ -11,7 +18,14 @@
   C
 }
 
-# labels of the reference points matching the B ratio and F bases (as SSdeltaMVLN)
+#' Labels of the reference points matching the B ratio and F bases (as ss3diags::SSdeltaMVLN)
+#'
+#' Labels of the reference points matching the B ratio and F bases (as SSdeltaMVLN)
+#'
+#' @param b basis from \code{.ss3_basis()}
+#' @param hatlab labels of the derived quantities
+#' @return named list of labels Btgt, B0, Ftgt, MSY, R0
+#' @noRd
 .ref_labels <- function(b, hatlab){
   pick <- function(x) x[x %in% hatlab][1]
   B0 <- pick(c("SSB_unfished", "SSB_Unfished"))
@@ -21,7 +35,19 @@
        R0 = pick(c("Recr_unfished", "Recr_Unfished", "Recr_Virgin")))
 }
 
-# joint MVLN over all years and reference points (ss3om::ssmvln approach, L.T. Kell); mc = 0: MLE only
+#' Joint MVLN over all years and reference points (ss3om::ssmvln approach, L.T. Kell)
+#'
+#' Joint MVLN over all years and reference points (ss3om::ssmvln approach, L.T. Kell); mc = 0: MLE only
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param Fref F reference: \code{NULL} (from the SS3 F basis), \code{"MSY"}, \code{"Btgt"} or \code{"SPR"}
+#' @param years years
+#' @param mc number of MVLN draws (0: MLE only)
+#' @param forecast include the forecast years
+#' @param catch catch type
+#' @param seed random seed
+#' @return list of the draws (kb), MLE and reference points
+#' @noRd
 .mvln_joint <- function(ss3rep, Fref = NULL, years = NULL, mc = 1000, forecast = FALSE, catch = "Exp", seed = 123){
   b <- .ss3_basis(ss3rep, Fref)
   hat <- as.data.table(ss3rep$derived_quants)
@@ -124,11 +150,11 @@
 #' shortfin mako. ICCAT SCRS/2019/093.
 #' @author Laurence T. Kell (joint MVLN, ss3om), Henning Winker
 #' @examples
-#' \dontrun{
-#' data(natl.sma, package = "ss3diags")
-#' mv <- ss3mvln(ss3sma, mc = 1000)
-#' mv$refpts.iter
-#' }
+#' data(ss3sma)
+#' mv <- ss3mvln(ss3sma, mc = 200)
+#' names(mv)
+#' head(mv$kb)
+#' mva <- ss3mvln(ss3sma, mc = 200, method = "annual")   # delta-MVLN by year, as ss3diags::SSdeltaMVLN()
 #' @export
 ss3mvln <- function(ss3rep, mc = 1000, method = c("joint", "annual"), Fref = NULL, years = NULL, fwd = FALSE,
                     catch = c("Exp", "Obs", "kill_bio", "dead_bio", "ret_bio"), seed = 123, virgin = FALSE){
@@ -166,7 +192,20 @@ print.ss3mvln <- function(x, ...){
 }
 
 
-# year-by-year MVLN of ss3diags::SSdeltaMVLN (Walter and Winker 2019), without dplyr
+#' Year-by-year MVLN of ss3diags::SSdeltaMVLN (Walter and Winker 2019)
+#'
+#' Year-by-year MVLN of ss3diags::SSdeltaMVLN (Walter and Winker 2019), without dplyr
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param Fref F reference: \code{NULL} (from the SS3 F basis), \code{"MSY"}, \code{"Btgt"} or \code{"SPR"}
+#' @param years years
+#' @param mc number of MVLN draws (0: MLE only)
+#' @param forecast include the forecast years
+#' @param virgin include the virgin year
+#' @param catch catch type
+#' @param seed random seed
+#' @return list of the draws (kb), MLE and reference points
+#' @noRd
 .mvln_annual <- function(ss3rep, Fref = NULL, years = NULL, mc = 1000, forecast = FALSE, virgin = FALSE,
                          catch = "Exp", seed = 123){
   .need("mvtnorm")
@@ -270,17 +309,14 @@ print.ss3mvln <- function(x, ...){
 #' @return FLStockR
 #' @author Henning Winker, Laurence T. Kell
 #' @examples
-#' data(ss3simple)
-#' stk <- ss3stk(ss3simple)                    # MLE
-#' sa <- ss3stk(readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2")),
-#'              area = TRUE)                   # FLStocks: stock and areas
-#' \dontrun{
-#' data(natl.sma, package = "ss3diags")
-#' stk  <- ss3stk(ss3sma)                      # MLE with SEs
-#' stkf <- ss3stk(ss3sma, output = "iters", fwd = TRUE)   # with the year after the end year
-#' stki <- ss3stk(ss3sma, output = "iters")    # joint MVLN iterations
-#' stki <- ss3stk(ss3mvln(ss3sma, method = "annual"))
-#' }
+#' data(ss3sma)
+#' stk <- ss3stk(ss3sma)                                     # MLE
+#' stk@refpts
+#' stki <- ss3stk(ss3sma, output = "iters", iters = 200)     # MVLN draws
+#' ss3plot_trj(stki)
+#' pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+#' sa <- ss3stk(pra, area = TRUE)                            # stock and areas
+#' ss3plot_trj(sa)
 #' @export
 ss3stk <- function(x, output = NULL, iters = 1000, method = c("joint", "annual"), rel = FALSE, thin = 1, Fref = NULL,
                    fwd = FALSE, catch = c("Exp", "Obs", "kill_bio", "dead_bio", "ret_bio"), blim = NULL,
@@ -353,7 +389,14 @@ ss3stk <- function(x, output = NULL, iters = 1000, method = c("joint", "annual")
   out
 }
 
-# log-scale SEs of SSB, F, recruitment, B ratio from the derived quantities
+#' Log-scale standard errors from the derived quantities
+#'
+#' Log-scale SEs of SSB, F, recruitment, B ratio from the derived quantities
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param yrs years
+#' @return data.table year with the log-scale SEs of SSB, F, recruitment and B ratio
+#' @noRd
 .se_log <- function(ss3rep, yrs){
   hat <- as.data.table(ss3rep$derived_quants)
   lab <- .col(hat, c("Label", "LABEL")); val <- .col(hat, c("Value", "VALUE")); sdv <- .col(hat, c("StdDev", "STDDEV"))
@@ -377,10 +420,8 @@ ss3stk <- function(x, output = NULL, iters = 1000, method = c("joint", "annual")
 #' @examples
 #' data(ss3simple)
 #' ss3_flqs(ss3stk(ss3simple), c("SSB", "F", "B/Btgt"))
-#' \dontrun{
-#' data(natl.sma, package = "ss3diags")
-#' ggplotFL::plot(ss3_flqs(ss3sma, output = "iters"))
-#' }
+#' fq <- ss3_flqs(ss3stk(ss3simple, output = "iters", iters = 100))
+#' ss3plot_flqs(fq)
 #' @export
 ss3_flqs <- function(x, quants = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftgt"), ...){
   if(inherits(x, "ss3mvln")){
@@ -407,7 +448,14 @@ ss3_flqs <- function(x, quants = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftgt
 
 utils::globalVariables(c("Ftgt", "Btgt", "MSY", "B0", "R0"))
 
-# simplified (age "1") FLStock from a data.table year, iter, SSB, Recr, Catch, F
+#' Simplified FLStock (age "1") from a long table
+#'
+#' Simplified (age "1") FLStock from a data.table year, iter, SSB, Recr, Catch, F
+#'
+#' @param d data.table year, iter, SSB, Recr, Catch, F
+#' @param name name of the stock
+#' @return FLStock
+#' @noRd
 .stk_build <- function(d, name){
   mk <- function(v, u) long2flq(d[, .(age = "1", year, iter, data = get(v))], quant = "age", units = u)
   R <- mk("Recr", "1000"); C <- mk("Catch", "t"); H <- mk("F", "f")
@@ -422,7 +470,16 @@ utils::globalVariables(c("Ftgt", "Btgt", "MSY", "B0", "R0"))
   stk
 }
 
-# stock by area: SSB, recruitment and catch by area, F experienced in each area (Fbar of the area fleets)
+#' Stock by area
+#'
+#' Stock by area: SSB, recruitment and catch by area, F experienced in each area (Fbar of the area fleets)
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param tot FLStockR of the whole stock
+#' @param blim Blim as a fraction of Btgt
+#' @param bpa Bpa as a fraction of Btgt
+#' @return FLStocks: the stock and one FLStockR per area (SSB, recruitment, catch, F of the area fleets)
+#' @noRd
 .ss3stk_area <- function(ss3rep, tot, blim = NULL, bpa = NULL){
   na <- ss3rep$nareas %||% 1
   if(na < 2) stop("the model has one area", call. = FALSE)
@@ -460,7 +517,13 @@ utils::globalVariables(c("Ftgt", "Btgt", "MSY", "B0", "R0"))
   FLCore::FLStocks(c(list(stock = tot), out))
 }
 
-# FLQuants with iterations from the MVLN draws: SSB, F, Rec, Catch, B/Btgt, F/Ftgt (+ B/B0, Catch/MSY)
+#' FLQuants with iterations from the MVLN draws
+#'
+#' FLQuants with iterations from the MVLN draws: SSB, F, Rec, Catch, B/Btgt, F/Ftgt (+ B/B0, Catch/MSY)
+#'
+#' @param x \code{ss3mvln()} output
+#' @return \code{x} with element \code{flqs}: SSB, F, Rec, Catch, B/Btgt, F/Ftgt (and B/B0, Catch/MSY)
+#' @noRd
 .add_flqs <- function(x){
   kb <- x$kb
   if(is.null(kb) || !is.data.frame(kb) || !nrow(kb)){             # mc = 0: MLE as one iteration
@@ -496,10 +559,10 @@ utils::globalVariables(c("Ftgt", "Btgt", "MSY", "B0", "R0"))
 #' @param ncol number of panel columns
 #' @return ggplot
 #' @examples
-#' \dontrun{
-#' m <- ss3mvln(ss3sma, mc = 1000)
-#' ss3plot_flqs(m$flqs)
-#' }
+#' data(ss3sma)
+#' mv <- ss3mvln(ss3sma, mc = 200)
+#' ss3plot_flqs(mv$flqs)
+#' ss3plot_flqs(mv$flqs, worms = 5, ci = FALSE)
 #' @export
 ss3plot_flqs <- function(x, probs = c(0.05, 0.25, 0.5, 0.75, 0.95), worms = 0, ci = TRUE, median = TRUE,
                          worm.col = c("colour", "grey"), alpha = 0.5, ncol = 2){

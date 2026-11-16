@@ -7,7 +7,13 @@
              B0 = "blue", R0 = "blue")
 .kobe_fills <- c(green = "#2ca25f", yellow = "#fee391", orange = "#fd8d3c", red = "#de2d26")
 
-# FLStockR / FLStock / FLStocks / list -> named list of stocks
+#' Named list of stocks
+#'
+#' FLStockR / FLStock / FLStocks / list -> named list of stocks
+#'
+#' @param x FLStockR, FLStock, FLStocks or list
+#' @return named list
+#' @noRd
 .stklist <- function(x){
   if(is(x, "FLStock")) return(stats::setNames(list(x), FLCore::name(x) %||% "stock"))
   if(is(x, "FLStocks") || is.list(x)){
@@ -18,13 +24,26 @@
   stop("expected FLStockR, FLStock, FLStocks or a list of them", call. = FALSE)
 }
 
+#' Reference point of a stock
+#'
+#' @param stk FLStockR (from \code{ss3stk()})
+#' @param p reference point name
+#' @return median value, or NA
+#' @noRd
 .rp <- function(stk, p){
   if(!is(stk, "FLStockR")) return(NA_real_)
   r <- FLCore::refpts(stk)
   if(p %in% dimnames(r)$params) stats::median(as.numeric(r[p, ])) else NA_real_
 }
 
-# long table of quantities for one stock: year, quant, iter, data
+#' Long table of quantities of one stock
+#'
+#' Long table of quantities for one stock: year, quant, iter, data
+#'
+#' @param stk FLStockR (from \code{ss3stk()})
+#' @param type quantity names (e.g. \code{"SSB"}, \code{"F/Ftgt"})
+#' @return data.table year, quant, iter, data
+#' @noRd
 .stk_quants <- function(stk, type){
   q <- ss3_flqs(stk, type)
   rbindlist(lapply(type, function(k){
@@ -33,7 +52,15 @@
   }))
 }
 
-# summary: median and quantiles from iterations, else MLE with lognormal intervals from attr(stk, "se.log")
+#' Median and quantiles of stock quantities
+#'
+#' Summary: median and quantiles from iterations, else MLE with lognormal intervals from attr(stk, "se.log")
+#'
+#' @param stk FLStockR (from \code{ss3stk()})
+#' @param type quantity names (e.g. \code{"SSB"}, \code{"F/Ftgt"})
+#' @param probs quantiles
+#' @return data.table: from the iterations, or the MLE with lognormal intervals from \code{attr(stk, "se.log")}
+#' @noRd
 .stk_summary <- function(stk, type, probs){
   d <- .stk_quants(stk, type)
   ni <- length(unique(d$iter))
@@ -64,14 +91,26 @@
   setnames(d, "data", "est"); d[, iter := NULL]; d
 }
 
-# panel labels; with a basis (attr "basis" of ss3stk) the targets are named by their benchmark (Bmsy, B40, Bspr40, ...)
+#' Panel labels of stock quantities
+#'
+#' Panel labels; with a basis (attr "basis" of ss3stk) the targets are named by their benchmark (Bmsy, B40, Bspr40, ...)
+#'
+#' @param type quantity names (e.g. \code{"SSB"}, \code{"F/Ftgt"})
+#' @param basis basis attribute of \code{ss3stk()} (benchmark names)
+#' @return character labels, with targets named by their benchmark (Bmsy, B40, ...)
+#' @noRd
 .ylab_quant <- function(type, basis = NULL){
   B <- basis$B %||% "Btgt"; F <- basis$F %||% "Ftgt"; C <- basis$C %||% "MSY"
   stats::setNames(c(SSB = "SSB", F = "F", Rec = "Recruitment", Catch = "Catch", `B/Btgt` = paste0("B/", B),
                     `F/Ftgt` = paste0("F/", F), `B/B0` = "B/B0", `Catch/MSY` = paste0("Catch/", C))[type], type)
 }
 
-# display name of a reference point
+#' Display name of a reference point
+#'
+#' @param name reference point name
+#' @param basis basis attribute of \code{ss3stk()} (benchmark names)
+#' @return character
+#' @noRd
 .rplab <- function(name, basis){
   m <- c(Btgt = basis$B %||% "Btgt", Ftgt = basis$F %||% "Ftgt", MSY = basis$C %||% "MSY")
   ifelse(name %in% names(m), m[name], name)
@@ -102,11 +141,11 @@
 #'   SS3 forecast values)
 #' @return ggplot
 #' @examples
-#' \dontrun{
-#' data(natl.sma, package = "ss3diags")
-#' ss3plot_trj(ss3stk(ss3sma))
-#' ss3plot_trj(ss3stk(ss3sma, iters = 1000), type = c("B/Btgt", "F/Ftgt", "Catch"), ncol = 1)
-#' }
+#' data(ss3sma)
+#' ss3plot_trj(ss3stk(ss3sma, output = "iters", iters = 200))
+#' data(retro.sma)
+#' ss3plot_trj(FLCore::FLStocks(ref = ss3stk(retro.sma$replist1), peel1 = ss3stk(retro.sma$replist2)),
+#'             type = c("B/Btgt", "F/Ftgt"))
 #' @export
 ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftgt"),
                         probs = c(0.05, 0.2, 0.5, 0.8, 0.95), refpts = TRUE, colours = NULL, colour = "grey45",
@@ -218,12 +257,10 @@ ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftg
 #' @param labels label years on the trajectory every \code{labels} years (0 for first and last only)
 #' @return ggplot
 #' @examples
-#' \dontrun{
-#' data(natl.sma, package = "ss3diags")
-#' stk <- ss3stk(ss3sma, output = "iters", fwd = TRUE)
-#' ss3plot_kobe(stk)            # F(y) vs B(y)
-#' ss3plot_kobe(stk, lag = 1)   # F(y) vs B(y + 1)
-#' }
+#' data(ss3sma)
+#' stk <- ss3stk(ss3sma, output = "iters", iters = 500)
+#' ss3plot_kobe(stk)
+#' ss3plot_kobe(stk, style = "contours", labels = 5)
 #' @export
 ss3plot_kobe <- function(x, year = NULL, lag = 0, npoints = 2000, contours = c(0.5, 0.8, 0.95),
                          style = c("points", "contours"), labels = 0){
@@ -286,7 +323,16 @@ ss3plot_kobe <- function(x, year = NULL, lag = 0, npoints = 2000, contours = c(0
     theme_ss3(legend.position = "right") + ggplot2::theme(legend.title = ggplot2::element_text(size = 8))
 }
 
-# highest-density regions of the (stock, harvest) cloud: contour lines or filled 50/80/95% regions
+#' Highest-density regions of the Kobe cloud
+#'
+#' Highest-density regions of the (stock, harvest) cloud: contour lines or filled 50/80/95% regions
+#'
+#' @param pt data.table of stock and harvest
+#' @param probs quantiles
+#' @param filled filled regions instead of contour lines
+#' @param lims axis limits
+#' @return data.table of contour lines or polygons
+#' @noRd
 .kobe_hdr <- function(pt, probs, filled = FALSE, lims){
   if(!requireNamespace("MASS", quietly = TRUE) || nrow(pt) < 50) return(NULL)
   k <- MASS::kde2d(pt$stock, pt$harvest, n = 120,
@@ -322,12 +368,10 @@ ss3plot_kobe <- function(x, year = NULL, lag = 0, npoints = 2000, contours = c(0
 #'   (default: fitted with \code{\link{ss3_spm}()}), an \code{ss3spm} object, or \code{FALSE}
 #' @return ggplot
 #' @examples
-#' \dontrun{
-#' data(natl.sma, package = "ss3diags")
+#' data(ss3sma)
 #' stk <- ss3stk(ss3sma)
 #' ss3plot_production(stk)
 #' ss3plot_production(stk, type = "dyn")
-#' }
 #' @export
 ss3plot_production <- function(x, eq = NULL, type = c("phase", "dyn"), rel = FALSE, spm = TRUE){
   type <- match.arg(type)
@@ -391,14 +435,28 @@ ss3plot_production <- function(x, eq = NULL, type = c("phase", "dyn"), rel = FAL
 utils::globalVariables(c("est", "lci", "uci", "lo1", "hi1", "run", "i.data", "xmin", "xmax", "ymin", "ymax", "zone",
                          "lab", "B", "C", "SP", "b", "sp", "grp", "z", "x", "y", "yield", "what", "ok"))
 
-# drop the years after the assessment end year (SS3 forecast years) of a stock, keeping the ss3diags2 attributes
+#' Drop the forecast years of a stock
+#'
+#' Drop the years after the assessment end year (SS3 forecast years) of a stock, keeping the ss3diags2 attributes
+#'
+#' @param s FLStockR (from \code{ss3stk()})
+#' @return FLStockR up to the end year, with the ss3diags2 attributes
+#' @noRd
 .trim_endyr <- function(s){
   ey <- attr(s, "endyr"); yrs <- as.numeric(dimnames(s)$year)
   if(is.null(ey) || max(yrs) <= ey) return(s)
   .win_stk(s, end = ey)
 }
 
-# window a stock keeping the ss3diags2 attributes (mle, se.log, status, basis, endyr, eqcurve)
+#' Window a stock keeping the ss3diags2 attributes
+#'
+#' Window a stock keeping the ss3diags2 attributes (mle, se.log, status, basis, endyr, eqcurve)
+#'
+#' @param s FLStockR (from \code{ss3stk()})
+#' @param start first year
+#' @param end last year
+#' @return FLStockR
+#' @noRd
 .win_stk <- function(s, start = NULL, end = NULL){
   yrs <- as.numeric(dimnames(s)$year)
   start <- max(start %||% min(yrs), min(yrs)); end <- min(end %||% max(yrs), max(yrs))

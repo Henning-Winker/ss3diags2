@@ -15,3 +15,7 @@ theme_ss3(base_size = 11, legend.position = "bottom")
 The JABBA3 theme (\code{theme_bw()} with light strips, small legend keys, no minor grid), so plots from
 ss3diags2, JABBA3 and FLicc can be combined.
 }
+\examples{
+library(ggplot2)
+ggplot(data.frame(x = 1:10, y = (1:10)^2), aes(x, y)) + geom_line() + theme_ss3()
+}

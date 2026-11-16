@@ -43,4 +43,8 @@ are filled with the FLR defaults (\code{"all"}, \code{"unique"}, 1).
 \examples{
 d <- data.frame(len = c(5, 10, 15, 5, 10, 15), year = rep(c(2000, 2002), each = 3), data = 1:6)
 long2flq(d, quant = "len", units = "numbers")
+# several quantities: one FLQuant per name
+d2 <- data.frame(name = rep(c("a", "b"), each = 6), len = rep(c(5, 10, 15), 4),
+                 year = rep(rep(c(2000, 2002), each = 3), 2), data = 1:12)
+long2flqs(d2, quant = "len")
 }

@@ -23,11 +23,10 @@
 #'   \code{se} (log-scale catch SE) and \code{units}. Units: "t" for biomass, "1000" for numbers (SS3 convention),
 #'   "f" for F.
 #' @examples
-#' \dontrun{
-#' data(natl.sma, package = "ss3diags")
-#' ss3_catch(ss3sma)                       # observed catch, FLQuants by fleet
-#' ss3_catch(ss3sma, what = "kill_bio")    # catch in weight from the model, for fleets reported in numbers
-#' }
+#' data(ss3sma)
+#' ss3_catch(ss3sma)                        # observed catch, FLQuants by fleet
+#' ss3_catch(ss3sma, what = "kill_bio")     # model catch in weight, also for fleets reported in numbers
+#' ss3_catch(ss3sma, what = "F", long = TRUE)[1:5, ]
 #' @export
 ss3_catch <- function(ss3rep, fleets = NULL, what = c("obs", "exp", "ret_bio", "kill_bio", "sel_bio", "ret_num",
                       "kill_num", "sel_num", "F"), years = NULL, long = FALSE){
@@ -73,6 +72,11 @@ ss3_catch <- function(ss3rep, fleets = NULL, what = c("obs", "exp", "ret_bio", "
 #' @param long return the long data.table instead of FLQuants
 #' @return FLQuants (named by fleet; units as the fleet catch) or data.table with \code{obs}, \code{exp},
 #'   \code{se_input} (\code{Std_in}) and \code{se} (\code{Std_use})
+#' @examples
+#' pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+#' ds <- ss3_discards(pra)
+#' names(ds)
+#' ss3plot_catch(ds, ylab = "Discards (t)")
 #' @export
 ss3_discards <- function(ss3rep, fleets = NULL, what = c("obs", "exp"), long = FALSE){
   what <- match.arg(what)

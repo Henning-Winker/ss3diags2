@@ -18,3 +18,8 @@ data.table
 Inverse of \code{\link{long2flqs}()}: one \code{data.table} with the FLQuant dimension columns, \code{data} and a
 column \code{name} holding the element names.
 }
+\examples{
+data(ss3simple)
+d <- flqs2long(ss3_flqs(ss3stk(ss3simple)))
+head(d)
+}

@@ -1,6 +1,15 @@
 # models.R - SS3 observations shaped as inputs of JABBA3 and FLicc
 
-# catch in weight for each fleet: observed where reported in weight, model retained/killed weight otherwise
+#' Catch in weight for each fleet
+#'
+#' Catch in weight for each fleet: observed where reported in weight, model retained/killed weight otherwise
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param fleets fleets (names or numbers); \code{NULL} for all
+#' @param catch \code{"auto"}, \code{"obs"}, \code{"ret_bio"} or \code{"kill_bio"}
+#' @param years years
+#' @return FLQuants by fleet: observed where reported in weight, model retained or killed weight otherwise
+#' @noRd
 .catch_weight <- function(ss3rep, fleets, catch, years){
   fl <- ss3_fleets(ss3rep)
   if(catch != "auto") return(ss3_catch(ss3rep, fleets, what = catch, years = years, long = TRUE))
@@ -14,7 +23,14 @@
   d[order(match(name, .fleetnames(ss3rep)), year, season)]
 }
 
-# sum seasons (catch) or average them (indices, ignoring NA) to an annual FLQuant
+#' Seasonal to annual FLQuant
+#'
+#' Sum seasons (catch) or average them (indices, ignoring NA) to an annual FLQuant
+#'
+#' @param x FLQuant
+#' @param fun \code{"sum"} (catch) or \code{"mean"} (indices, ignoring NA)
+#' @return FLQuant with one season
+#' @noRd
 .annual <- function(x, fun = c("sum", "mean")){
   fun <- match.arg(fun)
   if(dim(x)[4] == 1) return(x)
@@ -40,11 +56,11 @@
 #' @return list with \code{catch} (FLQuants), \code{indices} (FLIndices), \code{catch.total} (FLQuant) and
 #'   \code{fleets} (the \code{\link{ss3_fleets}()} table)
 #' @examples
-#' \dontrun{
-#' data(natl.sma, package = "ss3diags")
+#' data(ss3sma)
 #' inp <- ss2jabba3(ss3sma)
+#' names(inp)
+#' head(inp$catch)
 #' # d <- JABBA3::jb3_data(inp$catch, inp$indices, stock = "sma")
-#' }
 #' @export
 ss2jabba3 <- function(ss3rep, catch.fleets = NULL, index.fleets = NULL, catch = c("auto", "obs", "ret_bio", "kill_bio"),
                       se = c("input", "total"), annual = TRUE, combine.catch = TRUE){
@@ -96,11 +112,10 @@ ss2jabba3 <- function(ss3rep, catch.fleets = NULL, index.fleets = NULL, catch = 
 #' @return list with \code{lfd} (FLQuants), \code{catch_by_gear} (FLQuants, annual, in weight; NULL for surveys)
 #'   and \code{years}
 #' @examples
-#' \dontrun{
-#' data(natl.sma, package = "ss3diags")
+#' data(ss3sma)
 #' inp <- ss2flicc(ss3sma, years = "all")
+#' names(inp)
 #' # stk <- FLicc::stocklen(inp$lfd, lhpar)
-#' }
 #' @export
 ss2flicc <- function(ss3rep, fleets = NULL, years = "common", nsamp = c("adj", "input"),
                      catch = c("auto", "obs", "ret_bio", "kill_bio"), surveys = FALSE){

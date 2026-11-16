@@ -12,6 +12,11 @@
 #'   age-at-length: mean age by length bin combined over bins weighted by sample size, as
 #'   \code{ss3diags::SScompsTA1.8(type = "con")}) or \code{"size"} (generalised size compositions)
 #' @return FLQuants (quant "all", year x unit x season x area)
+#' @examples
+#' data(ss3simple)
+#' r <- ss3_iresid(ss3simple)
+#' head(r)
+#' head(ss3_iresid(ss3simple, "len"))
 #' @export
 ss3_iresid <- function(ss3rep, quant = c("cpue", "len", "age", "con", "size")){
   quant <- match.arg(quant)
@@ -26,7 +31,14 @@ ss3_iresid <- function(ss3rep, quant = c("cpue", "len", "age", "con", "size")){
   out
 }
 
-# Wald-Wolfowitz runs test on the signs (as randtests::runs.test(threshold = 0)); returns the p-value
+#' Wald-Wolfowitz runs test on the signs (as randtests::runs.test(threshold = 0))
+#'
+#' Wald-Wolfowitz runs test on the signs (as randtests::runs.test(threshold = 0)); returns the p-value
+#'
+#' @param x residuals
+#' @param mixing alternative
+#' @return p-value
+#' @noRd
 .runs_p <- function(x, mixing = c("less", "two.sided", "greater")){
   mixing <- match.arg(mixing)
   s <- sign(x[is.finite(x)]); s <- s[s != 0]
@@ -38,7 +50,12 @@ ss3_iresid <- function(ss3rep, quant = c("cpue", "len", "age", "con", "size")){
   switch(mixing, less = stats::pnorm(z), greater = 1 - stats::pnorm(z), two.sided = 2*min(stats::pnorm(z), 1 - stats::pnorm(z)))
 }
 
-# 3-sigma limits from the average moving range (as ss3diags::ssruns_sig3)
+#' 3-sigma limits from the average moving range (as ss3diags::ssruns_sig3)
+#'
+#' @param x residuals
+#' @param mu mean
+#' @return numeric lower and upper limits
+#' @noRd
 .sig3 <- function(x, mu = 0){
   mr <- abs(diff(x - mu)); amr <- mean(mr, na.rm = TRUE)
   mr <- mr[mr < 3.267*amr]; amr <- mean(mr, na.rm = TRUE)
@@ -57,6 +74,10 @@ ss3_iresid <- function(ss3rep, quant = c("cpue", "len", "age", "con", "size")){
 #' @param mixing \code{"less"} (default: too few runs, positive autocorrelation), \code{"two.sided"} or \code{"greater"}
 #' @param ... passed to \code{ss3_iresid()} when \code{x} is an SS3 report (e.g. \code{quant = "len"})
 #' @return data.table: index, runs.p, test (Passed, Failed, Excluded), sigma3.lo, sigma3.hi
+#' @examples
+#' data(ss3sma)
+#' ss3_runs(ss3sma)
+#' ss3plot_runs(ss3sma)
 #' @export
 ss3_runs <- function(x, mixing = "less", ...){
   if(.is_ss3rep(x)) x <- ss3_iresid(x, ...)
@@ -81,6 +102,11 @@ ss3_runs <- function(x, mixing = "less", ...){
 #' @param ncol facet columns
 #' @param ... passed to \code{ss3_iresid()} when \code{x} is an SS3 report
 #' @return ggplot
+#' @examples
+#' data(ss3sma)
+#' ss3plot_runs(ss3sma)
+#' data(ss3simple)
+#' ss3plot_runs(ss3simple, quant = "len")
 #' @export
 ss3plot_runs <- function(x, mixing = "less", ncol = NULL, ...){
   if(.is_ss3rep(x)) x <- ss3_iresid(x, ...)
@@ -118,6 +144,9 @@ ss3plot_runs <- function(x, mixing = "less", ncol = NULL, ...){
 #' @param x FLQuants of residuals or an SS3 report
 #' @param ... passed to \code{ss3_iresid()} when \code{x} is an SS3 report
 #' @return ggplot; the RMSE table (by index and combined) in \code{attr(p, "rmse")}
+#' @examples
+#' data(ss3sma)
+#' ss3plot_jres(ss3sma)
 #' @export
 ss3plot_jres <- function(x, ...){
   if(.is_ss3rep(x)) x <- ss3_iresid(x, ...)

@@ -13,12 +13,10 @@
 #' @param ... passed to \code{ss3stk()}
 #' @return FLStocks (named by peel end year)
 #' @examples
-#' \dontrun{
-#' data(natl.sma, package = "ss3diags")
+#' data(retro.sma)
 #' rt <- ss3_retro(retro.sma)
 #' ss3_mohn(rt)
 #' ss3plot_retro(rt)
-#' }
 #' @export
 ss3_retro <- function(retro, fwd = TRUE, ...){
   if(.is_ss3rep(retro)) stop("retro must be a list of SS3 reports (reference run first)", call. = FALSE)
@@ -29,7 +27,14 @@ ss3_retro <- function(retro, fwd = TRUE, ...){
   out
 }
 
-# value of quantity q of a stock (median over iterations) by year
+#' Value of a quantity of a stock by year
+#'
+#' Value of quantity q of a stock (median over iterations) by year
+#'
+#' @param stk FLStockR (from \code{ss3stk()})
+#' @param q quantity
+#' @return named numeric (median over iterations)
+#' @noRd
 .qval <- function(stk, q){
   x <- ss3_flqs(stk, q)[[1]]
   stats::setNames(apply(x@.Data, 2, stats::median, na.rm = TRUE), dimnames(x)$year)
@@ -46,6 +51,10 @@ ss3_retro <- function(retro, fwd = TRUE, ...){
 #' @param quants any quantities of \code{\link{ss3_flqs}()} (default "SSB", "F")
 #' @param endyrs peel end years (default \code{attr(stk, "endyr")}, else the names of \code{x})
 #' @return data.table: quant, peel, rho, fcrho (forecast rho; NA when the peel has no year after its end year)
+#' @examples
+#' data(retro.sma)
+#' rt <- ss3_retro(retro.sma)
+#' ss3_mohn(rt, c("SSB", "F/Ftgt"))
 #' @export
 ss3_mohn <- function(x, quants = c("SSB", "F"), endyrs = NULL){
   if(!is(x, "FLStocks")) x <- ss3_retro(x)
@@ -75,6 +84,9 @@ ss3_mohn <- function(x, quants = c("SSB", "F"), endyrs = NULL){
 #' @param xmin first year shown (default: 2 x number of peels before the last end year... all years if NULL)
 #' @param ncol facet columns
 #' @return ggplot
+#' @examples
+#' data(retro.sma)
+#' ss3plot_retro(ss3_retro(retro.sma), type = c("SSB", "F", "B/Btgt", "F/Ftgt"), xmin = 1990)
 #' @export
 ss3plot_retro <- function(x, type = c("SSB", "F"), fcast = TRUE, ci = 0.95, xmin = NULL, ncol = NULL){
   if(!is(x, "FLStocks")) x <- ss3_retro(x)

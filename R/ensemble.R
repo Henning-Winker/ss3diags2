@@ -1,6 +1,12 @@
 # ensemble.R - model ensembles from several SS3 runs (as ss3diags::SSplotEnsemble)
 
-# long table year, iter, SSB, Recr, Catch, F, stock (B/Btgt), harvest (F/Ftgt) of an FLStockR with iterations
+#' Long table of the main quantities of an FLStockR with iterations
+#'
+#' Long table year, iter, SSB, Recr, Catch, F, stock (B/Btgt), harvest (F/Ftgt) of an FLStockR with iterations
+#'
+#' @param stk FLStockR (from \code{ss3stk()})
+#' @return data.table year, iter, SSB, Recr, Catch, F, stock (B/Btgt), harvest (F/Ftgt)
+#' @noRd
 .stk_draws <- function(stk){
   q <- ss3_flqs(stk, c("SSB", "Rec", "Catch", "F", "B/Btgt", "F/Ftgt"))
   v <- c(SSB = "SSB", Rec = "Recr", Catch = "Catch", F = "F", `B/Btgt` = "stock", `F/Ftgt` = "harvest")
@@ -32,10 +38,10 @@
 #'   model as attribute \code{"weights"}
 #' @seealso \code{\link{ss3plot_ensemble}()}
 #' @examples
-#' \dontrun{
-#' ens <- ss3_ensemble(list(base = ss3rep1, highM = ss3rep2, lowh = ss3rep3), weights = c(0.5, 0.25, 0.25))
-#' ss3plot_ensemble(ens)
-#' }
+#' her <- readRDS(system.file("extdata", "her.27.25-2932", "her.27.25-2932.rds", package = "ss3diags2"))
+#' ens <- ss3_ensemble(her, weights = c(1.5, 1, 0.5), iters = 200)
+#' attr(ens, "weights")
+#' ss3plot_ensemble(ens, start = 1960)
 #' @export
 ss3_ensemble <- function(x, weights = NULL, iters = 1000, joint = TRUE, method = c("joint", "annual"), fwd = FALSE,
                          Fref = NULL, seed = 1, ...){
@@ -111,6 +117,11 @@ ss3_ensemble <- function(x, weights = NULL, iters = 1000, joint = TRUE, method =
 #' @param colours model colours (default r4ss colours; the joint ensemble is black)
 #' @param ... further arguments to \code{\link{ss3plot_trj}()}
 #' @return ggplot
+#' @examples
+#' her <- readRDS(system.file("extdata", "her.27.25-2932", "her.27.25-2932.rds", package = "ss3diags2"))
+#' ens <- ss3_ensemble(her, iters = 200)
+#' ss3plot_ensemble(ens, start = 1960)
+#' ss3plot_ensemble(ens, models = FALSE, type = c("B/Btgt", "F/Ftgt"))
 #' @export
 ss3plot_ensemble <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftgt"), models = TRUE, joint = TRUE,
                              probs = c(0.05, 0.2, 0.5, 0.8, 0.95), colours = NULL, start = NULL, end = NULL, ...){

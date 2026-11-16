@@ -22,6 +22,8 @@
 #' @examples
 #' data(ss3simple)
 #' ss3_lhpar(ss3simple)
+#' hke <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))
+#' ss3_lhpar(hke)
 #' @export
 ss3_lhpar <- function(ss3rep, year = NULL){
   gp <- as.data.table(ss3rep$Growth_Parameters)
@@ -71,7 +73,14 @@ ss3_lhpar <- function(ss3rep, year = NULL){
   FLCore::FLPar(arr)
 }
 
-# von Bertalanffy parameters for unit u from an FLPar with or without a unit dimension
+#' Von Bertalanffy parameters of a unit
+#'
+#' Von Bertalanffy parameters for unit u from an FLPar with or without a unit dimension
+#'
+#' @param lh FLPar of life-history parameters (\code{ss3_lhpar()})
+#' @param u unit (\code{"F"}, \code{"M"} or \code{"unique"})
+#' @return named numeric linf, k, t0
+#' @noRd
 .vb_unit <- function(lh, u){
   u <- as.character(u)
   d <- dimnames(lh)

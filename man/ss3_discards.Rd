@@ -25,3 +25,9 @@ or as a long table with SEs. When SS3 models retention, \code{ss3_catch(what = "
 (retained catch); landings plus discards give the total removals (or use \code{ss3_catch(what = "kill_bio")} for
 the model's dead catch).
 }
+\examples{
+pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+ds <- ss3_discards(pra)
+names(ds)
+ss3plot_catch(ds, ylab = "Discards (t)")
+}

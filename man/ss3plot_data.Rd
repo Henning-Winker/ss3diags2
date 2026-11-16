@@ -33,8 +33,6 @@ Which data are available by fleet and year (as \code{r4ss::SSplotData()}), from 
 relative to the fleet's maximum: catch, index precision (1/SE) and composition sample size.
 }
 \examples{
-\dontrun{
-data(natl.sma, package = "ss3diags")
+data(ss3sma)
 ss3plot_data(catch = ss3_catch(ss3sma), indices = ss3_indices(ss3sma), lencomp = ss3_lencomp(ss3sma))
-}
 }

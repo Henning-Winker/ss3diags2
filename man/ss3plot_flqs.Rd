@@ -42,8 +42,8 @@ any FLQuants. Ratios get a reference line at 1, labelled by the benchmark (e.g. 
 carry a basis.
 }
 \examples{
-\dontrun{
-m <- ss3mvln(ss3sma, mc = 1000)
-ss3plot_flqs(m$flqs)
-}
+data(ss3sma)
+mv <- ss3mvln(ss3sma, mc = 200)
+ss3plot_flqs(mv$flqs)
+ss3plot_flqs(mv$flqs, worms = 5, ci = FALSE)
 }

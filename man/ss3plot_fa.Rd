@@ -20,3 +20,7 @@ ggplot
 F-at-age curves of each fleet from \code{\link{ss3_fa}()}, averaged over the selected years, by season (colours)
 and unit (line type). Shows the seasonal pattern and the selectivity of the fleets on the F scale.
 }
+\examples{
+pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+ss3plot_fa(ss3_fa(pra), years = 2015:2024)
+}

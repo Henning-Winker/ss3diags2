@@ -39,10 +39,8 @@ gives a warning, as it means the equilibrium table and the SS3 MSY calculation u
 benchmark years for biology or selectivity) or that the curve is not of Pella-Tomlinson shape.
 }
 \examples{
-\dontrun{
-data(pac.hke, package = "ss3diags")
+data(ss3phk)
 sp <- ss3_spm(ss3phk)
 sp
 # JABBA3::jb3_priors(data, r = sp$priors$r, K = sp$priors$K, m = sp$priors$m)
-}
 }

@@ -40,3 +40,9 @@ ggplot
 Trajectories of a model ensemble from \code{\link{ss3_ensemble}()} with \code{\link{ss3plot_trj}()}: the models in
 colour (median and quantile bands) and the joint ensemble in black, as \code{ss3diags::SSplotEnsemble()}.
 }
+\examples{
+her <- readRDS(system.file("extdata", "her.27.25-2932", "her.27.25-2932.rds", package = "ss3diags2"))
+ens <- ss3_ensemble(her, iters = 200)
+ss3plot_ensemble(ens, start = 1960)
+ss3plot_ensemble(ens, models = FALSE, type = c("B/Btgt", "F/Ftgt"))
+}

@@ -40,9 +40,8 @@ This is the catch input of JABBA3 (\code{FLQuants} by fleet) and the relative ca
 (\code{catch_by_gear}).
 }
 \examples{
-\dontrun{
-data(natl.sma, package = "ss3diags")
-ss3_catch(ss3sma)                       # observed catch, FLQuants by fleet
-ss3_catch(ss3sma, what = "kill_bio")    # catch in weight from the model, for fleets reported in numbers
-}
+data(ss3sma)
+ss3_catch(ss3sma)                        # observed catch, FLQuants by fleet
+ss3_catch(ss3sma, what = "kill_bio")     # model catch in weight, also for fleets reported in numbers
+ss3_catch(ss3sma, what = "F", long = TRUE)[1:5, ]
 }

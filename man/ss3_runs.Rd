@@ -22,3 +22,8 @@ and three-sigma control limits from the average moving range, by index, as \code
 (Carvalho et al. 2021, Fish. Res. 240: 105959; Winker et al. 2018). Series with 3 or fewer residuals or spanning 3
 years or less are excluded.
 }
+\examples{
+data(ss3sma)
+ss3_runs(ss3sma)
+ss3plot_runs(ss3sma)
+}

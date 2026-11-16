@@ -23,3 +23,8 @@ ggplot
 Partial fishing mortality by fleet, gear or area from \code{\link{ss3_partialF}()} as stacked areas (with the total
 F as a line), lines, or shares.
 }
+\examples{
+pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+pf <- ss3_partialF(pra, groups = "area")
+ss3plot_partialF(pf, type = "share")
+}

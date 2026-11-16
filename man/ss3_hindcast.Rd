@@ -36,10 +36,8 @@ than the naive forecast. \code{MASE.adj} uses \code{max(MAE.naive, MAE.base.adj)
 MASE for nearly flat series.
 }
 \examples{
-\dontrun{
-data(natl.sma, package = "ss3diags")
+data(retro.sma)
 hc <- ss3_hindcast(retro.sma)
 hc$mase
 ss3plot_hcxval(hc)
-}
 }

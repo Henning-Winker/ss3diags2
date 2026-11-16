@@ -25,3 +25,9 @@ Summary of forecast scenarios as in the GFCM / ICES advice tables: catch and F i
 start of the following year, its change relative to the advice year, and the probability that it is below Blim
 (from iterations).
 }
+\examples{
+fw <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18_fwd.rds", package = "ss3diags2"))
+fs <- ss3_fwd(fw, Fref = "Btgt", bpa = 0.5, blim = 0.25)
+ss3_fwdtable(fs)
+ss3_fwdtable(fs, year = 2027, blim = 30000)
+}

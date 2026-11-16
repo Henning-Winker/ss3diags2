@@ -56,9 +56,9 @@ log-scale SEs in \code{attr(x, "se.log")}. Several stocks (a list or \code{FLSto
 SS3 run compares directly with JABBA3 or FLicc. Reference points from \code{refpts()} are drawn as labelled lines.
 }
 \examples{
-\dontrun{
-data(natl.sma, package = "ss3diags")
-ss3plot_trj(ss3stk(ss3sma))
-ss3plot_trj(ss3stk(ss3sma, iters = 1000), type = c("B/Btgt", "F/Ftgt", "Catch"), ncol = 1)
-}
+data(ss3sma)
+ss3plot_trj(ss3stk(ss3sma, output = "iters", iters = 200))
+data(retro.sma)
+ss3plot_trj(FLCore::FLStocks(ref = ss3stk(retro.sma$replist1), peel1 = ss3stk(retro.sma$replist2)),
+            type = c("B/Btgt", "F/Ftgt"))
 }

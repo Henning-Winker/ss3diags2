@@ -1,6 +1,11 @@
 # outputs.R - model outputs: reference points, MLE and MVLN trajectories, FLStockR, equilibrium curve
 
-# reference point basis of an SS3 run (logic of ss3diags::SSdeltaMVLN)
+#' Reference point basis of an SS3 run (logic of ss3diags::SSdeltaMVLN)
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param Fref F reference: \code{NULL} (from the SS3 F basis), \code{"MSY"}, \code{"Btgt"} or \code{"SPR"}
+#' @return list with the B ratio and F bases, Btgt, the benchmark labels (Bref, Fref, Cref) and a proxy flag
+#' @noRd
 .ss3_basis <- function(ss3rep, Fref = NULL){
   hat <- as.data.table(ss3rep$derived_quants)
   lab <- .col(hat, c("Label", "LABEL")); val <- .col(hat, c("Value", "VALUE"))
@@ -58,7 +63,14 @@
        msy = g(c("Dead_Catch_MSY", "TotYield_MSY", "Ret_Catch_MSY")), r0 = g(c("Recr_unfished", "Recr_Unfished", "Recr_Virgin")))
 }
 
-# MLE trajectories from the time series when derived quantities are not available (run without hessian/sdreport)
+#' MLE trajectories from the time series
+#'
+#' MLE trajectories from the time series when derived quantities are not available (run without hessian/sdreport)
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param btgt Btgt as a fraction of B0 (default from the run)
+#' @return data.table of MLE trajectories, for runs without the hessian
+#' @noRd
 .ss3_ts_mle <- function(ss3rep, btgt = NULL){
   ts <- as.data.table(ss3rep$timeseries)
   tt <- ts[Era == "TIME"]
@@ -85,6 +97,11 @@
                     fbasis = "timeseries", Btgtref = bt, ssbunits = ss3rep$SpawnOutputUnits %||% "biomass"))
 }
 
+#' Are the derived quantities usable?
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @return logical: TRUE if SSB of the end year is positive
+#' @noRd
 .derived_ok <- function(ss3rep){
   h <- ss3rep$derived_quants; if(is.null(h)) return(FALSE)
   lab <- .col(h, c("Label", "LABEL")); val <- .col(h, c("Value", "VALUE"))
@@ -107,6 +124,10 @@
 #' @return data.table with columns \code{F}, \code{SSB}, \code{yield}, \code{loop} (sorted by SSB); attributes
 #'   \code{Fmsy}, \code{Bmsy}, \code{MSY}, \code{B0}, \code{sd} (SS3 standard errors of MSY and B0) and
 #'   \code{ssbunits}
+#' @examples
+#' data(ss3sma)
+#' eq <- ss3_eqcurve(ss3sma)
+#' head(eq)
 #' @export
 ss3_eqcurve <- function(ss3rep, loops = NULL){
   eq <- as.data.table(ss3rep$equil_yield)

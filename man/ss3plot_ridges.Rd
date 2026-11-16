@@ -55,6 +55,6 @@ fleet and unit (sex), season or area with data, as \code{FLicc::plot_growth_lfd(
 \examples{
 data(ss3simple)
 lfd <- ss3_lencomp(ss3simple)
-ss3plot_ridges(lfd, fit = ss3_lencomp(ss3simple, what = "exp"), type = "both", fleets = "SURVEY1",
+ss3plot_ridges(lfd["SURVEY1"], fit = ss3_lencomp(ss3simple, what = "exp")["SURVEY1"], type = "both",
                lhpar = ss3_lhpar(ss3simple))
 }

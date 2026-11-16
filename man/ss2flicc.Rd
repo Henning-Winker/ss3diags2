@@ -42,9 +42,8 @@ FLicc fits all gears in each year, so with \code{years = "common"} only years in
 sample are kept; with \code{years = "all"} gears without a sample in a year are \code{NA}.
 }
 \examples{
-\dontrun{
-data(natl.sma, package = "ss3diags")
+data(ss3sma)
 inp <- ss2flicc(ss3sma, years = "all")
+names(inp)
 # stk <- FLicc::stocklen(inp$lfd, lhpar)
-}
 }

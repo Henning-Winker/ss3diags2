@@ -33,4 +33,6 @@ length-logistic leaves \code{L50} and \code{mat.slope} as NA.
 \examples{
 data(ss3simple)
 ss3_lhpar(ss3simple)
+hke <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))
+ss3_lhpar(hke)
 }

@@ -54,3 +54,11 @@ Short-term forecast plot as in the GFCM / ICES advice: the assessment (black) up
 scenarios (colours) from the end year on, with or without uncertainty bands, the reference points and vertical
 lines at the end of the assessment and the start of the advice year.
 }
+\examples{
+fw <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18_fwd.rds", package = "ss3diags2"))
+hke <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))
+fs <- ss3_fwd(fw, Fref = "Btgt", bpa = 0.5, blim = 0.25)
+stk <- ss3stk(hke, output = "iters", iters = 200, Fref = "Btgt", bpa = 0.5, blim = 0.25)
+ss3plot_fwd(fs, stk = stk)                 # with uncertainty
+ss3plot_fwd(fs, ci = FALSE, start = 2010)  # scenarios only
+}

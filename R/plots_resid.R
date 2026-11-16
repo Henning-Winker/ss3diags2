@@ -1,6 +1,13 @@
 # plots_resid.R - composition residual plots (FLR inputs), growth / cohort lines as FLicc
 
-# one facet per fleet x group with data, free x (years with data only)
+#' One facet per fleet and group with data
+#'
+#' One facet per fleet x group with data, free x (years with data only)
+#'
+#' @param d long data.table
+#' @param dims the 'by' dimensions (\code{"unit"}, \code{"season"}, \code{"area"})
+#' @return ggplot2 facet with free x
+#' @noRd
 .panel <- function(d, dims){
   d[, panel := if(length(dims)) paste(name, group, sep = " | ") else as.character(name)]
   lv <- unique(d[order(name, group)]$panel)
@@ -8,7 +15,18 @@
   d
 }
 
-# cohort tracks: von Bertalanffy length (or age) by year for birth years every 'by' years, per panel
+#' Cohort tracks
+#'
+#' Cohort tracks: von Bertalanffy length (or age) by year for birth years every 'by' years, per panel
+#'
+#' @param d long data.table
+#' @param quant \code{"len"} or \code{"age"}
+#' @param lh FLPar of life-history parameters (\code{ss3_lhpar()})
+#' @param by years between tracks
+#' @param timing fraction of the year of the observations
+#' @param binw bin width
+#' @return data.table of growth tracks by birth year per panel
+#' @noRd
 .cohort_lines <- function(d, quant, lh, by = 2, timing = 0.5, binw = 0){
   pan <- d[, .(unit = unit[1], ymin = min(year), ymax = max(year), qmin = min(q), qmax = max(q)), by = panel]
   rbindlist(lapply(seq_len(nrow(pan)), function(i){
@@ -70,8 +88,8 @@
 #' data(ss3simple)
 #' r <- ss3_resid(ss3simple)
 #' ss3plot_resid(r, lhpar = ss3_lhpar(ss3simple))
-#' ss3plot_resid(r, type = "len")
 #' ss3plot_resid(r, type = "qq")
+#' ss3plot_resid(ss3_resid(ss3simple, "age"), cohorts = FALSE)
 #' @export
 ss3plot_resid <- function(x, type = c("bubble", "len", "qq"), by = "unit", lhpar = NULL, cohorts = TRUE,
                           cohort_by = 2, cap = 4, ncol = NULL,

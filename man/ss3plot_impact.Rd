@@ -21,3 +21,8 @@ Plots \code{\link{ss3_impact}()} as in Wang et al. (2009): the SSB (grey) with t
 stacked on top, up to the dynamic unfished SSB (dashed line), or the share of the impact by group, or the SSB
 trajectories of the scenarios.
 }
+\examples{
+pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+imp <- ss3_impact(pra, groups = list(Denmark = c("DK3a", "DK4a"), Others = c("NOR3a", "NOR4a", "SWE3a", "SWE4a")))
+ss3plot_impact(imp, type = "line")
+}

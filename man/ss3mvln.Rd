@@ -64,11 +64,11 @@ SSB_MSY (basis SSB/SSBMSY), SSB_Btgt (SSB/SSBtgt) or X x SSB_unfished (SSB/SSB0)
 SPR. MLE values and reference points are the same for both methods.
 }
 \examples{
-\dontrun{
-data(natl.sma, package = "ss3diags")
-mv <- ss3mvln(ss3sma, mc = 1000)
-mv$refpts.iter
-}
+data(ss3sma)
+mv <- ss3mvln(ss3sma, mc = 200)
+names(mv)
+head(mv$kb)
+mva <- ss3mvln(ss3sma, mc = 200, method = "annual")   # delta-MVLN by year, as ss3diags::SSdeltaMVLN()
 }
 \references{
 Kell, L., Rice, J., Courtney, D. and Winker, H. (2023). Approximation of Kobe posteriors from Stock Synthesis for

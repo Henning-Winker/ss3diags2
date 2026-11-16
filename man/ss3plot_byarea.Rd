@@ -18,3 +18,7 @@ ggplot
 SSB, biomass and recruitment by area from \code{\link{ss3_byarea}()}, as stacked areas (\code{"area"}) or the
 share of each area (\code{"share"}).
 }
+\examples{
+pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+ss3plot_byarea(ss3_byarea(pra))
+}

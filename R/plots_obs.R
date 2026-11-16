@@ -13,11 +13,9 @@
 #' @param ylab y-axis label (default from the units)
 #' @return ggplot
 #' @examples
-#' \dontrun{
-#' data(natl.sma, package = "ss3diags")
+#' data(ss3sma)
 #' ss3plot_catch(ss3_catch(ss3sma))
 #' ss3plot_catch(ss3_catch(ss3sma), type = "share")
-#' }
 #' @export
 ss3plot_catch <- function(catch, by = NULL, type = c("bar", "line", "share"), iter = 1, ylab = NULL){
   type <- match.arg(type); dims <- .bydims(by)
@@ -57,11 +55,10 @@ ss3plot_catch <- function(catch, by = NULL, type = c("bar", "line", "share"), it
 #' @param iter iteration to plot
 #' @return ggplot
 #' @examples
-#' \dontrun{
-#' data(natl.sma, package = "ss3diags")
-#' ss3plot_indices(ss3_indices(ss3sma), fit = ss3_indices(ss3sma, what = "exp"))
-#' ss3plot_indices(ss3_indices(ss3sma), combine = TRUE)
-#' }
+#' data(ss3sma)
+#' idx <- ss3_indices(ss3sma)
+#' ss3plot_indices(idx, fit = ss3_indices(ss3sma, what = "exp"))
+#' ss3plot_indices(idx, combine = TRUE, log = TRUE)
 #' @export
 ss3plot_indices <- function(indices, fit = NULL, by = NULL, ci = 0.95, log = FALSE, combine = FALSE, time = FALSE,
                             ncol = NULL, iter = 1){
@@ -130,14 +127,12 @@ ss3plot_indices <- function(indices, fit = NULL, by = NULL, ci = 0.95, log = FAL
 #'   without these units are dropped (default: all)
 #' @return ggplot
 #' @examples
-#' \dontrun{
-#' data(natl.sma, package = "ss3diags")
-#' lfd <- ss3_lencomp(ss3sma)
-#' ss3plot_comps(lfd, by = "unit")
-#' ss3plot_comps(lfd["Fishery_4"], type = "annual", by = "unit", fit = ss3_lencomp(ss3sma, what = "exp")["Fishery_4"])
+#' data(ss3simple)
+#' lfd <- ss3_lencomp(ss3simple)
+#' ss3plot_comps(lfd)
+#' ss3plot_comps(lfd["SURVEY1"], fit = ss3_lencomp(ss3simple, what = "exp")["SURVEY1"], type = "annual")
 #' ss3plot_comps(lfd, type = "bubble")
-#' ss3plot_comps(lfd, type = "mean", by = "unit")
-#' }
+#' ss3plot_comps(lfd, type = "mean")
 #' @export
 ss3plot_comps <- function(comps, fit = NULL, by = NULL, type = c("pooled", "annual", "bubble", "mean"),
                           years = NULL, ncol = NULL, iter = 1, fleets = NULL, units = NULL){
@@ -217,7 +212,11 @@ ss3plot_comps <- function(comps, fit = NULL, by = NULL, type = c("pooled", "annu
   p
 }
 
-# bin width for bars
+#' Bin width for bars
+#'
+#' @param x bins
+#' @return numeric bin width
+#' @noRd
 .bw <- function(x){ u <- sort(unique(x)); if(length(u) > 1) min(diff(u))*0.9 else 0.9 }
 
 #' Plot composition sample sizes
@@ -230,10 +229,8 @@ ss3plot_comps <- function(comps, fit = NULL, by = NULL, type = c("pooled", "annu
 #' @param iter iteration
 #' @return ggplot
 #' @examples
-#' \dontrun{
-#' data(natl.sma, package = "ss3diags")
-#' ss3plot_nsamp(ss3_lencomp(ss3sma), by = "unit")
-#' }
+#' data(ss3sma)
+#' ss3plot_nsamp(ss3_lencomp(ss3sma))
 #' @export
 ss3plot_nsamp <- function(comps, by = NULL, iter = 1){
   dims <- .bydims(by)
@@ -266,10 +263,8 @@ ss3plot_nsamp <- function(comps, by = NULL, iter = 1){
 #' @param iter iteration
 #' @return ggplot
 #' @examples
-#' \dontrun{
-#' data(natl.sma, package = "ss3diags")
+#' data(ss3sma)
 #' ss3plot_data(catch = ss3_catch(ss3sma), indices = ss3_indices(ss3sma), lencomp = ss3_lencomp(ss3sma))
-#' }
 #' @export
 ss3plot_data <- function(catch = NULL, indices = NULL, lencomp = NULL, agecomp = NULL, by = NULL, iter = 1){
   dims <- .bydims(by)

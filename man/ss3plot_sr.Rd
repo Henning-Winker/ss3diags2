@@ -18,3 +18,8 @@ ggplot
 SS3 recruitment against spawning output (\code{ss3rep$recruit}) with the expected stock-recruit curve, coloured by
 year, and the recruitment deviations over time.
 }
+\examples{
+data(ss3sma)
+ss3plot_sr(ss3sma)
+ss3plot_sr(ss3sma, type = "devs")
+}

@@ -48,12 +48,10 @@ The choice matters for advice when F is well above Ftgt (see the guide, \code{vi
 convention used and show both when they differ.
 }
 \examples{
-\dontrun{
-data(natl.sma, package = "ss3diags")
-stk <- ss3stk(ss3sma, output = "iters", fwd = TRUE)
-ss3plot_kobe(stk)            # F(y) vs B(y)
-ss3plot_kobe(stk, lag = 1)   # F(y) vs B(y + 1)
-}
+data(ss3sma)
+stk <- ss3stk(ss3sma, output = "iters", iters = 500)
+ss3plot_kobe(stk)
+ss3plot_kobe(stk, style = "contours", labels = 5)
 }
 \references{
 Kell, L., Rice, J., Courtney, D. and Winker, H. (2023). Approximation of Kobe posteriors from Stock Synthesis for

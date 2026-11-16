@@ -1,6 +1,15 @@
 # impact.R - partial impact of fleets on the spawning stock (Wang et al. 2009)
 
-# numbers at age at the beginning of season s, summed over areas, sexes and morphs: matrix ages x years
+#' Numbers at age at the start of a season
+#'
+#' Numbers at age at the beginning of season s, summed over areas, sexes and morphs: matrix ages x years
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param era SS3 era (\code{"TIME"} or \code{"FORE"})
+#' @param seas season
+#' @param sex sex (1 female, 2 male); \code{NULL} for all
+#' @return matrix ages x years, summed over areas, sexes and morphs
+#' @noRd
 .natage_mat <- function(ss3rep, era = c("TIME", "FORE"), seas = 1, sex = NULL){
   na <- as.data.table(ss3rep$natage)
   bm <- .col(na, c("Beg/Mid", "BegMid"))
@@ -12,7 +21,15 @@
   m[, order(d$Yr), drop = FALSE]
 }
 
-# spawning output at age (females at spawning time x Mat*Fecund), summed over areas: matrix ages x years
+#' Spawning output at age
+#'
+#' Spawning output at age (females at spawning time x Mat*Fecund), summed over areas: matrix ages x years
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param years years
+#' @param sex sex (1 female, 2 male); \code{NULL} for all
+#' @return matrix ages x years (females at spawning time x Mat*Fecund), summed over areas
+#' @noRd
 .spawn_contrib <- function(ss3rep, years, sex = NULL){
   na <- as.data.table(ss3rep$natage); bm <- .col(na, c("Beg/Mid", "BegMid"))
   sp <- ss3rep$spawnseas %||% 1
@@ -31,7 +48,15 @@
   m[, as.character(years), drop = FALSE]
 }
 
-# SS3 annual natural mortality at age (seasons weighted by duration, sexes averaged); NULL if not reported
+#' SS3 annual natural mortality at age
+#'
+#' SS3 annual natural mortality at age (seasons weighted by duration, sexes averaged); NULL if not reported
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param ages ages
+#' @param sex sex (1 female, 2 male); \code{NULL} for all
+#' @return M at age (seasons weighted by duration), or \code{NULL} if not reported
+#' @noRd
 .ss3_M <- function(ss3rep, ages, sex = NULL){
   eg <- as.data.table(ss3rep$endgrowth)
   if(!nrow(eg) || !"M" %in% names(eg)) return(NULL)
@@ -42,7 +67,17 @@
   m$M[match(as.numeric(ages), m$age)]
 }
 
-# initial equilibrium: function of the fleets fishing that returns N_eq(fleets)/N_eq(all fleets) at age
+#' Initial equilibrium for the impact analysis
+#'
+#' Initial equilibrium: function of the fleets fishing that returns N_eq(fleets)/N_eq(all fleets) at age
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param fleets fleets (names or numbers); \code{NULL} for all
+#' @param ages ages
+#' @param M natural mortality at age
+#' @param sex sex (1 female, 2 male); \code{NULL} for all
+#' @return function of the fleets fishing that returns N_eq(fleets)/N_eq(all fleets) at age
+#' @noRd
 .init_eq <- function(ss3rep, fleets, ages, M, sex = NULL){
   Ni <- tryCatch(.natage_mat(ss3rep, era = "INIT", sex = sex), error = function(e) NULL)
   ci <- .catage_annual(ss3rep, era = "INIT", sex = sex)
@@ -69,7 +104,14 @@
   }
 }
 
-# stock-recruit shape f(S) (R0 cancels in the ratio f(S')/f(S))
+#' Stock-recruitment shape
+#'
+#' Stock-recruit shape f(S) (R0 cancels in the ratio f(S')/f(S))
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param sr \code{"ss3"} (the SS3 relationship) or \code{"constant"}
+#' @return function f(S); R0 cancels in the ratio f(S')/f(S)
+#' @noRd
 .sr_shape <- function(ss3rep, sr){
   if(sr == "constant") return(function(S) rep(1, length(S)))
   p <- as.data.table(ss3rep$parameters)
@@ -130,10 +172,11 @@
 #'   application to bigeye tuna (Thunnus obesus) in the eastern Pacific Ocean. Fisheries Research 99: 106-111.
 #' @seealso \code{\link{ss3plot_impact}()}, \code{\link{ss3_partialF}()}
 #' @examples
-#' \dontrun{
-#' imp <- ss3_impact(ss3rep, groups = list(Denmark = 1:2, Norway = 3:4, Sweden = 5:6))
+#' pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+#' countries <- list(Denmark = c("DK3a", "DK4a"), Norway = c("NOR3a", "NOR4a"), Sweden = c("SWE3a", "SWE4a"))
+#' imp <- ss3_impact(pra, groups = countries)
 #' ss3plot_impact(imp)
-#' }
+#' ss3plot_impact(imp, type = "prop")
 #' @export
 ss3_impact <- function(ss3rep, groups = NULL, type = c("cumulative", "remove"), init = c("equilibrium", "virgin", "model"),
                        sr = c("ss3", "constant"), M = c("ss3", "baranov"), years = NULL){
@@ -285,6 +328,10 @@ print.ss3impact <- function(x, ...){
 #' @param type \code{"area"} (default), \code{"prop"} (share of the total impact) or \code{"line"} (SSB by scenario)
 #' @param ss3 add the SS3 dynamic B0 (dotted), when reported
 #' @return ggplot
+#' @examples
+#' pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+#' imp <- ss3_impact(pra, groups = list(Denmark = c("DK3a", "DK4a"), Others = c("NOR3a", "NOR4a", "SWE3a", "SWE4a")))
+#' ss3plot_impact(imp, type = "line")
 #' @export
 ss3plot_impact <- function(x, type = c("area", "prop", "line"), ss3 = TRUE){
   type <- match.arg(type)

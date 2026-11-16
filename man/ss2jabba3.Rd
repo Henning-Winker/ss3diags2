@@ -42,9 +42,9 @@ catch in weight keep the observed catch and fleets with catch in numbers get the
 weight (\code{ret_bio}), with a message. Seasons are summed (catch) or averaged (indices) for annual models.
 }
 \examples{
-\dontrun{
-data(natl.sma, package = "ss3diags")
+data(ss3sma)
 inp <- ss2jabba3(ss3sma)
+names(inp)
+head(inp$catch)
 # d <- JABBA3::jb3_data(inp$catch, inp$indices, stock = "sma")
-}
 }

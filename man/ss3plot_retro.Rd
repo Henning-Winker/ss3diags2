@@ -35,3 +35,7 @@ Retrospective peels of SSB, F, recruitment or stock status against the reference
 forecast as a dashed segment ending in a point; Mohn's rho (forecast rho in brackets) in the panel titles, as
 \code{ss3diags::SSplotRetro()} and \code{JABBA3::jbplot_retro()}.
 }
+\examples{
+data(retro.sma)
+ss3plot_retro(ss3_retro(retro.sma), type = c("SSB", "F", "B/Btgt", "F/Ftgt"), xmin = 1990)
+}

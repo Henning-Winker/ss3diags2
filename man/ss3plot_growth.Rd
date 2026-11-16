@@ -31,4 +31,6 @@ at age interpolated between \code{CVmin} (at L1) and \code{CVmax} (at L2).
 data(ss3simple)
 ss3plot_growth(ss3simple, lfd = ss3_lencomp(ss3simple))
 ss3plot_growth(ss3_lhpar(ss3simple))
+hke <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))
+ss3plot_growth(hke)                               # two sexes, Richards (Schnute) growth
 }

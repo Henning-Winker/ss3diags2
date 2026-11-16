@@ -62,4 +62,6 @@ residuals are those reported by SS3 (\code{Pearson}), correlated within a compos
 data(ss3simple)
 r <- ss3_resid(ss3simple)
 names(r)
+ss3plot_resid(r)
+ss3_resid(ss3simple, "age", type = "pearson")
 }

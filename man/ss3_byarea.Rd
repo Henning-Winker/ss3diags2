@@ -18,3 +18,10 @@ FLQuants \code{SSB}, \code{B} and \code{Rec} (quant "all", area dimension)
 Extracts the SS3 time series by area (\code{ss3rep$timeseries}): spawning output at spawning time, total biomass
 at the beginning of the year and recruitment summed over seasons, as \code{FLQuants} with an area dimension.
 }
+\examples{
+pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
+ba <- ss3_byarea(pra)
+ba
+ss3plot_byarea(ba)
+ss3plot_byarea(ba, type = "share")
+}

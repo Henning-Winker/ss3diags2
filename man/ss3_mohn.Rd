@@ -22,3 +22,8 @@ at each peel's end year \eqn{T_i}, and the forecast (one-year-ahead) rho at \eqn
 ("Combined"), as \code{ss3diags::SShcbias()}. Works for any FLStocks with the peels' end years (FLStocks from
 \code{\link{ss3_retro}()}, or e.g. JABBA3 retrospective stocks), using \code{\link{ss3_flqs}()} quantities.
 }
+\examples{
+data(retro.sma)
+rt <- ss3_retro(retro.sma)
+ss3_mohn(rt, c("SSB", "F/Ftgt"))
+}
