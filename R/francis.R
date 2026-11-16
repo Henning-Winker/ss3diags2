@@ -8,8 +8,18 @@
   if(!nrow(db)) return(NULL)
   db[, `:=`(sexes = .col(db, "Sexes", 0), lbin = .col(db, "Lbin_lo", NA_real_), method = .col(db, "method", 1),
             sea = if(seas == "sep") Seas else 0L)]
-  # one composition: fleet x year x season (if separate) x sex option x method (size) x length bin (con)
-  by <- c("Fleet", "Yr", "sea", if(quant == "con") "lbin", if(quant != "con") "sexes", if(quant == "size") "method")
+  if(quant == "con"){
+    # conditional age-at-length (as r4ss::SSMethod.Cond.TA1.8): mean age by length bin, combined over the bins of a
+    # fleet x year with weights N_bin / sum(N)
+    lb <- db[, .(o = sum(Obs*Bin)/sum(Obs), e = sum(Exp*Bin)/sum(Exp),
+                 v = sum(Exp*Bin^2)/sum(Exp) - (sum(Exp*Bin)/sum(Exp))^2, N = mean(Nsamp_adj), seas = mean(Seas)),
+             by = .(Fleet, Yr, sea, lbin)]
+    return(lb[, { wt <- N/sum(N)
+                  .(obs = sum(o*wt), exp = sum(e*wt), se = sqrt(sum(wt^2*v/N)), n = sum(N), seas = mean(seas),
+                    sexes = 0) }, by = .(Fleet, Yr, sea)])
+  }
+  # one composition: fleet x year x season (if separate) x sex option x method (size)
+  by <- c("Fleet", "Yr", "sea", "sexes", if(quant == "size") "method")
   db[, .(obs = sum(Obs*Bin)/sum(Obs), exp = sum(Exp*Bin)/sum(Exp),
          se = sqrt((sum(Exp*Bin^2)/sum(Exp) - (sum(Exp*Bin)/sum(Exp))^2)/mean(Nsamp_adj)),
          n = mean(Nsamp_adj), seas = mean(Seas)), by = by]
@@ -25,8 +35,8 @@
 #' adjustment of the fleet by \eqn{w}. The 95\% interval is a bootstrap of the residuals.
 #'
 #' @param ss3rep output of \code{r4ss::SS_output()}
-#' @param quant \code{"len"} (default), \code{"age"}, \code{"con"} (conditional age-at-length: one composition per
-#'   length bin) or \code{"size"}
+#' @param quant \code{"len"} (default), \code{"age"}, \code{"con"} (conditional age-at-length: mean age by length
+#'   bin combined over the bins of each year, as \code{r4ss::SSMethod.Cond.TA1.8()}) or \code{"size"}
 #' @param fleets fleets (numbers or names; default all with data)
 #' @param part partitions combined (0 whole, 1 discard, 2 retained; default all)
 #' @param seas \code{"comb"} (seasons combined in a composition, default) or \code{"sep"}
@@ -78,8 +88,8 @@ ss3_francis <- function(ss3rep, quant = c("len", "age", "con", "size"), fleets =
 #' Plot Francis TA1.8 mean lengths or ages
 #'
 #' Observed mean length (or age) of each composition with \eqn{\pm 2} SE from the adjusted sample size (thick bars)
-#' and after the Francis weighting (thin bars), and the expected mean (line), by fleet over years (by year over length
-#' bins for conditional age-at-length), with the Francis weight and its interval in the panel title.
+#' and after the Francis weighting (thin bars), and the expected mean (line), by fleet over years, with the Francis
+#' weight and its interval in the panel title.
 #'
 #' @param x output of \code{\link{ss3_francis}()}
 #' @param ncol number of panel columns
@@ -91,8 +101,7 @@ ss3plot_francis <- function(x, ncol = NULL){
   pl <- copy(pl)
   lab <- x[, .(name = fleet, lab = sprintf("%s: w = %.3f (%.3f-%.3f)", fleet, w, lo, hi))]
   pl <- merge(pl, lab, by = "name")
-  con <- quant == "con"
-  pl[, `:=`(xx = if(con) lbin else Yr, panel = if(con) paste(lab, Yr) else lab)]
+  pl[, `:=`(xx = Yr, panel = lab)]
   grp <- intersect(c("sexes", "method"), names(pl))
   pl[, grp := do.call(paste, c(list(panel), .SD)), .SDcols = grp]
   ggplot2::ggplot(pl, ggplot2::aes(xx)) +
@@ -101,8 +110,7 @@ ss3plot_francis <- function(x, ncol = NULL){
     ggplot2::geom_point(ggplot2::aes(y = obs), shape = 21, fill = "grey85", size = 1.8) +
     ggplot2::geom_line(ggplot2::aes(y = exp, group = grp), colour = "#0000CC", linewidth = 0.6) +
     ggplot2::facet_wrap(~ panel, scales = "free", ncol = ncol) +
-    ggplot2::labs(x = if(con) "Length bin" else "Year",
-                  y = paste("Mean", switch(quant, len = "length", size = "size", "age")),
+    ggplot2::labs(x = "Year", y = paste("Mean", switch(quant, len = "length", size = "size", con = "age (conditional on length)", "age")),
                   caption = "thick: +/- 2 SE (adjusted N); thin: after Francis weighting; line: expected") +
     theme_ss3()
 }

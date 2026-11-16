@@ -11,6 +11,7 @@ ss3_resid(
   fleets = NULL,
   seed = 1,
   min.exp = 0.01,
+  nsamp = c("adj", "input"),
   long = FALSE
 )
 }
@@ -31,6 +32,11 @@ an age x year cell are combined (Stouffer), \code{long = TRUE} keeps the length 
 \item{min.exp}{OSA residuals of bins with zero observations and an expected count (proportion x N) below
 \code{min.exp} are set to NA: the randomised residual of a bin that cannot be observed is pure noise (e.g. old
 ages in small length bins of conditional age-at-length data, empty tails of length compositions); 0 keeps all}
+
+\item{nsamp}{sample size of the compositions: \code{"adj"} (default, the adjusted sample size of the SS3
+likelihood) or \code{"input"} (the input sample size, e.g. the number of aged fish per length bin). With strong
+down-weighting (variance adjustments well below 1) the adjusted sample size can round to zero fish, leaving few
+OSA residuals; \code{"input"} shows the residuals of the data as sampled}
 
 \item{long}{return the long data.table instead of FLQuants}
 }

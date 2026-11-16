@@ -53,6 +53,10 @@
 #' @param min.exp OSA residuals of bins with zero observations and an expected count (proportion x N) below
 #'   \code{min.exp} are set to NA: the randomised residual of a bin that cannot be observed is pure noise (e.g. old
 #'   ages in small length bins of conditional age-at-length data, empty tails of length compositions); 0 keeps all
+#' @param nsamp sample size of the compositions: \code{"adj"} (default, the adjusted sample size of the SS3
+#'   likelihood) or \code{"input"} (the input sample size, e.g. the number of aged fish per length bin). With strong
+#'   down-weighting (variance adjustments well below 1) the adjusted sample size can round to zero fish, leaving few
+#'   OSA residuals; \code{"input"} shows the residuals of the data as sampled
 #' @param seed random seed for the OSA randomisation
 #' @param long return the long data.table instead of FLQuants
 #' @return FLQuants of residuals (one per fleet and partition, as \code{\link{ss3_lencomp}()}: len/age x year x unit x
@@ -64,7 +68,8 @@
 #' names(r)
 #' @export
 ss3_resid <- function(ss3rep, quant = c("len", "age", "con", "size"), type = c("osa", "pearson"), fleets = NULL,
-                      seed = 1, min.exp = 0.01, long = FALSE){
+                      seed = 1, min.exp = 0.01, nsamp = c("adj", "input"), long = FALSE){
+  nsamp <- match.arg(nsamp)
   quant <- match.arg(quant); type <- match.arg(type)
   db <- .comp_db(ss3rep, quant)
   qn <- if(quant == "con") "age" else quant
@@ -78,7 +83,7 @@ ss3_resid <- function(ss3rep, quant = c("len", "age", "con", "size"), type = c("
                   part = .col(db, "Part", 0), month = .col(db, "Month", 0), sexes = .col(db, "Sexes", 0),
                   ageerr = .col(db, "Ageerr", 0), repl = .col(db, "Repl.", 1), lbin = .col(db, "Lbin_lo", NA_real_),
                   method = .col(db, "method", 1),
-                  pobs = db$Obs, pexp = db$Exp, pearson = .col(db, "Pearson", NA_real_), N = db$Nsamp_adj,
+                  pobs = db$Obs, pexp = db$Exp, pearson = .col(db, "Pearson", NA_real_), N = if(nsamp == "adj") db$Nsamp_adj else .col(db, "Nsamp_in", db$Nsamp_adj), Nadj = db$Nsamp_adj,
                   neff = dm %||% NA_real_)
   d[, partname := name]
   d[, np := uniqueN(part), by = name][np > 1, partname := paste0(name, ".", .part_lab[as.character(part)])][, np := NULL]
@@ -86,7 +91,7 @@ ss3_resid <- function(ss3rep, quant = c("len", "age", "con", "size"), type = c("
   # (conditional age-at-length: one composition per length bin; size: per size method)
   d[, comp := .GRP, by = .(fleet, year, season, area, month, part, sexes, ageerr, repl, lbin, method)]
   setorder(d, comp, sex, q)
-  d[, a0 := { ne <- neff[1]; n <- N[1]
+  d[, a0 := { ne <- neff[1]; n <- Nadj[1]
               if(is.finite(ne) && ne > 1 && ne < n) n*(ne - 1)/(n - ne) else Inf }, by = comp]
   d[, `:=`(obs = round(pobs*N), exp = pexp*N, n = N)]
   if(type == "osa"){
@@ -132,22 +137,31 @@ utils::globalVariables(c("comp", "a0", "neff", "N", "pobs", "repl", "np"))
 #' @param x long data.table from \code{ss3_resid(ss3rep, quant = "con", long = TRUE)}
 #' @param fleet fleet name (default: the first fleet with data)
 #' @param years years to plot (default: all with data)
+#' @param units units (sexes) to plot (default all; two sexes are drawn side by side at each age, females as circles,
+#'   males as triangles)
 #' @param lhpar optional FLPar from \code{\link{ss3_lhpar}()} for the growth curves by unit
 #' @param cap residuals capped at this absolute value for the bubble size
 #' @param ncol number of panel columns
 #' @return ggplot
 #' @export
-ss3plot_caal <- function(x, fleet = NULL, years = NULL, lhpar = NULL, cap = 4, ncol = NULL){
+ss3plot_caal <- function(x, fleet = NULL, years = NULL, units = NULL, lhpar = NULL, cap = 4, ncol = NULL){
   if(!is.data.frame(x) || !"lbin" %in% names(x))
     stop("x must be the long table of ss3_resid(ss3rep, quant = \"con\", long = TRUE)", call. = FALSE)
   d <- as.data.table(x)[is.finite(data)]
   fl <- fleet %||% d$partname[1]
   d <- d[partname %in% fl | name %in% fl]
   if(!is.null(years)) d <- d[year %in% years]
+  if(!is.null(units)) d <- d[unit %in% units]
   if(!nrow(d)) stop("no residuals for this fleet / years", call. = FALSE)
   d[, `:=`(age = as.numeric(as.character(age)), r = pmin(abs(data), cap), sign = ifelse(data > 0, "obs > exp", "obs < exp"))]
-  p <- ggplot2::ggplot(d, ggplot2::aes(age, lbin)) +
-    ggplot2::geom_point(ggplot2::aes(size = r, fill = sign), shape = 21, colour = "grey30", stroke = 0.2, alpha = 0.8) +
+  # two sexes in one composition: females left, males right of the age (circles / triangles)
+  us <- sort(unique(d$unit)); nu <- length(us)
+  d[, xa := age + if(nu > 1) (match(unit, us) - (nu + 1)/2)*0.3 else 0]
+  shp <- stats::setNames(c(21, 24, 22)[seq_len(nu)], us)
+  p <- ggplot2::ggplot(d, ggplot2::aes(xa, lbin)) +
+    ggplot2::geom_point(ggplot2::aes(size = r, fill = sign, shape = unit), colour = "grey30", stroke = 0.2, alpha = 0.8) +
+    ggplot2::scale_shape_manual(values = shp, guide = if(nu > 1) ggplot2::guide_legend(override.aes = list(size = 3, fill = "grey70")) else "none") +
+    ggplot2::guides(fill = ggplot2::guide_legend(override.aes = list(shape = 21, size = 3))) +
     ggplot2::scale_fill_manual(values = c(`obs > exp` = "#3C78B4", `obs < exp` = "#D2604B"), name = NULL) +
     ggplot2::scale_size_area(max_size = 4, limits = c(0, cap), name = "|residual|")
   if(!is.null(lhpar)){

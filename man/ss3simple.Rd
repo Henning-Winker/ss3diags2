@@ -22,6 +22,11 @@ and age compositions); Hessian available (CoVar reduced to the derived quantitie
 stock-recruitment. The SS3 input and output files are in \code{system.file("extdata", "simple_small", package = "r4ss")}.
 }
 \details{
+European hake in the Adriatic Sea (GFCM GSAs 17-18; benchmark assessment 2024: two sexes, eight fleets, three surveys,
+conditional age-at-length data for two fleets) ships as an rds file:
+\code{readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))} (FAO GFCM 2024.
+SAC WGSAD Benchmark session for European hake in the Adriatic Sea, Rome, 11-15 March 2024).
+
 Further examples: the two cookbook models (\code{\link{ss3sma}}, \code{\link{ss3phk}}) with retrospective runs.
 A season-, sex- and area-structured example (northern shrimp pra.27.3a4a: four seasons, hermaphrodite, two areas,
 six area-specific fleets) is shipped as an rds file with its SS3 input files:

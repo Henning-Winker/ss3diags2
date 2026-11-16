@@ -1,10 +1,11 @@
 # impact.R - partial impact of fleets on the spawning stock (Wang et al. 2009)
 
 # numbers at age at the beginning of season s, summed over areas, sexes and morphs: matrix ages x years
-.natage_mat <- function(ss3rep, era = c("TIME", "FORE"), seas = 1){
+.natage_mat <- function(ss3rep, era = c("TIME", "FORE"), seas = 1, sex = NULL){
   na <- as.data.table(ss3rep$natage)
   bm <- .col(na, c("Beg/Mid", "BegMid"))
   na <- na[bm == "B" & Era %in% era & Seas == seas]
+  if(!is.null(sex)) na <- na[Sex %in% sex]
   ages <- names(na)[grepl("^[0-9]+$", names(na))]
   d <- na[, lapply(.SD, sum), by = Yr, .SDcols = ages]
   m <- t(as.matrix(d[, ages, with = FALSE])); colnames(m) <- d$Yr
@@ -12,14 +13,17 @@
 }
 
 # spawning output at age (females at spawning time x Mat*Fecund), summed over areas: matrix ages x years
-.spawn_contrib <- function(ss3rep, years){
+.spawn_contrib <- function(ss3rep, years, sex = NULL){
   na <- as.data.table(ss3rep$natage); bm <- .col(na, c("Beg/Mid", "BegMid"))
   sp <- ss3rep$spawnseas %||% 1
   ages <- names(na)[grepl("^[0-9]+$", names(na))]
   na <- na[bm == "B" & Era == "TIME" & Seas == sp & Yr %in% years & (Sex == 1 | (ss3rep$nsexes %||% 1) == 1)]
+  if(!is.null(sex)) na <- na[Sex %in% sex]
+  if(!nrow(na)) return(NULL)
   eg <- as.data.table(ss3rep$endgrowth)[Seas == sp]
   mf <- .col(eg, c("Mat*Fecund", "Mat_F_wtatage"))
   fec <- data.table(fec = mf, Morph = eg$Morph, age = as.character(.col(eg, c("int_Age", "Age_Beg"))))
+  na[, (ages) := lapply(.SD, as.numeric), .SDcols = ages]
   d <- melt(na, id.vars = c("Yr", "Morph"), measure.vars = ages, variable.name = "age", variable.factor = FALSE)
   d <- merge(d, unique(fec[, .(Morph, age, fec)], by = c("Morph", "age")), by = c("Morph", "age"), all.x = TRUE)
   d <- d[, .(s = sum(value*fec, na.rm = TRUE)), by = .(Yr, age)]
@@ -28,9 +32,10 @@
 }
 
 # SS3 annual natural mortality at age (seasons weighted by duration, sexes averaged); NULL if not reported
-.ss3_M <- function(ss3rep, ages){
+.ss3_M <- function(ss3rep, ages, sex = NULL){
   eg <- as.data.table(ss3rep$endgrowth)
   if(!nrow(eg) || !"M" %in% names(eg)) return(NULL)
+  if(!is.null(sex)) eg <- eg[Sex %in% sex]
   dur <- ss3rep$seasdurations %||% 1
   eg[, age := .col(eg, c("int_Age", "Age_Beg"))]
   m <- eg[, .(M = sum(M*dur[Seas])), by = .(Morph, age)][, .(M = mean(M)), by = age]
@@ -38,9 +43,9 @@
 }
 
 # initial equilibrium: function of the fleets fishing that returns N_eq(fleets)/N_eq(all fleets) at age
-.init_eq <- function(ss3rep, fleets, ages, M){
-  Ni <- tryCatch(.natage_mat(ss3rep, era = "INIT"), error = function(e) NULL)
-  ci <- .catage_annual(ss3rep, era = "INIT")
+.init_eq <- function(ss3rep, fleets, ages, M, sex = NULL){
+  Ni <- tryCatch(.natage_mat(ss3rep, era = "INIT", sex = sex), error = function(e) NULL)
+  ci <- .catage_annual(ss3rep, era = "INIT", sex = sex)
   if(is.null(Ni) || !ncol(Ni) || !nrow(ci)) return(NULL)
   n <- Ni[, ncol(Ni)]; A <- length(n)
   # equilibrium survival at age from the INIT numbers (plus group: Z(A-1) = Z(A))
@@ -137,90 +142,105 @@ ss3_impact <- function(ss3rep, groups = NULL, type = c("cumulative", "remove"), 
   fleets <- fl[type %in% c("catch", "bycatch")]$name
   grp <- .fleet_groups(ss3rep, groups, fleets)
   yrs <- years %||% seq(ss3rep$startyr, ss3rep$endyr)
-  N <- .natage_mat(ss3rep)
-  if(!all(as.character(c(yrs, max(yrs) + 1)) %in% colnames(N))){
-    yrs <- yrs[as.character(yrs + 1) %in% colnames(N)]
+  # strata: sexes projected separately (different M, selectivity and spawning), pooled when sexes change
+  # (hermaphroditism) or the model has one sex
+  herm <- any(grepl("^Herm_", rownames(ss3rep$parameters)))
+  strata <- if((ss3rep$nsexes %||% 1) == 2 && !herm) list(1, 2) else list(NULL)
+  N0 <- .natage_mat(ss3rep)
+  if(!all(as.character(c(yrs, max(yrs) + 1)) %in% colnames(N0))){
+    yrs <- yrs[as.character(yrs + 1) %in% colnames(N0)]
     if(!length(yrs)) stop("numbers at age for the year after the end year not found", call. = FALSE)
   }
-  A <- nrow(N); ny <- length(yrs); ya <- as.character(yrs)
-  N1 <- N[, as.character(yrs + 1), drop = FALSE]; N <- N[, ya, drop = FALSE]
-  # total mortality: Z and deaths by age, plus group pooled with the age before
-  nxt <- rbind(N1[-1, , drop = FALSE], 0)
-  Z <- log(N/nxt); D <- N - nxt
-  pg <- c(A - 1, A)
-  Z[pg, ] <- rep(log(colSums(N[pg, , drop = FALSE])/N1[A, ]), each = 2)
-  D[pg, ] <- rep(colSums(N[pg, , drop = FALSE]) - N1[A, ], each = 2)
-  # fleet F at age from the catch-at-age shares of the deaths
-  ca <- .catage_annual(ss3rep)[year %in% yrs]
+  ny <- length(yrs); ya <- as.character(yrs)
   nm <- .fleetnames(ss3rep)
-  Ff <- lapply(stats::setNames(fleets, fleets), function(f){
-    m <- matrix(0, A, ny, dimnames = dimnames(N))
-    x <- ca[fleet == match(f, nm)]
-    m[cbind(match(x$age, as.numeric(rownames(N))), match(x$year, yrs))] <- x$data
-    m[pg, ] <- rep(colSums(m[pg, , drop = FALSE]), each = 2)
-    m
-  })
-  Ctot <- Reduce(`+`, Ff)
-  bad <- !is.finite(Z) | Z <= 0 | D <= 0
-  Mb <- if(M == "ss3") .ss3_M(ss3rep, rownames(N)) else NULL
-  if(is.null(Mb)){
-    # Baranov: F_f = Z C_f / D, M the remainder
-    Ff <- lapply(Ff, function(m){ r <- m/D*Z; r[bad | !is.finite(r)] <- 0; r })
-    Mm <- Z - Reduce(`+`, Ff)
-    if(any(Mm[!bad] < -1e-6)) warning("catch exceeds deaths for some ages/years: M set to >= 0", call. = FALSE)
-    Mm[bad] <- 0; Mm <- pmax(Mm, 0)
-  } else {
-    # SS3 natural mortality; fishing mortality Z - M split among fleets by catch at age in numbers
-    Mm <- matrix(Mb, A, ny)
-    Ft <- pmax(Z - Mm, 0); Ft[bad] <- 0
-    Ff <- lapply(Ff, function(m){ r <- Ft*m/Ctot; r[!is.finite(r)] <- 0; r })
-    Mm <- Z - Reduce(`+`, Ff); Mm[bad] <- matrix(Mb, A, ny)[bad]
-  }
-  Fall <- Reduce(`+`, Ff)
-  # spawning output per fish at the beginning of the year, scaled to the SS3 SSB
-  fec <- .spawn_contrib(ss3rep, yrs)/N
-  fec[!is.finite(fec)] <- 0
   ts <- as.data.table(ss3rep$timeseries)
   ssb3 <- ts[Yr %in% yrs & !is.na(SpawnBio), .(s = sum(SpawnBio)), by = Yr][match(yrs, Yr)]$s
-  fec <- sweep(fec, 2, ssb3/colSums(fec*N), "*")
   dur <- ss3rep$seasdurations %||% 1
   tsp <- sum(dur[seq_len((ss3rep$spawnseas %||% 1) - 1)])
   fS <- .sr_shape(ss3rep, sr)
-  if(init == "equilibrium"){
-    eq <- .init_eq(ss3rep, fleets, rownames(N), Mb %||% Mm[, 1])
-    if(is.null(eq)){ warning("initial equilibrium (INIT era) not available: init = \"virgin\" used", call. = FALSE)
-                     init <- "virgin" }
+  setup <- function(sx){
+    N <- .natage_mat(ss3rep, sex = sx)
+    A <- nrow(N)
+    N1 <- N[, as.character(yrs + 1), drop = FALSE]; N <- N[, ya, drop = FALSE]
+    # total mortality: Z and deaths by age, plus group pooled with the age before
+    nxt <- rbind(N1[-1, , drop = FALSE], 0)
+    Z <- log(N/nxt); D <- N - nxt
+    pg <- c(A - 1, A)
+    Z[pg, ] <- rep(log(colSums(N[pg, , drop = FALSE])/N1[A, ]), each = 2)
+    D[pg, ] <- rep(colSums(N[pg, , drop = FALSE]) - N1[A, ], each = 2)
+    # fleet F at age from the catch-at-age shares
+    ca <- .catage_annual(ss3rep, sex = sx)[year %in% yrs]
+    Ff <- lapply(stats::setNames(fleets, fleets), function(f){
+      m <- matrix(0, A, ny, dimnames = dimnames(N))
+      x <- ca[fleet == match(f, nm)]
+      m[cbind(match(x$age, as.numeric(rownames(N))), match(x$year, yrs))] <- x$data
+      m[pg, ] <- rep(colSums(m[pg, , drop = FALSE]), each = 2)
+      m
+    })
+    Ctot <- Reduce(`+`, Ff)
+    bad <- !is.finite(Z) | Z <= 0 | D <= 0
+    Mb <- if(M == "ss3") .ss3_M(ss3rep, rownames(N), sex = sx) else NULL
+    if(is.null(Mb)){
+      # Baranov: F_f = Z C_f / D, M the remainder
+      Ff <- lapply(Ff, function(m){ r <- m/D*Z; r[bad | !is.finite(r)] <- 0; r })
+      Mm <- Z - Reduce(`+`, Ff)
+      if(any(Mm[!bad] < -1e-6)) warning("catch exceeds deaths for some ages/years: M set to >= 0", call. = FALSE)
+      Mm[bad] <- 0; Mm <- pmax(Mm, 0)
+    } else {
+      # SS3 natural mortality; fishing mortality Z - M split among fleets by catch at age in numbers
+      Mm <- matrix(Mb, A, ny)
+      Ft <- pmax(Z - Mm, 0); Ft[bad] <- 0
+      Ff <- lapply(Ff, function(m){ r <- Ft*m/Ctot; r[!is.finite(r)] <- 0; r })
+      Mm <- Z - Reduce(`+`, Ff); Mm[bad] <- matrix(Mb, A, ny)[bad]
+    }
+    # spawning output at age (females only contribute)
+    sc <- .spawn_contrib(ss3rep, yrs, sex = sx)
+    fec <- if(is.null(sc)) 0*N else sc/N
+    fec[!is.finite(fec)] <- 0
+    eq <- if(init == "equilibrium") .init_eq(ss3rep, fleets, rownames(N), Mb %||% Mm[, 1], sex = sx) else NULL
+    Nv <- if(init == "virgin") { v <- .natage_mat(ss3rep, era = "VIRG", sex = sx); v[, ncol(v)] } else N[, 1]
+    list(N = N, Z = Z, Ff = Ff, Mm = Mm, fec = fec, eq = eq, Nv = Nv, A = A)
   }
-  Nv <- if(init == "virgin") { v <- .natage_mat(ss3rep, era = "VIRG"); v[, ncol(v)] } else N[, 1]
-  proj <- function(Fsum, fl){
-    Np <- matrix(0, A, ny); S <- R <- numeric(ny)
-    Np[, 1] <- if(init == "equilibrium") N[, 1]*eq(fl) else Nv
+  st <- lapply(strata, setup)
+  if(init == "equilibrium" && any(vapply(st, function(x) is.null(x$eq), TRUE))){
+    warning("initial equilibrium (INIT era) not available: init = \"virgin\" used", call. = FALSE)
+    init <- "virgin"
+    st <- lapply(strata, setup)
+  }
+  # scale spawning output to the SS3 SSB (all strata together)
+  tot <- Reduce(`+`, lapply(st, function(x) colSums(x$fec*x$N)))
+  for(k in seq_along(st)) st[[k]]$fec <- sweep(st[[k]]$fec, 2, ssb3/tot, "*")
+  R3 <- Reduce(`+`, lapply(st, function(x) x$N[1, ]))
+  Fall <- lapply(st, function(x) Reduce(`+`, x$Ff))
+  proj <- function(fl){
+    Np <- lapply(st, function(x) { m <- matrix(0, x$A, ny)
+      m[, 1] <- if(init == "equilibrium") x$N[, 1]*x$eq(fl) else x$Nv; m })
+    Fs <- lapply(st, function(x) if(length(fl)) Reduce(`+`, x$Ff[fl]) else 0*x$Mm)
+    S <- R <- numeric(ny)
     for(i in seq_len(ny)){
-      Zp <- Mm[, i] + Fsum[, i]
-      S[i] <- sum(Np[, i]*fec[, i]*exp(-(Zp - Z[, i])*tsp))
-      R[i] <- N[1, i]*fS(S[i])/fS(ssb3[i])
-      Np[1, i] <- R[i]
-      if(i < ny){
-        s <- Np[, i]*exp(-Zp)
-        Np[-1, i + 1] <- s[-A]; Np[A, i + 1] <- Np[A, i + 1] + s[A]
+      Zp <- lapply(seq_along(st), function(k) st[[k]]$Mm[, i] + Fs[[k]][, i])
+      S[i] <- sum(vapply(seq_along(st), function(k)
+        sum(Np[[k]][, i]*st[[k]]$fec[, i]*exp(-(Zp[[k]] - st[[k]]$Z[, i])*tsp)), 1))
+      rr <- fS(S[i])/fS(ssb3[i])
+      for(k in seq_along(st)) Np[[k]][1, i] <- st[[k]]$N[1, i]*rr      # sex ratio at recruitment kept
+      R[i] <- R3[i]*rr
+      if(i < ny) for(k in seq_along(st)){
+        A <- st[[k]]$A; s <- Np[[k]][, i]*exp(-Zp[[k]])
+        Np[[k]][-1, i + 1] <- s[-A]; Np[[k]][A, i + 1] <- Np[[k]][A, i + 1] + s[A]
       }
     }
     list(ssb = S, rec = R)
   }
-  zero <- 0*Fall
-  gsum <- lapply(grp, function(g) Reduce(`+`, Ff[g]))
-  sc <- if(type == "cumulative"){
+  if(type == "cumulative"){
     lv <- c("no fishing", vapply(seq_along(grp), function(k) paste0("+", names(grp)[k]), ""))
-    scf <- lapply(0:length(grp), function(k) unlist(grp[seq_len(k)]))
-    stats::setNames(lapply(0:length(grp), function(k) if(k == 0) zero else Reduce(`+`, gsum[seq_len(k)])), lv)
+    scf <- lapply(0:length(grp), function(k) unlist(grp[seq_len(k)], use.names = FALSE))
   } else {
     lv <- c("no fishing", paste0("-", names(grp)), "all fleets")
     scf <- c(list(character(0)), lapply(names(grp), function(g) setdiff(fleets, grp[[g]])), list(fleets))
-    stats::setNames(c(list(zero), lapply(names(grp), function(g) Fall - gsum[[g]]), list(Fall)), lv)
   }
-  names(scf) <- lv
-  res <- rbindlist(lapply(names(sc), function(s){ p <- proj(sc[[s]], scf[[s]]); data.table(year = yrs, scenario = s,
-                                                                                ssb = p$ssb, rec = p$rec) }))
+  names(scf) <- lv; sc <- scf
+  res <- rbindlist(lapply(names(scf), function(s){ p <- proj(scf[[s]]); data.table(year = yrs, scenario = s,
+                                                                                 ssb = p$ssb, rec = p$rec) }))
   res[, scenario := factor(scenario, levels = names(sc))]
   ref <- if(type == "cumulative") res[scenario == utils::tail(names(sc), 1)] else res[scenario == "all fleets"]
   imp <- if(type == "cumulative") rbindlist(lapply(seq_along(grp), function(k)

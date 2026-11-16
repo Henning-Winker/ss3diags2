@@ -17,8 +17,8 @@ ss3_francis(
 \arguments{
 \item{ss3rep}{output of \code{r4ss::SS_output()}}
 
-\item{quant}{\code{"len"} (default), \code{"age"}, \code{"con"} (conditional age-at-length: one composition per
-length bin) or \code{"size"}}
+\item{quant}{\code{"len"} (default), \code{"age"}, \code{"con"} (conditional age-at-length: mean age by length
+bin combined over the bins of each year, as \code{r4ss::SSMethod.Cond.TA1.8()}) or \code{"size"}}
 
 \item{fleets}{fleets (numbers or names; default all with data)}
 

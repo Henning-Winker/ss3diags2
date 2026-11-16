@@ -258,6 +258,18 @@ maturity/fecundity at age (Bio), SPR curves (SPR), parameter table with priors (
   CoVar so they can stand in as ensemble members. Pandalus three-model ensemble to follow.
 - ss3plot_caal: x = age, y = length bin.
 
+## Adriatic hake example, conditional age-at-length on real data, impact by sex (16 Nov)
+
+- `inst/extdata/hke.37.17-18/hke.37.17-18.rds`: GFCM benchmark 2024 (FAO GFCM 2024), SS 3.30.22, two sexes (M 0.25 /
+  0.5), 8 fleets + 3 surveys, CAAL for ITA_OTB_18 and ITA_LLS_18 (both sexes in one composition). Slimmed (1.2 MB).
+- `ss3_resid(nsamp = "input")`: CAAL var adj 0.01/0.11 leave < 1 fish per bin with adjusted N; input N gives the
+  residuals of the sampled data (DM/multinomial precision from the adjusted N).
+- `ss3_francis("con")` now as r4ss::SSMethod.Cond.TA1.8 (year-level, bins weighted by N): 0.967 / 0.694, identical.
+- `ss3plot_caal()`: sexes side by side (F circles left, M triangles right), `units =`.
+- `ss3_impact()` projects by sex when the model has two sexes without hermaphroditism (sex-specific M, selectivity,
+  spawning; recruit sex ratio kept): hake dynamic B0 7e-6 (pooled: 4%); Pandalus (hermaphrodite) stays pooled.
+- Pacific hake 2024 (SS 3.30.22, DM_theta_Age naming) checked: no CAAL; works with all functions; not added.
+
 ## Flagged for later: NUTS (11 Nov)
 
 - `ss3nuts(dir, ...)`: wrapper of `adnuts::sample_nuts()` on the SS3 executable (after an `-hbf` MLE run), chains,

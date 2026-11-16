@@ -16,6 +16,6 @@ ggplot
 }
 \description{
 Observed mean length (or age) of each composition with \eqn{\pm 2} SE from the adjusted sample size (thick bars)
-and after the Francis weighting (thin bars), and the expected mean (line), by fleet over years (by year over length
-bins for conditional age-at-length), with the Francis weight and its interval in the panel title.
+and after the Francis weighting (thin bars), and the expected mean (line), by fleet over years, with the Francis
+weight and its interval in the panel title.
 }

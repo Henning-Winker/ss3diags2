@@ -22,6 +22,9 @@ remotes::install_github("Henning-Winker/ss3diags2")
   area-specific fleets with retention. Report and SS3 input files:
   `readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))`; user guide section
   "Season-, sex- and area-structured models" (F-at-age, partial F, F by area, stock by area, partial impact).
+- European hake in the Adriatic Sea (GFCM GSAs 17-18, benchmark 2024; FAO GFCM 2024): two sexes, eight fleets,
+  three surveys and conditional age-at-length data for two fleets:
+  `readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))`.
 - Cookbook examples (Carvalho et al. 2021, copied from ss3diags): North Atlantic shortfin mako (`ss3sma`,
   `retro.sma`, `aspm.sma`) and Pacific hake (`ss3phk`, `retro.phk`, `aspm.phk`), to replicate the paper.
 

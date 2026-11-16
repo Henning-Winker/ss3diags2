@@ -49,4 +49,5 @@ The examples ship with the package:
 | `ss3simple` | simulated two-sex model, one fishery and two surveys (r4ss "simple_small"; the example of the PIFSC ss3diags) | quick start, data, residuals |
 | `ss3sma`, `retro.sma`, `aspm.sma` | North Atlantic shortfin mako (cookbook) | runs tests, retrospective, status, Kobe |
 | `ss3phk`, `retro.phk`, `aspm.phk` | Pacific hake (cookbook) | Dirichlet-multinomial OSA residuals, hindcast |
+| `hke.37.17-18.rds` | European hake in the Adriatic Sea (GFCM benchmark 2024), two sexes, eight fleets, three surveys, conditional age-at-length | conditional age-at-length residuals and Francis weights |
 | `pra.27.3a4a.rds` | northern shrimp, four seasons, hermaphrodite, two areas, six area-specific fleets | structured models, F by area, impact |

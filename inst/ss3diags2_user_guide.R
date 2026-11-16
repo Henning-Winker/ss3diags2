@@ -63,6 +63,7 @@ library(ggplot2)
 # | ss3simple | simulated two-sex model, one fishery and two surveys (r4ss "simple_small"; the example of the PIFSC ss3diags) | quick start, data, residuals |
 # | ss3sma, retro.sma, aspm.sma | North Atlantic shortfin mako (cookbook) | runs tests, retrospective, status, Kobe |
 # | ss3phk, retro.phk, aspm.phk | Pacific hake (cookbook) | Dirichlet-multinomial OSA residuals, hindcast |
+# | hke.37.17-18.rds | European hake in the Adriatic Sea (GFCM benchmark 2024), two sexes, eight fleets, three surveys, conditional age-at-length | conditional age-at-length residuals and Francis weights |
 # | pra.27.3a4a.rds | northern shrimp, four seasons, hermaphrodite, two areas, six area-specific fleets | structured models, F by area, impact |
 
 ####################################################################################################
@@ -253,19 +254,41 @@ ss3plot_resid(rl, type = "qq")
 data(ss3phk)
 ss3plot_resid(ss3_resid(ss3phk, "age"), cohorts = FALSE)
 
+# ---- Conditional age-at-length ---------------------------------------------------------------
+
 # Conditional age-at-length data are a multinomial over ages for each length bin, so
 # ss3_resid(quant = "con") computes OSA residuals per length bin; long = TRUE keeps the bin for
-# ss3plot_caal() (age by length bin, one panel per year, with the growth curves). Runs tests,
-# joint residuals and hindcasts use the mean age by length bin combined over the bins (quant =
-# "con", as ss3diags::SScompsTA1.8(type = "con")), and generalised size compositions are quant =
-# "size". None of the example models has conditional age-at-length data:
+# ss3plot_caal() (age by length bin, one panel per year, with the growth curves by sex; with both
+# sexes in one composition, females are circles to the left and males triangles to the right of
+# each age). Runs tests, joint residuals and hindcasts use the mean age by length bin combined
+# over the bins (quant = "con"), and ss3_francis(quant = "con") gives the Francis weight of
+# conditional age-at-length data as r4ss::SSMethod.Cond.TA1.8().
 
-if(FALSE){
-  d <- ss3_resid(ss3rep, quant = "con", long = TRUE)
-  ss3plot_caal(d, fleet = "Survey", lhpar = ss3_lhpar(ss3rep))   # age by length bin, one panel per year
-  ss3_francis(ss3rep, "con")
-  ss3plot_runs(ss3rep, quant = "con")
-}
+# The example is the GFCM benchmark assessment of European hake in the Adriatic Sea (GSAs 17-18;
+# FAO GFCM 2024): a two-sex Stock Synthesis model with eight fleets and three surveys, with
+# conditional age-at-length data for the Italian trawl (ITA_OTB_18) and longline (ITA_LLS_18)
+# fleets in GSA 18.
+
+hke <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))
+lhh <- ss3_lhpar(hke)
+
+# The conditional age-at-length compositions are strongly down-weighted (SS3 variance adjustments
+# 0.01 and 0.11), so with the adjusted sample size most length bins hold less than one fish and
+# give no residual. With nsamp = "input" the residuals use the number of aged fish per length
+# bin, with the Dirichlet-multinomial or multinomial precision of the fit:
+
+cl <- ss3_resid(hke, quant = "con", long = TRUE, nsamp = "input")
+ss3plot_caal(cl, fleet = "ITA_OTB_18", years = 2018:2023, lhpar = lhh)
+
+fc <- ss3_francis(hke, "con")
+fc
+ss3plot_francis(fc)
+ss3plot_runs(hke, quant = "con")
+
+# Reading conditional age-at-length residuals. Each row of bubbles (one length bin) is one
+# sample, conditioned from the youngest age up. Blue above and red below the growth curve means
+# fish of a given length are older than the model expects (slower growth); a diagonal of one
+# colour that moves one age per year is a year class.
 
 # Reading OSA residuals. Bins are conditioned on the smaller bins: too few small fish gives
 # negative residuals at small sizes and positive residuals at larger sizes. Diagonal patterns

@@ -4,6 +4,13 @@ Carvalho, F., Winker, H., Courtney, D., Kapur, M., Kell, L., Cardinale, M., Schi
 Piner, K.R., Maunder, M.N., Taylor, I., Wetzel, C.R., Doering, K., Johnson, K.F. and Methot, R.D. (2021). A cookbook
 for using model diagnostics in integrated stock assessments. *Fisheries Research* 240: 105959.
 
+FAO GFCM (2024). Scientific Advisory Committee on Fisheries (SAC), Working Group on Stock Assessment of Demersal
+Species (WGSAD): Benchmark session for European hake in the Adriatic Sea. FAO headquarters, Rome, Italy, 11-15 March
+2024. Report.
+
+Francis, R.I.C.C. (2011). Data weighting in statistical fisheries stock assessment models. *Canadian Journal of
+Fisheries and Aquatic Sciences* 68: 1124-1138.
+
 Hurtado-Ferro, F., Szuwalski, C.S., Valero, J.L., Anderson, S.C., Cunningham, C.J., Johnson, K.F., Licandeo, R.,
 McGilliard, C.R., Monnahan, C.C., Muradian, M.L., Ono, K., Vert-Pre, K.A., Whitten, A.R. and Punt, A.E. (2015).
 Looking in the rear-view mirror: bias and retrospective patterns in integrated, age-structured stock assessment

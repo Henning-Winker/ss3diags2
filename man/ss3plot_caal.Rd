@@ -4,7 +4,15 @@
 \alias{ss3plot_caal}
 \title{Plot residuals of conditional age-at-length data}
 \usage{
-ss3plot_caal(x, fleet = NULL, years = NULL, lhpar = NULL, cap = 4, ncol = NULL)
+ss3plot_caal(
+  x,
+  fleet = NULL,
+  years = NULL,
+  units = NULL,
+  lhpar = NULL,
+  cap = 4,
+  ncol = NULL
+)
 }
 \arguments{
 \item{x}{long data.table from \code{ss3_resid(ss3rep, quant = "con", long = TRUE)}}
@@ -12,6 +20,9 @@ ss3plot_caal(x, fleet = NULL, years = NULL, lhpar = NULL, cap = 4, ncol = NULL)
 \item{fleet}{fleet name (default: the first fleet with data)}
 
 \item{years}{years to plot (default: all with data)}
+
+\item{units}{units (sexes) to plot (default all; two sexes are drawn side by side at each age, females as circles,
+males as triangles)}
 
 \item{lhpar}{optional FLPar from \code{\link{ss3_lhpar}()} for the growth curves by unit}
 

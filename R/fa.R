@@ -31,6 +31,7 @@ ss3_fa <- function(ss3rep, fleets = NULL, era = "TIME", annual = FALSE, long = F
   fleets <- .pick_fleets(ss3rep, fleets, fl[type %in% c("catch", "bycatch") & fleet %in% fa$Fleet]$name)
   ages <- setdiff(names(fa), .fa_id)
   fa <- fa[Era %in% era & Fleet %in% match(fleets, .fleetnames(ss3rep))]
+  fa[, (ages) := lapply(.SD, as.numeric), .SDcols = ages]
   d <- melt(fa, id.vars = intersect(.fa_id, names(fa)), measure.vars = ages, variable.name = "age",
             value.name = "data", variable.factor = FALSE)
   d <- d[, .(data = mean(data)), by = .(Fleet, Area, Sex, Yr, Seas, age)]
@@ -73,12 +74,14 @@ ss3_fa <- function(ss3rep, fleets = NULL, era = "TIME", annual = FALSE, long = F
 }
 
 # catch at age in numbers by fleet, summed over seasons, sexes and areas: data.table fleet, year, age, data
-.catage_annual <- function(ss3rep, era = "TIME"){
+.catage_annual <- function(ss3rep, era = "TIME", sex = NULL){
   ca <- as.data.table(ss3rep$catage)
   ca <- ca[, !duplicated(names(ca)), with = FALSE]
   if("Era" %in% names(ca)) ca <- ca[Era == era]
   if("Type" %in% names(ca)) ca <- ca[Type == "dead" | is.na(Type)]
+  if(!is.null(sex) && "Sex" %in% names(ca)) ca <- ca[Sex %in% sex]
   ages <- names(ca)[grepl("^[0-9]+$", names(ca))]
+  ca[, (ages) := lapply(.SD, as.numeric), .SDcols = ages]
   d <- melt(ca, id.vars = c("Fleet", "Yr"), measure.vars = ages, variable.name = "age", value.name = "data",
             variable.factor = FALSE)
   d[, .(data = sum(data)), by = .(fleet = Fleet, year = Yr, age = as.numeric(age))]
