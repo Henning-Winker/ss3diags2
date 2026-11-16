@@ -49,6 +49,7 @@
 #' @param lhpar optional FLPar for Linf and L50 lines when \code{x} is an SS3 report (default \code{ss3_lhpar(x)})
 #' @param lfd optional FLQuants of length compositions: largest observed length by fleet as reference lines
 #' @param maxage maximum age shown
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' data(ss3simple)
@@ -57,7 +58,8 @@
 #' hke <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))
 #' ss3plot_growth(hke)                               # two sexes, Richards (Schnute) growth
 #' @export
-ss3plot_growth <- function(x, lhpar = NULL, lfd = NULL, maxage = NULL){
+ss3plot_growth <- function(x, lhpar = NULL, lfd = NULL, maxage = NULL, text = TRUE){
+  .drop_text((function(){
   d <- .growth_curves(x, maxage)
   lh <- lhpar %||% (if(.is_ss3rep(x)) ss3_lhpar(x) else x)
   if(!is.null(maxage)) d <- d[age <= maxage]
@@ -95,6 +97,7 @@ ss3plot_growth <- function(x, lhpar = NULL, lfd = NULL, maxage = NULL){
   }
   p + ggplot2::scale_colour_manual(values = cols, name = NULL) + ggplot2::scale_fill_manual(values = cols, name = NULL) +
     ggplot2::expand_limits(y = 0) + ggplot2::labs(x = "Age (years)", y = "Length") + theme_ss3()
+  })(), text)
 }
 
 #' Ridge plots of length or age compositions
@@ -117,6 +120,7 @@ ss3plot_growth <- function(x, lhpar = NULL, lfd = NULL, maxage = NULL){
 #'   \code{DK3a.discard} and \code{DK3a.retained}) or positions in the FLQuants (default: all)
 #' @param units units (sexes) to plot, e.g. \code{"F"}, \code{"M"} or \code{"unique"} (combined-sex data); fleets
 #'   without these units are dropped (default: all)
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' data(ss3simple)
@@ -126,10 +130,11 @@ ss3plot_growth <- function(x, lhpar = NULL, lfd = NULL, maxage = NULL){
 #' @export
 ss3plot_ridges <- function(comps, fit = NULL, type = c("obs", "exp", "both"), by = "unit", lhpar = NULL,
                            cohort_by = 2, years = NULL, scale = 0.9, ncol = NULL,
-                           fleets = NULL, units = NULL){
+                           fleets = NULL, units = NULL, text = TRUE){
+  .drop_text((function(){
   comps <- .subset_flqs(comps, fleets, units)
   if(!is.null(fit)) fit <- .subset_flqs(fit, fleets, units)
-  type <- match.arg(type); dims <- .bydims(by)
+  type <- match.arg(type, c("obs", "exp", "both")); dims <- .bydims(by)
   if(type != "obs" && is.null(fit)) stop("type = \"", type, "\" needs 'fit'", call. = FALSE)
   qn <- FLCore::quant(if(is(comps, "FLQuant")) comps else comps[[1]])
   prep <- function(x){
@@ -175,6 +180,7 @@ ss3plot_ridges <- function(comps, fit = NULL, type = c("obs", "exp", "both"), by
     ggplot2::labs(x = "Year", y = switch(qn, len = "Length", age = "Age", qn),
                   subtitle = switch(type, obs = "observed", exp = "expected", both = "observed (filled), expected (lines)")) +
     scale_x_year() + theme_ss3()
+  })(), text)
 }
 
 utils::globalVariables(c("qlo", "qhi", "tot", "p", "mx", "y", "what", "Len_Mid", "SD_Mid", "Age_Mid", "L", "sd"))
@@ -197,14 +203,16 @@ utils::globalVariables(c("qlo", "qhi", "tot", "p", "mx", "y", "what", "Len_Mid",
 #'   the expected compositions
 #' @param min.n minimum (effective) number of fish in a bin for an interval; bins with fewer, mostly the largest
 #'   lengths, are nearly uninformative and their intervals span most of 0-1
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' hke <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))
 #' ss3plot_sexratio(ss3_lencomp(hke), fit = ss3_lencomp(hke, what = "exp"))
 #' ss3plot_sexratio(ss3_lencomp(hke), fit = ss3_lencomp(hke, what = "exp"), type = "year", ci = FALSE)
 #' @export
-ss3plot_sexratio <- function(comps, fit = NULL, type = c("len", "year"), fleets = NULL, ncol = NULL, ci = 0.95, min.n = 5){
-  type <- match.arg(type)
+ss3plot_sexratio <- function(comps, fit = NULL, type = c("len", "year"), fleets = NULL, ncol = NULL, ci = 0.95, min.n = 5, text = TRUE){
+  .drop_text((function(){
+  type <- match.arg(type, c("len", "year"))
   comps <- .subset_flqs(comps, fleets, NULL)
   keep <- names(comps)[vapply(comps, function(q) all(c("F", "M") %in% dimnames(q)$unit), TRUE)]
   if(!length(keep)) stop("no compositions with units F and M", call. = FALSE)
@@ -241,4 +249,5 @@ ss3plot_sexratio <- function(comps, fit = NULL, type = c("len", "year"), fleets 
                   caption = paste0("points: observed (size: numbers)", if(!is.null(ci) && !isFALSE(ci) && ci > 0)
                     paste0(", bars: ", round(100*ci), "% binomial CI"), if(!is.null(fit)) "; line: expected")) +
     theme_ss3()
+  })(), text)
 }

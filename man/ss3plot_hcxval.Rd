@@ -4,7 +4,7 @@
 \alias{ss3plot_hcxval}
 \title{Plot hindcast cross-validation}
 \usage{
-ss3plot_hcxval(x, ci = 0.95, xmin = NULL, ncol = NULL)
+ss3plot_hcxval(x, ci = 0.95, xmin = NULL, ncol = NULL, text = TRUE)
 }
 \arguments{
 \item{x}{output of \code{\link{ss3_hindcast}()}, or a list of SS3 reports}
@@ -14,6 +14,8 @@ ss3plot_hcxval(x, ci = 0.95, xmin = NULL, ncol = NULL)
 \item{xmin}{first year shown (default 5 years before the first peel end year)}
 
 \item{ncol}{facet columns}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

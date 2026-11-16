@@ -13,7 +13,8 @@ ss3plot_ensemble(
   colours = NULL,
   start = NULL,
   end = NULL,
-  ...
+  ...,
+  text = TRUE
 )
 }
 \arguments{
@@ -32,6 +33,8 @@ ss3plot_ensemble(
 \item{start, end}{first and last year to plot}
 
 \item{...}{further arguments to \code{\link{ss3plot_trj}()}}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

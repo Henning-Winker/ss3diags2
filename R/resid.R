@@ -168,6 +168,7 @@ utils::globalVariables(c("comp", "a0", "neff", "N", "pobs", "repl", "np"))
 #'   under the sampling by length bin of the data (so they compare with each other, not with the population curve)
 #' @param cap residuals capped at this absolute value for the bubble size
 #' @param ncol number of panel columns
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' hke <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))
@@ -175,7 +176,8 @@ utils::globalVariables(c("comp", "a0", "neff", "N", "pobs", "repl", "np"))
 #' ss3plot_caal(cl, fleet = "ITA_OTB_18", years = 2018:2023, lhpar = ss3_lhpar(hke))
 #' @export
 ss3plot_caal <- function(x, fleet = NULL, years = NULL, units = NULL, lhpar = NULL, timing = 0.5, band = TRUE,
-                         means = TRUE, cap = 4, ncol = NULL){
+                         means = TRUE, cap = 4, ncol = NULL, text = TRUE){
+  .drop_text((function(){
   if(!is.data.frame(x) || !"lbin" %in% names(x))
     stop("x must be the long table of ss3_resid(ss3rep, quant = \"con\", long = TRUE)", call. = FALSE)
   d0 <- as.data.table(x)
@@ -226,4 +228,5 @@ ss3plot_caal <- function(x, fleet = NULL, years = NULL, units = NULL, lhpar = NU
     ggplot2::labs(x = "Age", y = "Length", title = fl[1], caption = if(nzchar(cap_txt)) cap_txt,
                   subtitle = paste(attr(x, "type") %||% "osa", "residuals, conditional age-at-length")) +
     theme_ss3() + ggplot2::theme(legend.title = ggplot2::element_text(size = 8))
+  })(), text)
 }

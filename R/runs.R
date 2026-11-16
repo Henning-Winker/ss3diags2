@@ -101,6 +101,7 @@ ss3_runs <- function(x, mixing = "less", ...){
 #' @param mixing runs test alternative, see \code{\link{ss3_runs}()}
 #' @param ncol facet columns
 #' @param ... passed to \code{ss3_iresid()} when \code{x} is an SS3 report
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' data(ss3sma)
@@ -108,7 +109,8 @@ ss3_runs <- function(x, mixing = "less", ...){
 #' data(ss3simple)
 #' ss3plot_runs(ss3simple, quant = "len")
 #' @export
-ss3plot_runs <- function(x, mixing = "less", ncol = NULL, ...){
+ss3plot_runs <- function(x, mixing = "less", ncol = NULL, ..., text = TRUE){
+  .drop_text((function(){
   if(.is_ss3rep(x)) x <- ss3_iresid(x, ...)
   rt <- ss3_runs(x, mixing)
   d <- .flq_long(x, 1, "resid")[is.finite(data)]
@@ -134,6 +136,7 @@ ss3plot_runs <- function(x, mixing = "less", ncol = NULL, ...){
     ggplot2::geom_blank(data = lim, ggplot2::aes(year, y)) +
     ggplot2::facet_wrap(~ panel, scales = "free", ncol = ncol) +
     ggplot2::labs(x = "Year", y = ylab) + scale_x_year(n = 4) + theme_ss3()
+  })(), text)
 }
 
 #' Plot joint residuals
@@ -143,12 +146,14 @@ ss3plot_runs <- function(x, mixing = "less", ncol = NULL, ...){
 #'
 #' @param x FLQuants of residuals or an SS3 report
 #' @param ... passed to \code{ss3_iresid()} when \code{x} is an SS3 report
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot; the RMSE table (by index and combined) in \code{attr(p, "rmse")}
 #' @examples
 #' data(ss3sma)
 #' ss3plot_jres(ss3sma)
 #' @export
-ss3plot_jres <- function(x, ...){
+ss3plot_jres <- function(x, ..., text = TRUE){
+  .drop_text((function(){
   if(.is_ss3rep(x)) x <- ss3_iresid(x, ...)
   d <- .flq_long(x, 1, "resid")[is.finite(data)]
   d[, data := ifelse(abs(data) > 3, NA_real_, data)]
@@ -176,6 +181,7 @@ ss3plot_jres <- function(x, ...){
     scale_x_year() + theme_ss3()
   attr(p, "rmse") <- rmse
   p
+  })(), text)
 }
 
 utils::globalVariables(c("test", "runs.p", "sigma3.lo", "sigma3.hi", "out", "m", "sm", "RMSE.perc"))

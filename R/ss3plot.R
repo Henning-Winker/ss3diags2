@@ -56,6 +56,7 @@
 #' @param indices show the observed indices scaled to SSB
 #' @param fwd show the SS3 forecast years in the trajectories (default \code{FALSE}: assessment years only)
 #' @param probs quantiles for the uncertainty bands
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return a patchwork of ggplots (needs the patchwork package)
 #' @seealso \code{\link{ss3plot_trj}()}, \code{\link{ss3plot_kobe}()}, \code{\link{ss3plot_sr}()},
 #'   \code{\link{ss3plot_production}()}
@@ -64,7 +65,8 @@
 #' ss3plot(pra, iters = 200, lag = 1)
 #' @export
 ss3plot <- function(ss3rep, stk = NULL, iters = 1000, lag = 0, indices = TRUE, fwd = FALSE,
-                    probs = c(0.05, 0.2, 0.5, 0.8, 0.95)){
+                    probs = c(0.05, 0.2, 0.5, 0.8, 0.95), text = TRUE){
+  .drop_text((function(){
   .need("patchwork", "package 'patchwork' is required for ss3plot()")
   if(!.is_ss3rep(ss3rep)) stop("ss3rep must be an r4ss::SS_output() list", call. = FALSE)
   stk <- stk %||% ss3stk(ss3rep, output = "iters", iters = iters, fwd = TRUE)
@@ -101,4 +103,5 @@ ss3plot <- function(ss3rep, stk = NULL, iters = 1000, lag = 0, indices = TRUE, f
   pP <- .strip(ss3plot_production(ss3stk(ss3rep), type = "phase") + noleg + ggplot2::labs(x = "SSB"),
                "Surplus production phase")
   patchwork::wrap_plots(pB, trj("F"), trj("Catch"), pBr, trj("F/Ftgt"), pK, pSR, pR, pP, ncol = 3)
+  })(), text)
 }

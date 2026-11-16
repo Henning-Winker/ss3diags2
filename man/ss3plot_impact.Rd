@@ -4,7 +4,7 @@
 \alias{ss3plot_impact}
 \title{Plot the partial impact of fleets}
 \usage{
-ss3plot_impact(x, type = c("area", "prop", "line"), ss3 = TRUE)
+ss3plot_impact(x, type = c("area", "prop", "line"), ss3 = TRUE, text = TRUE)
 }
 \arguments{
 \item{x}{object from \code{\link{ss3_impact}()}}
@@ -12,6 +12,8 @@ ss3plot_impact(x, type = c("area", "prop", "line"), ss3 = TRUE)
 \item{type}{\code{"area"} (default), \code{"prop"} (share of the total impact) or \code{"line"} (SSB by scenario)}
 
 \item{ss3}{add the SS3 dynamic B0 (dotted), when reported}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

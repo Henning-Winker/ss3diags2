@@ -115,6 +115,7 @@ ss3_fwd <- function(x, refpts = NULL, output = c("mle", "iters"), iters = 1000, 
 #' @param probs quantiles for the bands
 #' @param ncol facet columns
 #' @param ... further arguments to \code{\link{ss3plot_trj}()}
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' fw <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18_fwd.rds", package = "ss3diags2"))
@@ -125,7 +126,8 @@ ss3_fwd <- function(x, refpts = NULL, output = c("mle", "iters"), iters = 1000, 
 #' ss3plot_fwd(fs, ci = FALSE, start = 2010)  # scenarios only
 #' @export
 ss3plot_fwd <- function(x, stk = NULL, type = c("Rec", "SSB", "F", "Catch"), start = NULL, end = NULL, ci = TRUE,
-                        vlines = NULL, refnames = c("Btgt", "Bpa", "Blim", "Btrigger", "Ftgt"), colours = NULL, probs = c(0.05, 0.2, 0.5, 0.8, 0.95), ncol = 2, ...){
+                        vlines = NULL, refnames = c("Btgt", "Bpa", "Blim", "Btrigger", "Ftgt"), colours = NULL, probs = c(0.05, 0.2, 0.5, 0.8, 0.95), ncol = 2, ..., text = TRUE){
+  .drop_text((function(){
   if(.is_summary(x) || (is.list(x) && !is(x, "FLStocks") && .is_ss3rep(x[[1]]))) x <- ss3_fwd(x)
   ey <- attr(x, "endyr") %||% attr(x[[1]], "endyr")
   start <- start %||% (ey - 10)
@@ -148,6 +150,7 @@ ss3plot_fwd <- function(x, stk = NULL, type = c("Rec", "SSB", "F", "Catch"), sta
   p$labels$caption <- NULL
   if(length(vlines)) p <- p + ggplot2::geom_vline(xintercept = ey + vlines, linetype = 2, linewidth = 0.3)
   p + ggplot2::labs(colour = NULL)
+  })(), text)
 }
 
 #' Fishing opportunities table of forecast scenarios

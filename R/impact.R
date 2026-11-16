@@ -327,14 +327,16 @@ print.ss3impact <- function(x, ...){
 #' @param x object from \code{\link{ss3_impact}()}
 #' @param type \code{"area"} (default), \code{"prop"} (share of the total impact) or \code{"line"} (SSB by scenario)
 #' @param ss3 add the SS3 dynamic B0 (dotted), when reported
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
 #' imp <- ss3_impact(pra, groups = list(Denmark = c("DK3a", "DK4a"), Others = c("NOR3a", "NOR4a", "SWE3a", "SWE4a")))
 #' ss3plot_impact(imp, type = "line")
 #' @export
-ss3plot_impact <- function(x, type = c("area", "prop", "line"), ss3 = TRUE){
-  type <- match.arg(type)
+ss3plot_impact <- function(x, type = c("area", "prop", "line"), ss3 = TRUE, text = TRUE){
+  .drop_text((function(){
+  type <- match.arg(type, c("area", "prop", "line"))
   grp <- levels(x$impact$group)
   cols <- stats::setNames(ss3cols(length(grp)), grp)
   if(type == "line"){
@@ -366,4 +368,5 @@ ss3plot_impact <- function(x, type = c("area", "prop", "line"), ss3 = TRUE){
                     caption = paste0("dashed: SSB without fishing (dynamic B0)",
                                      if(ss3 && "ss3_dynB0" %in% names(x$check)) "; dotted: SS3 dynamic B0")) +
     scale_x_year() + theme_ss3()
+  })(), text)
 }

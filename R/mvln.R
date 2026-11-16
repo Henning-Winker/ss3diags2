@@ -557,6 +557,7 @@ utils::globalVariables(c("Ftgt", "Btgt", "MSY", "B0", "R0"))
 #' @param worm.col \code{"colour"} (each draw its own colour, default) or \code{"grey"}
 #' @param alpha transparency of the worms
 #' @param ncol number of panel columns
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' data(ss3sma)
@@ -565,8 +566,9 @@ utils::globalVariables(c("Ftgt", "Btgt", "MSY", "B0", "R0"))
 #' ss3plot_flqs(mv$flqs, worms = 5, ci = FALSE)
 #' @export
 ss3plot_flqs <- function(x, probs = c(0.05, 0.25, 0.5, 0.75, 0.95), worms = 0, ci = TRUE, median = TRUE,
-                         worm.col = c("colour", "grey"), alpha = 0.5, ncol = 2){
-  worm.col <- match.arg(worm.col)
+                         worm.col = c("colour", "grey"), alpha = 0.5, ncol = 2, text = TRUE){
+  .drop_text((function(){
+  worm.col <- match.arg(worm.col, c("colour", "grey"))
   bs <- attr(x, "basis")
   d <- rbindlist(lapply(names(x), function(n){
     v <- x[[n]]; yr <- as.numeric(dimnames(v)$year)
@@ -599,4 +601,5 @@ ss3plot_flqs <- function(x, probs = c(0.05, 0.25, 0.5, 0.75, 0.95), worms = 0, c
     ggplot2::geom_hline(data = r1, ggplot2::aes(yintercept = 1), linetype = 2, colour = "darkgreen") +
     ggplot2::facet_wrap(~ quant, scales = "free_y", ncol = ncol, labeller = ggplot2::as_labeller(lab)) +
     ggplot2::expand_limits(y = 0) + ggplot2::labs(x = "Year", y = NULL) + scale_x_year() + theme_ss3()
+  })(), text)
 }

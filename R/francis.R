@@ -104,12 +104,14 @@ ss3_francis <- function(ss3rep, quant = c("len", "age", "con", "size"), fleets =
 #'
 #' @param x output of \code{\link{ss3_francis}()}
 #' @param ncol number of panel columns
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' data(ss3simple)
 #' ss3plot_francis(ss3_francis(ss3simple, "age"))
 #' @export
-ss3plot_francis <- function(x, ncol = NULL){
+ss3plot_francis <- function(x, ncol = NULL, text = TRUE){
+  .drop_text((function(){
   pl <- attr(x, "comps"); quant <- attr(x, "quant") %||% "len"
   if(is.null(pl)) stop("x must be the output of ss3_francis()", call. = FALSE)
   pl <- copy(pl)
@@ -127,4 +129,5 @@ ss3plot_francis <- function(x, ncol = NULL){
     ggplot2::labs(x = "Year", y = paste("Mean", switch(quant, len = "length", size = "size", con = "age (conditional on length)", "age")),
                   caption = "thick: +/- 2 SE (adjusted N); thin: after Francis weighting; line: expected") +
     theme_ss3()
+  })(), text)
 }

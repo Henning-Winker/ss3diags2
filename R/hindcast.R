@@ -142,12 +142,14 @@ print.ss3hc <- function(x, ...){
 #' @param ci confidence level of the observation intervals (indices)
 #' @param xmin first year shown (default 5 years before the first peel end year)
 #' @param ncol facet columns
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' data(retro.sma)
 #' ss3plot_hcxval(ss3_hindcast(retro.sma), xmin = 2000)
 #' @export
-ss3plot_hcxval <- function(x, ci = 0.95, xmin = NULL, ncol = NULL){
+ss3plot_hcxval <- function(x, ci = 0.95, xmin = NULL, ncol = NULL, text = TRUE){
+  .drop_text((function(){
   if(!inherits(x, "ss3hc")) x <- ss3_hindcast(x)
   d <- copy(x$data); m <- x$mase[index != "joint"]
   lab <- m[, .(index, lab = ifelse(is.finite(MASE), paste0(index, ": MASE = ", sprintf("%.2f", MASE),
@@ -178,6 +180,7 @@ ss3plot_hcxval <- function(x, ci = 0.95, xmin = NULL, ncol = NULL){
     ggplot2::labs(x = "Year", y = switch(x$quant, cpue = "Index", len = "Mean length", age = "Mean age",
                                                  con = "Mean age (conditional on length)", size = "Mean size")) +
     scale_x_year() + theme_ss3()
+  })(), text)
 }
 
 utils::globalVariables(c("Bin", "Obs", "Exp", "Like", "Nsamp_adj", "like", "pred", "index", "MASE", "MASE.adj",

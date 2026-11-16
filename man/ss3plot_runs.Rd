@@ -4,7 +4,7 @@
 \alias{ss3plot_runs}
 \title{Plot runs tests}
 \usage{
-ss3plot_runs(x, mixing = "less", ncol = NULL, ...)
+ss3plot_runs(x, mixing = "less", ncol = NULL, ..., text = TRUE)
 }
 \arguments{
 \item{x}{FLQuants of residuals or an SS3 report}
@@ -14,6 +14,8 @@ ss3plot_runs(x, mixing = "less", ncol = NULL, ...)
 \item{ncol}{facet columns}
 
 \item{...}{passed to \code{ss3_iresid()} when \code{x} is an SS3 report}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

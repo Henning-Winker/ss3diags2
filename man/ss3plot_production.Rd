@@ -9,7 +9,8 @@ ss3plot_production(
   eq = NULL,
   type = c("phase", "dyn"),
   rel = FALSE,
-  spm = TRUE
+  spm = TRUE,
+  text = TRUE
 )
 }
 \arguments{
@@ -24,6 +25,8 @@ ss3plot_production(
 
 \item{spm}{overlay the Pella-Tomlinson fit to the equilibrium curve, extrapolated to SSB = 0 and K: \code{TRUE}
 (default: fitted with \code{\link{ss3_spm}()}), an \code{ss3spm} object, or \code{FALSE}}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

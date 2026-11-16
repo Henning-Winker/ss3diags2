@@ -4,12 +4,14 @@
 \alias{ss3plot_byarea}
 \title{Plot stock quantities by area}
 \usage{
-ss3plot_byarea(x, type = c("area", "share"))
+ss3plot_byarea(x, type = c("area", "share"), text = TRUE)
 }
 \arguments{
 \item{x}{FLQuants from \code{\link{ss3_byarea}()}}
 
 \item{type}{\code{"area"} (default) or \code{"share"}}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

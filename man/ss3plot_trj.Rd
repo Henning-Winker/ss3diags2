@@ -15,7 +15,8 @@ ss3plot_trj(
   label.size = 2.5,
   fwd = FALSE,
   ci = TRUE,
-  refnames = NULL
+  refnames = NULL,
+  text = TRUE
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ SS3 forecast values)}
 \item{ci}{draw the uncertainty bands (quantiles of the iterations, or the MLE standard errors)}
 
 \item{refnames}{reference points to draw (default all: B0, Btgt, Bpa, Blim, Btrigger, Ftgt, MSY, R0)}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

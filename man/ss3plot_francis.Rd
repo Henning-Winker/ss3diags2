@@ -4,12 +4,14 @@
 \alias{ss3plot_francis}
 \title{Plot Francis TA1.8 mean lengths or ages}
 \usage{
-ss3plot_francis(x, ncol = NULL)
+ss3plot_francis(x, ncol = NULL, text = TRUE)
 }
 \arguments{
 \item{x}{output of \code{\link{ss3_francis}()}}
 
 \item{ncol}{number of panel columns}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

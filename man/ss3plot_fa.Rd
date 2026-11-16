@@ -4,7 +4,7 @@
 \alias{ss3plot_fa}
 \title{Plot F-at-age by fleet}
 \usage{
-ss3plot_fa(fa, years = NULL, ncol = NULL)
+ss3plot_fa(fa, years = NULL, ncol = NULL, text = TRUE)
 }
 \arguments{
 \item{fa}{FLQuants from \code{\link{ss3_fa}()}}
@@ -12,6 +12,8 @@ ss3plot_fa(fa, years = NULL, ncol = NULL)
 \item{years}{years to average (default: the last three)}
 
 \item{ncol}{number of panel columns}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

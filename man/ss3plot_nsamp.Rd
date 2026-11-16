@@ -4,7 +4,7 @@
 \alias{ss3plot_nsamp}
 \title{Plot composition sample sizes}
 \usage{
-ss3plot_nsamp(comps, by = NULL, iter = 1)
+ss3plot_nsamp(comps, by = NULL, iter = 1, text = TRUE)
 }
 \arguments{
 \item{comps}{FLQuants (or FLQuant) of numbers at length or age}
@@ -12,6 +12,8 @@ ss3plot_nsamp(comps, by = NULL, iter = 1)
 \item{by}{dimensions kept separate, any of \code{"unit"}, \code{"season"}, \code{"area"}}
 
 \item{iter}{iteration}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

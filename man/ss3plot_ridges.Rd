@@ -15,7 +15,8 @@ ss3plot_ridges(
   scale = 0.9,
   ncol = NULL,
   fleets = NULL,
-  units = NULL
+  units = NULL,
+  text = TRUE
 )
 }
 \arguments{
@@ -42,6 +43,8 @@ ss3plot_ridges(
 
 \item{units}{units (sexes) to plot, e.g. \code{"F"}, \code{"M"} or \code{"unique"} (combined-sex data); fleets
 without these units are dropped (default: all)}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot
