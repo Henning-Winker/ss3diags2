@@ -11,6 +11,8 @@ ss3plot_ensemble(
   joint = TRUE,
   probs = c(0.05, 0.2, 0.5, 0.8, 0.95),
   colours = NULL,
+  start = NULL,
+  end = NULL,
   ...
 )
 }
@@ -26,6 +28,8 @@ ss3plot_ensemble(
 \item{probs}{quantiles for the bands}
 
 \item{colours}{model colours (default r4ss colours; the joint ensemble is black)}
+
+\item{start, end}{first and last year to plot}
 
 \item{...}{further arguments to \code{\link{ss3plot_trj}()}}
 }

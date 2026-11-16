@@ -39,3 +39,11 @@ test_that("model ensemble pools draws by weight, ratios within models", {
   expect_s3_class(ss3plot_ensemble(e), "ggplot")
   expect_s3_class(ss3plot_ensemble(e, models = FALSE), "ggplot")
 })
+
+test_that("herring ensemble: equal and unequal weights", {
+  her <- readRDS(system.file("extdata", "her.27.25-2932", "her.27.25-2932.rds", package = "ss3diags2"))
+  e <- ss3_ensemble(her, weights = c(1.5, 1, 0.5), iters = 60)
+  expect_equal(attr(e, "weights")$iters, c(90, 60, 30))
+  expect_equal(FLCore::dims(e$Joint)$iter, 180)
+  expect_s3_class(ss3plot_ensemble(e, start = 1960), "ggplot")
+})

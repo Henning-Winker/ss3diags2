@@ -40,7 +40,10 @@ ss3plot_comps(lfh, fit = lxh, by = "unit", fleets = c("ITA_OTB_18", "ITA_LLS_18"
 ```
 
 With two sexes, the length compositions also carry the sex ratio. `ss3plot_sexratio()` shows the observed and
-expected proportion of females by length (pooled over years) or by year (pooled over lengths):
+expected proportion of females by length (pooled over years) or by year (pooled over lengths). The bars are 95%
+binomial (Wilson) intervals with the numbers in each bin, i.e. the adjusted sample sizes, so they show how far an
+observed proportion can stray from the line by sampling alone. Bins with fewer than `min.n = 5` effective fish (mostly
+the largest lengths) get no bar, since their interval would span most of 0-1; `ci = FALSE` removes the bars:
 
 ```{r hke-sexratio, fig.height = 6, fig.width = 10}
 ss3plot_sexratio(lfh, fit = lxh)
@@ -52,7 +55,8 @@ ss3plot_sexratio(lfh, fit = lxh, type = "year")
 > trawl and surveys (HRV_OTB_17, MEDITS_HRV, and MEDITS_ITA above 25 cm) the observed switch is steeper: fewer
 > females than expected at about 15-28 cm and more at about 30-40 cm. Males are more common among small fish and
 > drop out of the intermediate lengths faster than modelled: male growth or male mortality differ from the model,
-> selectivity differs between the sexes, or small hake are hard to sex. A sex ratio that drifts
+> selectivity differs between the sexes, or small hake are hard to sex. Where the bars of several neighbouring bins
+miss the line on the same side (HRV_OTB_17 at 15-28 cm), the pattern is more than sampling noise. A sex ratio that drifts
 > over years, away from the expected line, points to a time-varying process or a change in sampling.
 
 ## Conditional age-at-length

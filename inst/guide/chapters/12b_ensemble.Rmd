@@ -7,19 +7,37 @@ to its weight, and the joint ensemble pools them. Ratios to the targets are comp
 own reference points, before pooling. `ss3plot_ensemble()` shows the models in colour and the joint ensemble in
 black, with `ss3plot_trj()`.
 
-The example uses the shortfin mako reference run and two retrospective peels as stand-ins for alternative models:
+The example is the ICES Central Baltic herring (her.27.25-2932, SS3 3.30.22, 1903-2024): three runs that differ in
+the time series of natural mortality by age (Run2 the highest M, Run3 the lowest), with B30 and F30 as the
+model-internal benchmarks. The three reports ship in `extdata` (with the covariance reduced to the derived
+quantities):
 
-```{r ens, fig.height = 6, fig.width = 9}
-ens <- ss3_ensemble(list(ref = retro.sma$replist1, alt1 = retro.sma$replist2, alt2 = retro.sma$replist3),
-                    weights = c(0.5, 0.25, 0.25), iters = 1000)
-attr(ens, "weights")
-ss3plot_ensemble(ens)
+```{r ens-data}
+her <- readRDS(system.file("extdata", "her.27.25-2932", "her.27.25-2932.rds", package = "ss3diags2"))
+names(her)
 ```
 
-The joint ensemble on its own, and its Kobe plot:
+With equal weights each model contributes the same number of draws:
+
+```{r ens, fig.height = 6, fig.width = 9}
+ens <- ss3_ensemble(her, weights = c(1, 1, 1), iters = 1000)
+attr(ens, "weights")
+ss3plot_ensemble(ens, start = 1960)
+```
+
+With hypothetical weights 1.5, 1 and 0.5 (normalised to 0.5, 0.33 and 0.17) the joint ensemble moves towards Run1
+and away from the low-M run:
+
+```{r ens-w, fig.height = 6, fig.width = 9}
+ensw <- ss3_ensemble(her, weights = c(1.5, 1, 0.5), iters = 1000)
+attr(ensw, "weights")
+ss3plot_ensemble(ensw, start = 1960)
+```
+
+The two joint ensembles on their own, and the Kobe plot of the equally weighted one:
 
 ```{r ens-joint, fig.height = 3.5, fig.width = 8}
-ss3plot_ensemble(ens, models = FALSE, type = c("B/Btgt", "F/Ftgt"))
+ss3plot_trj(FLCore::FLStocks(equal = ens$Joint, weighted = ensw$Joint), type = c("B/Btgt", "F/Ftgt"))
 ```
 
 ```{r ens-kobe, fig.height = 4.5, fig.width = 6}
@@ -29,3 +47,10 @@ ss3plot_kobe(ens$Joint)
 > **Weights and years.** Weights are normalised to sum to one; model $i$ contributes `round(iters * n * w_i)`
 > draws. The joint ensemble covers the years common to all models. Models built from `FLStockR` with iterations
 > (`ss3stk(output = "iters")`) are resampled to their number of draws.
+
+> **Reading the ensemble.** The models agree on the trends but differ in scale: with higher M (Run2) the stock is
+> more productive, so biomass is larger relative to B30 and F lower relative to F30; the low-M run (Run3) is the
+> most pessimistic. The joint bands are wider than any single model's because they include the spread between
+> models (structural uncertainty) as well as the estimation uncertainty within each. Down-weighting Run3 shifts the
+> joint status towards the more optimistic runs, so weights should be justified (diagnostics, plausibility of M),
+> not tuned to the outcome.

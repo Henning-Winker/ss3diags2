@@ -168,13 +168,19 @@ utils::globalVariables(c("qlo", "qhi", "tot", "p", "mx", "y", "what", "Len_Mid",
 #' @param type \code{"len"} (by bin, default) or \code{"year"}
 #' @param fleets,units fleets to plot (as \code{\link{ss3plot_comps}()}; units are F and M)
 #' @param ncol number of panel columns
+#' @param ci level of the binomial confidence interval of the observed proportions (Wilson score interval with the
+#'   numbers in the bin, i.e. the input or adjusted sample size of the compositions); \code{NULL} or \code{FALSE}
+#'   for none. The interval reflects sampling error of the observations; the SS3 hessian gives no standard errors for
+#'   the expected compositions
+#' @param min.n minimum (effective) number of fish in a bin for an interval; bins with fewer, mostly the largest
+#'   lengths, are nearly uninformative and their intervals span most of 0-1
 #' @return ggplot
 #' @examples
 #' \dontrun{
 #' ss3plot_sexratio(ss3_lencomp(ss3rep), fit = ss3_lencomp(ss3rep, what = "exp"))
 #' }
 #' @export
-ss3plot_sexratio <- function(comps, fit = NULL, type = c("len", "year"), fleets = NULL, ncol = NULL){
+ss3plot_sexratio <- function(comps, fit = NULL, type = c("len", "year"), fleets = NULL, ncol = NULL, ci = 0.95, min.n = 5){
   type <- match.arg(type)
   comps <- .subset_flqs(comps, fleets, NULL)
   keep <- names(comps)[vapply(comps, function(q) all(c("F", "M") %in% dimnames(q)$unit), TRUE)]
@@ -189,7 +195,16 @@ ss3plot_sexratio <- function(comps, fit = NULL, type = c("len", "year"), fleets 
   }
   o <- sr(comps, "observed")
   p <- ggplot2::ggplot(o, ggplot2::aes(if(type == "len") q else year, pF)) +
-    ggplot2::geom_hline(yintercept = 0.5, linetype = 3, colour = "grey50") +
+    ggplot2::geom_hline(yintercept = 0.5, linetype = 3, colour = "grey50")
+  if(!is.null(ci) && !isFALSE(ci) && ci > 0){
+    # Wilson score interval for a binomial proportion with the (effective) sample size n in the bin / year
+    z <- stats::qnorm(1 - (1 - ci)/2)
+    o[, `:=`(lo = (pF + z^2/(2*n) - z*sqrt(pF*(1 - pF)/n + z^2/(4*n^2)))/(1 + z^2/n),
+             hi = (pF + z^2/(2*n) + z*sqrt(pF*(1 - pF)/n + z^2/(4*n^2)))/(1 + z^2/n))]
+    p <- p + ggplot2::geom_linerange(data = o[n >= min.n], ggplot2::aes(ymin = lo, ymax = hi), colour = "grey55",
+                                     linewidth = 0.35)
+  }
+  p <- p +
     ggplot2::geom_point(ggplot2::aes(size = n), shape = 21, fill = "grey60", colour = "grey20", alpha = 0.8) +
     ggplot2::scale_size_area(max_size = 3, guide = "none")
   if(!is.null(fit)){
@@ -200,6 +215,7 @@ ss3plot_sexratio <- function(comps, fit = NULL, type = c("len", "year"), fleets 
   }
   p + ggplot2::facet_wrap(~ name, ncol = ncol) + ggplot2::coord_cartesian(ylim = c(0, 1)) +
     ggplot2::labs(x = if(type == "len") "Length" else "Year", y = "Proportion female",
-                  caption = paste0("points: observed (size: numbers)", if(!is.null(fit)) "; line: expected")) +
+                  caption = paste0("points: observed (size: numbers)", if(!is.null(ci) && !isFALSE(ci) && ci > 0)
+                    paste0(", bars: ", round(100*ci), "% binomial CI"), if(!is.null(fit)) "; line: expected")) +
     theme_ss3()
 }

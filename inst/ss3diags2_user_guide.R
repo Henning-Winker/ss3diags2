@@ -65,6 +65,7 @@ library(ggplot2)
 # | ss3sma, retro.sma, aspm.sma | North Atlantic shortfin mako (cookbook) | runs tests, retrospective, status, Kobe |
 # | ss3phk, retro.phk, aspm.phk | Pacific hake (cookbook) | Dirichlet-multinomial OSA residuals, hindcast |
 # | hke.37.17-18.rds | European hake in the Adriatic Sea (GFCM benchmark 2024), two sexes, eight fleets, three surveys, conditional age-at-length | worked example: growth by sex, sex ratios, conditional age-at-length, impact by gear |
+# | her.27.25-2932.rds | Central Baltic herring, three SS3 runs with alternative M | model ensembles |
 # | hke.37.17-18_fwd.rds | Adriatic hake, SS3 forecast runs for three F scenarios (SSsummarize() summary) | short-term forecasts |
 # | pra.27.3a4a.rds | northern shrimp, four seasons, hermaphrodite, two areas, six area-specific fleets | structured models, F by area, impact |
 
@@ -386,7 +387,10 @@ ss3plot_comps(lfh, fit = lxh, by = "unit", fleets = c("ITA_OTB_18", "ITA_LLS_18"
 
 # With two sexes, the length compositions also carry the sex ratio. ss3plot_sexratio() shows the
 # observed and expected proportion of females by length (pooled over years) or by year (pooled
-# over lengths):
+# over lengths). The bars are 95% binomial (Wilson) intervals with the numbers in each bin, i.e.
+# the adjusted sample sizes, so they show how far an observed proportion can stray from the line
+# by sampling alone. Bins with fewer than min.n = 5 effective fish (mostly the largest lengths)
+# get no bar, since their interval would span most of 0-1; ci = FALSE removes the bars:
 
 ss3plot_sexratio(lfh, fit = lxh)
 ss3plot_sexratio(lfh, fit = lxh, type = "year")
@@ -397,8 +401,10 @@ ss3plot_sexratio(lfh, fit = lxh, type = "year")
 # 25 cm) the observed switch is steeper: fewer females than expected at about 15-28 cm and more
 # at about 30-40 cm. Males are more common among small fish and drop out of the intermediate
 # lengths faster than modelled: male growth or male mortality differ from the model, selectivity
-# differs between the sexes, or small hake are hard to sex. A sex ratio that drifts over years,
-# away from the expected line, points to a time-varying process or a change in sampling.
+# differs between the sexes, or small hake are hard to sex. Where the bars of several
+# neighbouring bins miss the line on the same side (HRV_OTB_17 at 15-28 cm), the pattern is more
+# than sampling noise. A sex ratio that drifts over years, away from the expected line, points to
+# a time-varying process or a change in sampling.
 
 # ---- Conditional age-at-length ---------------------------------------------------------------
 
@@ -583,23 +589,44 @@ ss3plot_production(ss3stk(ss3sma), type = "dyn")
 # before pooling. ss3plot_ensemble() shows the models in colour and the joint ensemble in black,
 # with ss3plot_trj().
 
-# The example uses the shortfin mako reference run and two retrospective peels as stand-ins for
-# alternative models:
+# The example is the ICES Central Baltic herring (her.27.25-2932, SS3 3.30.22, 1903-2024): three
+# runs that differ in the time series of natural mortality by age (Run2 the highest M, Run3 the
+# lowest), with B30 and F30 as the model-internal benchmarks. The three reports ship in extdata
+# (with the covariance reduced to the derived quantities):
 
-ens <- ss3_ensemble(list(ref = retro.sma$replist1, alt1 = retro.sma$replist2, alt2 = retro.sma$replist3),
-                    weights = c(0.5, 0.25, 0.25), iters = 1000)
+her <- readRDS(system.file("extdata", "her.27.25-2932", "her.27.25-2932.rds", package = "ss3diags2"))
+names(her)
+
+# With equal weights each model contributes the same number of draws:
+
+ens <- ss3_ensemble(her, weights = c(1, 1, 1), iters = 1000)
 attr(ens, "weights")
-ss3plot_ensemble(ens)
+ss3plot_ensemble(ens, start = 1960)
 
-# The joint ensemble on its own, and its Kobe plot:
+# With hypothetical weights 1.5, 1 and 0.5 (normalised to 0.5, 0.33 and 0.17) the joint ensemble
+# moves towards Run1 and away from the low-M run:
 
-ss3plot_ensemble(ens, models = FALSE, type = c("B/Btgt", "F/Ftgt"))
+ensw <- ss3_ensemble(her, weights = c(1.5, 1, 0.5), iters = 1000)
+attr(ensw, "weights")
+ss3plot_ensemble(ensw, start = 1960)
+
+# The two joint ensembles on their own, and the Kobe plot of the equally weighted one:
+
+ss3plot_trj(FLCore::FLStocks(equal = ens$Joint, weighted = ensw$Joint), type = c("B/Btgt", "F/Ftgt"))
 
 ss3plot_kobe(ens$Joint)
 
 # Weights and years. Weights are normalised to sum to one; model $i$ contributes round(iters * n
 # * w_i) draws. The joint ensemble covers the years common to all models. Models built from
 # FLStockR with iterations (ss3stk(output = "iters")) are resampled to their number of draws.
+
+# Reading the ensemble. The models agree on the trends but differ in scale: with higher M (Run2)
+# the stock is more productive, so biomass is larger relative to B30 and F lower relative to F30;
+# the low-M run (Run3) is the most pessimistic. The joint bands are wider than any single model's
+# because they include the spread between models (structural uncertainty) as well as the
+# estimation uncertainty within each. Down-weighting Run3 shifts the joint status towards the
+# more optimistic runs, so weights should be justified (diagnostics, plausibility of M), not
+# tuned to the outcome.
 
 ####################################################################################################
 # SHORT-TERM FORECASTS

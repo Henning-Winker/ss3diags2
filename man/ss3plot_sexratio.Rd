@@ -9,7 +9,9 @@ ss3plot_sexratio(
   fit = NULL,
   type = c("len", "year"),
   fleets = NULL,
-  ncol = NULL
+  ncol = NULL,
+  ci = 0.95,
+  min.n = 5
 )
 }
 \arguments{
@@ -22,6 +24,14 @@ ss3plot_sexratio(
 \item{fleets, units}{fleets to plot (as \code{\link{ss3plot_comps}()}; units are F and M)}
 
 \item{ncol}{number of panel columns}
+
+\item{ci}{level of the binomial confidence interval of the observed proportions (Wilson score interval with the
+numbers in the bin, i.e. the input or adjusted sample size of the compositions); \code{NULL} or \code{FALSE}
+for none. The interval reflects sampling error of the observations; the SS3 hessian gives no standard errors for
+the expected compositions}
+
+\item{min.n}{minimum (effective) number of fish in a bin for an interval; bins with fewer, mostly the largest
+lengths, are nearly uninformative and their intervals span most of 0-1}
 }
 \value{
 ggplot

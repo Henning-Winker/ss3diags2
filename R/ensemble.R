@@ -107,17 +107,19 @@ ss3_ensemble <- function(x, weights = NULL, iters = 1000, joint = TRUE, method =
 #' @param models show the individual models
 #' @param joint show the joint ensemble
 #' @param probs quantiles for the bands
+#' @param start,end first and last year to plot
 #' @param colours model colours (default r4ss colours; the joint ensemble is black)
 #' @param ... further arguments to \code{\link{ss3plot_trj}()}
 #' @return ggplot
 #' @export
 ss3plot_ensemble <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftgt"), models = TRUE, joint = TRUE,
-                             probs = c(0.05, 0.2, 0.5, 0.8, 0.95), colours = NULL, ...){
+                             probs = c(0.05, 0.2, 0.5, 0.8, 0.95), colours = NULL, start = NULL, end = NULL, ...){
   nm <- names(x); mods <- setdiff(nm, "Joint")
   sel <- c(if(models) mods, if(joint && "Joint" %in% nm) "Joint")
   if(!length(sel)) stop("nothing to plot", call. = FALSE)
   cols <- c(stats::setNames(colours %||% ss3runcols(length(mods)), mods), Joint = "black")[sel]
-  p <- ss3plot_trj(FLCore::FLStocks(as.list(x)[sel]), type = type, probs = probs, colours = cols, ...)
+  sl <- lapply(as.list(x)[sel], .win_stk, start = start, end = end)
+  p <- ss3plot_trj(FLCore::FLStocks(sl), type = type, probs = probs, colours = cols, ...)
   w <- attr(x, "weights")
   if(!is.null(w)) p <- p + ggplot2::labs(subtitle = paste0("weights: ", paste0(w$model, " ", round(w$weight, 2),
                                                                                collapse = ", ")))

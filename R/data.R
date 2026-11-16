@@ -12,6 +12,11 @@
 #' \code{readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))} (FAO GFCM 2024.
 #' SAC WGSAD Benchmark session for European hake in the Adriatic Sea, Rome, 11-15 March 2024).
 #'
+#' Model ensemble: three SS3 runs of ICES Central Baltic herring (her.27.25-2932) with alternative natural mortality
+#' time series, \code{readRDS(system.file("extdata", "her.27.25-2932", "her.27.25-2932.rds", package = "ss3diags2"))}
+#' (named list Run1-Run3 of \code{r4ss::SS_output()} reports; CoVar reduced to the derived quantities), for
+#' \code{\link{ss3_ensemble}()}.
+#'
 #' Short-term forecast runs of the Adriatic hake (reference year 2024; SS3 F scenarios Fadv, Fsq and F0 with two
 #' intermediate years) ship as their \code{r4ss::SSsummarize()} summary:
 #' \code{readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18_fwd.rds", package = "ss3diags2"))}, for
