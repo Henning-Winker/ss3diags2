@@ -1,4 +1,4 @@
-# Worked example: European hake in the Adriatic Sea
+# Conditional age-length key example: European hake in the Adriatic Sea
 
 European hake (*Merluccius merluccius*) in the Adriatic Sea (GFCM geographical subareas 17-18) was benchmarked in
 2024 with a two-sex, multi-fleet Stock Synthesis model (FAO GFCM 2024). It is a good example for sex-structured

@@ -128,7 +128,9 @@ ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftg
       ggplot2::geom_ribbon(data = dr, ggplot2::aes(ymin = lo1, ymax = hi1), fill = colour, alpha = 0.45)
     p <- p + ggplot2::geom_line(linewidth = 0.6)
   } else {
-    cols <- colours %||% ss3runcols(nr)
+    # stock by area (ss3stk(area = TRUE)): the stock in black with grey bands, the areas in r4ss colours
+    byarea <- names(sl)[1] == "stock" && all(grepl("^area ", names(sl)[-1]))
+    cols <- colours %||% (if(byarea) c("black", ss3runcols(nr - 1)) else ss3runcols(nr))
     cols <- if(!is.null(names(cols)) && all(names(sl) %in% names(cols))) cols[names(sl)] else
       stats::setNames(rep_len(cols, nr), names(sl))
     if(nrow(dr)) p <- p + ggplot2::geom_ribbon(data = dr, ggplot2::aes(ymin = lci, ymax = uci, fill = run), alpha = 0.15) +

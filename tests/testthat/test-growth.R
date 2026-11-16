@@ -3,7 +3,7 @@ test_that("growth and ridge plots build", {
   lfd <- ss3_lencomp(ss3simple); fit <- ss3_lencomp(ss3simple, what = "exp"); lh <- ss3_lhpar(ss3simple)
   g <- ss3plot_growth(ss3simple, lfd = lfd)
   expect_silent(ggplot2::ggplot_build(g))
-  expect_equal(sort(unique(g$data$unit)), c("F", "M"))
+  expect_equal(unique(g$data$unit), "F = M")                      # same growth for both sexes
   expect_silent(ggplot2::ggplot_build(ss3plot_growth(lh)))
   for(ty in c("obs", "exp", "both"))
     expect_silent(ggplot2::ggplot_build(ss3plot_ridges(lfd["SURVEY1"], fit = fit["SURVEY1"], type = ty, lhpar = lh)))

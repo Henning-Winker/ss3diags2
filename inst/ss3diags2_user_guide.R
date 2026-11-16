@@ -263,8 +263,8 @@ ss3plot_resid(ss3_resid(ss3phk, "age"), cohorts = FALSE)
 # ss3_resid(quant = "con") computes OSA residuals per length bin; long = TRUE keeps the bin for
 # ss3plot_caal(). Runs tests, joint residuals, hindcasts (quant = "con") and Francis weights
 # (ss3_francis(quant = "con"), as r4ss::SSMethod.Cond.TA1.8()) work on the mean age by length
-# bin. Section [Worked example: European hake in the Adriatic Sea] goes through these diagnostics
-# for a two-sex assessment with conditional age-at-length data.
+# bin. Section [Conditional age-length key example: European hake in the Adriatic Sea] goes
+# through these diagnostics for a two-sex assessment with conditional age-at-length data.
 
 # Reading OSA residuals. Bins are conditioned on the smaller bins: too few small fish gives
 # negative residuals at small sizes and positive residuals at larger sizes. Diagonal patterns
@@ -347,7 +347,7 @@ ss3plot_hcxval(ss3_hindcast(retro.sma))
 # limits the scaling.
 
 ####################################################################################################
-# WORKED EXAMPLE: EUROPEAN HAKE IN THE ADRIATIC SEA
+# CONDITIONAL AGE-LENGTH KEY EXAMPLE: EUROPEAN HAKE IN THE ADRIATIC SEA
 ####################################################################################################
 
 # European hake (*Merluccius merluccius*) in the Adriatic Sea (GFCM geographical subareas 17-18)
