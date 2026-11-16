@@ -115,17 +115,3 @@ ss3plot_jres(hke)
 > (p < 0.05): the mean ages at length run above or below the expected values for several years in a row. Together
 > with the residual plots, this points to time-varying growth or variation in length at age that the model does not
 > capture. The indices and the mean lengths of all fleets pass.
-
-## Fishing by gear and its impact
-
-```{r hke-gear, fig.height = 4.5, fig.width = 8}
-gear <- list(OTB = c("ITA_OTB_17", "HRV_OTB_17", "ITA_OTB_18", "MNE_OTB_18", "ALB_OTB_18"),
-             LLS = c("HRV_LLS_17", "ITA_LLS_18"), GNS = "HRV_GNS_17")
-ss3plot_partialF(ss3_partialF(hke, groups = gear))
-imp <- ss3_impact(hke, groups = gear)
-ss3plot_impact(imp)
-```
-
-> **Reading the impact plot.** The projection is done by sex, because males and females have different M,
-> selectivity and spawning output; its no-fishing run reproduces the SS3 dynamic B0. Bottom trawls account for
-> nearly all of the SSB lost to fishing; longlines and gillnets for about 1%.
