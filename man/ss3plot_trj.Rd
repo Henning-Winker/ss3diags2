@@ -13,7 +13,8 @@ ss3plot_trj(
   colour = "grey45",
   ncol = NULL,
   label.size = 2.5,
-  fwd = FALSE
+  fwd = FALSE,
+  ci = TRUE
 )
 }
 \arguments{
@@ -36,6 +37,8 @@ ss3plot_trj(
 \item{fwd}{show the years after the assessment end year (default \code{FALSE}: a stock built with
 \code{ss3stk(fwd = TRUE)} for the lagged Kobe plot is shown up to the end year; F and catch of the next year are
 SS3 forecast values)}
+
+\item{ci}{draw the uncertainty bands (quantiles of the iterations, or the MLE standard errors)}
 }
 \value{
 ggplot

@@ -12,6 +12,11 @@
 #' \code{readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))} (FAO GFCM 2024.
 #' SAC WGSAD Benchmark session for European hake in the Adriatic Sea, Rome, 11-15 March 2024).
 #'
+#' Short-term forecast runs of European hake in GSAs 12-16 (reference year 2024; SS3 F scenarios Fadv, Fsq and F0
+#' with two intermediate years) ship as a list of reduced SS3 reports:
+#' \code{readRDS(system.file("extdata", "hke.37.12-16", "hke.37.12-16_fwd.rds", package = "ss3diags2"))}, for
+#' \code{\link{ss3_fwd}()}, \code{\link{ss3plot_fwd}()} and \code{\link{ss3_fwdtable}()}.
+#'
 #' Further examples: the two cookbook models (\code{\link{ss3sma}}, \code{\link{ss3phk}}) with retrospective runs.
 #' A season-, sex- and area-structured example (northern shrimp pra.27.3a4a: four seasons, hermaphrodite, two areas,
 #' six area-specific fleets) is shipped as an rds file with its SS3 input files:

@@ -94,6 +94,7 @@
 #' @param colour band colour for a single run
 #' @param ncol facet columns
 #' @param label.size size of the reference point labels
+#' @param ci draw the uncertainty bands (quantiles of the iterations, or the MLE standard errors)
 #' @param fwd show the years after the assessment end year (default \code{FALSE}: a stock built with
 #'   \code{ss3stk(fwd = TRUE)} for the lagged Kobe plot is shown up to the end year; F and catch of the next year are
 #'   SS3 forecast values)
@@ -107,7 +108,7 @@
 #' @export
 ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftgt"),
                         probs = c(0.05, 0.2, 0.5, 0.8, 0.95), refpts = TRUE, colours = NULL, colour = "grey45",
-                        ncol = NULL, label.size = 2.5, fwd = FALSE){
+                        ncol = NULL, label.size = 2.5, fwd = FALSE, ci = TRUE){
   sl <- .stklist(x)
   if(!fwd) sl <- lapply(sl, .trim_endyr)
   nr <- length(sl)
@@ -118,7 +119,7 @@ ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftg
     type <- setdiff(type, miss); d <- d[quant %in% type]
   }
   d[, quant := factor(quant, levels = type)][, run := factor(run, levels = names(sl))]
-  dr <- d[is.finite(lci) & is.finite(uci)]
+  dr <- if(ci) d[is.finite(lci) & is.finite(uci)] else d[0]
   p <- ggplot2::ggplot(d, ggplot2::aes(year, est))
   if(nr == 1){
     if(nrow(dr)) p <- p + ggplot2::geom_ribbon(data = dr, ggplot2::aes(ymin = lci, ymax = uci), fill = colour, alpha = 0.25) +
@@ -148,16 +149,17 @@ ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftg
                       name = c("Btgt", "Ftgt", "Btgt", "MSY", "Blim", "Bpa"),
                       value = c(1, 1, .rp(s1, "Btgt")/.rp(s1, "B0"), 1, .rp(s1, "Blim")/.rp(s1, "Btgt"),
                                 .rp(s1, "Bpa")/.rp(s1, "Btgt")))
-    abs <- data.table(quant = c("SSB", "SSB", "SSB", "SSB", "F", "Catch", "Rec"),
-                      name = c("B0", "Btgt", "Blim", "Bpa", "Ftgt", "MSY", "R0"),
-                      value = c(.rp(s1, "B0"), .rp(s1, "Btgt"), .rp(s1, "Blim"), .rp(s1, "Bpa"), .rp(s1, "Ftgt"),
-                                .rp(s1, "MSY"), .rp(s1, "R0")))
+    abs <- data.table(quant = c("SSB", "SSB", "SSB", "SSB", "SSB", "F", "Catch", "Rec"),
+                      name = c("B0", "Btgt", "Blim", "Bpa", "Btrigger", "Ftgt", "MSY", "R0"),
+                      value = c(.rp(s1, "B0"), .rp(s1, "Btgt"), .rp(s1, "Blim"), .rp(s1, "Bpa"), .rp(s1, "Btrigger"),
+                                .rp(s1, "Ftgt"), .rp(s1, "MSY"), .rp(s1, "R0")))
+    if(isTRUE(all.equal(.rp(s1, "Btrigger"), .rp(s1, "Bpa")))) abs <- abs[name != "Btrigger"]
     refs <- if(nr == 1) rbind(rel, abs) else rel[name != "Btgt" | quant != "B/B0"]
     refs <- refs[quant %in% type & is.finite(value)]
     refs[, label := .rplab(name, bs)]
     if(nrow(refs)){
       refs[, quant := factor(quant, levels = type)]
-      lty <- c(B0 = 2, Btgt = 2, Ftgt = 2, MSY = 2, R0 = 3, Blim = 2, Bpa = 2)
+      lty <- c(B0 = 2, Btgt = 2, Ftgt = 2, MSY = 2, R0 = 3, Blim = 2, Bpa = 2, Btrigger = 4)
       # targets green, precautionary orange, limits red, unfished blue (fixed colours, one layer per point,
       # so the colour scale stays free for runs)
       for(k in unique(refs$name)){
@@ -384,12 +386,21 @@ utils::globalVariables(c("est", "lci", "uci", "lo1", "hi1", "run", "i.data", "xm
 .trim_endyr <- function(s){
   ey <- attr(s, "endyr"); yrs <- as.numeric(dimnames(s)$year)
   if(is.null(ey) || max(yrs) <= ey) return(s)
+  .win_stk(s, end = ey)
+}
+
+# window a stock keeping the ss3diags2 attributes (mle, se.log, status, basis, endyr, eqcurve)
+.win_stk <- function(s, start = NULL, end = NULL){
+  yrs <- as.numeric(dimnames(s)$year)
+  start <- max(start %||% min(yrs), min(yrs)); end <- min(end %||% max(yrs), max(yrs))
   at <- attributes(s)[intersect(c("basis", "endyr", "mle", "se.log", "eqcurve", "status"), names(attributes(s)))]
-  w <- FLCore::window(s, end = ey)
-  if(!is.null(at$status)) at$status <- lapply(at$status, function(q) FLCore::window(q, end = ey))
-  if(!is.null(at$mle) && is.data.frame(at$mle) && "year" %in% names(at$mle)) at$mle <- at$mle[at$mle$year <= ey, ]
-  if(!is.null(at$se.log) && is.data.frame(at$se.log) && "year" %in% names(at$se.log))
-    at$se.log <- at$se.log[at$se.log$year <= ey, ]
+  w <- FLCore::window(s, start = start, end = end)
+  wq <- function(q) FLCore::window(q, start = start, end = end)
+  if(!is.null(at$status)) at$status <- lapply(at$status, wq)
+  if(!is.null(at$mle) && is.data.frame(at$mle) && "year" %in% names(at$mle))
+    at$mle <- at$mle[at$mle$year >= start & at$mle$year <= end, ]
+  if(!is.null(at$se.log)) at$se.log <- if(is.data.frame(at$se.log)) at$se.log[at$se.log$year >= start & at$se.log$year <= end, ]
+                                      else lapply(at$se.log, wq)
   for(n in names(at)) attr(w, n) <- at[[n]]
   w
 }

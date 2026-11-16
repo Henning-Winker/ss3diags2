@@ -72,6 +72,9 @@ blockquote p { margin-bottom: 0.4em; }
 ```{r child = "chapters/12_production.Rmd"}
 ```
 
+```{r child = "chapters/12c_forecast.Rmd"}
+```
+
 ```{r child = "chapters/12b_ensemble.Rmd"}
 ```
 

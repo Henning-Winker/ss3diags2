@@ -65,6 +65,7 @@ library(ggplot2)
 # | ss3sma, retro.sma, aspm.sma | North Atlantic shortfin mako (cookbook) | runs tests, retrospective, status, Kobe |
 # | ss3phk, retro.phk, aspm.phk | Pacific hake (cookbook) | Dirichlet-multinomial OSA residuals, hindcast |
 # | hke.37.17-18.rds | European hake in the Adriatic Sea (GFCM benchmark 2024), two sexes, eight fleets, three surveys, conditional age-at-length | worked example: growth by sex, sex ratios, conditional age-at-length, impact by gear |
+# | hke.37.12-16_fwd.rds | European hake GSAs 12-16, SS3 forecast runs for three F scenarios | short-term forecasts |
 # | pra.27.3a4a.rds | northern shrimp, four seasons, hermaphrodite, two areas, six area-specific fleets | structured models, F by area, impact |
 
 ####################################################################################################
@@ -601,6 +602,51 @@ ss3plot_kobe(ens$Joint)
 # FLStockR with iterations (ss3stk(output = "iters")) are resampled to their number of draws.
 
 ####################################################################################################
+# SHORT-TERM FORECASTS
+####################################################################################################
+
+# Catch advice is based on short-term forecasts: the stock is projected from the assessment
+# through one or more intermediate years (status quo F or a known catch) into the advice year
+# under alternative F (or catch) scenarios. With SS3 the scenarios are run as forecasts in
+# forecast.ss (fixed F by fleet and season, scaled from the F basis of the advice to apical F;
+# see the FLRef workflow and ss3diags::SSnewrun()), and the runs are read with
+# r4ss::SSgetoutput(). ss3diags2 takes it from there: ss3_fwd() converts the runs into FLStockR
+# objects (MLE or MVLN draws), ss3plot_fwd() plots the scenarios with or without uncertainty, and
+# ss3_fwdtable() summarises the fishing opportunities.
+
+# The example is European hake in GSAs 12-16 (reference year 2024) with three F scenarios: the
+# advice F (Fadv), status quo F (Fsq) and no fishing (F0), after two intermediate years at Fsq
+# (2025-2026):
+
+fw <- readRDS(system.file("extdata", "hke.37.12-16", "hke.37.12-16_fwd.rds", package = "ss3diags2"))
+names(fw)
+fs <- ss3_fwd(fw)                                  # MLE
+
+ss3plot_fwd(fs, ci = FALSE)
+
+# With uncertainty from MVLN draws of each run (here to 2029):
+
+fi <- ss3_fwd(fw, output = "iters", iters = 1000)
+ss3plot_fwd(fi, end = 2029)
+
+# The agreed benchmarks can replace the SS3 reference points (refpts =), and the fishing
+# opportunities table gives catch and F in the advice year (the first year in which the scenarios
+# differ, 2027), SSB at the start of the next year, its change and the probability of SSB below
+# Blim:
+
+bms <- FLCore::FLPar(Ftgt = 0.285, Btgt = 6640, Bpa = 3320, Blim = 1660)   # illustration
+fb <- ss3_fwd(fw, refpts = bms, output = "iters", iters = 1000)
+ss3_fwdtable(fb)
+
+# Reading the forecast plot. The black line and bands are the assessment, the coloured lines the
+# scenarios from the end year (2024, first dashed line) on. Between the dashed lines are the
+# intermediate years, in which all scenarios fish at status quo F, so they overlap; the scenarios
+# separate in the advice year (2027). SSB responds one year later (SSB at the start of 2028
+# reflects the catch of 2027), which is why the table reports SSB of the year after the advice
+# year. Uncertainty bands come from the MVLN draws of each forecast run and widen with the
+# horizon; catch is a model output without its own uncertainty in this approximation.
+
+####################################################################################################
 # SEASON-, SEX- AND AREA-STRUCTURED MODELS
 ####################################################################################################
 
@@ -767,6 +813,7 @@ ss3plot_flqs(ss3_flqs(mp, c("SSB", "Rec", "B/Btgt", "F/Ftgt")), worms = 100, ci 
 # | Residuals | ss3_resid() (len, age, conditional age-at-length, size), ss3plot_resid(), ss3plot_caal(), ss3_runs(), ss3plot_runs(), ss3plot_jres(), ss3_iresid() |
 # | Retro and hindcast | ss3_retro(), ss3_mohn(), ss3plot_retro(), ss3_hindcast(), ss3plot_hcxval() |
 # | Data weighting | ss3_francis(), ss3plot_francis() |
+# | Forecasts | ss3_fwd(), ss3plot_fwd(), ss3_fwdtable() |
 # | Ensembles | ss3_ensemble(), ss3plot_ensemble() |
 # | Status | ss3stk(), ss3mvln(), ss3_flqs(), ss3plot_flqs(), ss3plot(), ss3plot_trj(), ss3plot_kobe() |
 # | Production | ss3_eqcurve(), ss3_spm(), ss3plot_production() |

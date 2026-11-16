@@ -19,7 +19,8 @@ ss3stk(
   name = "ss3",
   source = c("auto", "derived", "timeseries"),
   btgt = NULL,
-  area = FALSE
+  area = FALSE,
+  years = NULL
 )
 }
 \arguments{
@@ -53,6 +54,9 @@ F ages of the area's fleets (\code{ss3_partialF(groups = "area", method = "fbar"
 age-based). This F does not add up to the stock F. Area reference points are approximations: B0 and R0 are the
 unfished SSB and recruitment of the area, Btgt (and Blim, Bpa) are scaled by the area's share of B0, Ftgt is
 the stock Ftgt, and MSY is not defined.}
+
+\item{years}{years to include (default the model years, plus the next year with \code{fwd = TRUE}); e.g.
+\code{startyr:2029} for the SS3 forecast years of a forecast run}
 }
 \value{
 FLStockR

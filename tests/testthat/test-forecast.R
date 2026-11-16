@@ -1,0 +1,12 @@
+test_that("forecast scenarios: FLStocks, intermediate years, plot and table", {
+  fw <- readRDS(system.file("extdata", "hke.37.12-16", "hke.37.12-16_fwd.rds", package = "ss3diags2"))
+  fs <- ss3_fwd(fw, years = fw$Fadv$startyr:2029)
+  expect_equal(names(fs), c("Fadv", "Fsq", "F0"))
+  expect_equal(ss3diags2:::.fwd_nint(fs, 2024), 2)
+  expect_s3_class(ss3plot_fwd(fs, ci = FALSE), "ggplot")
+  tb <- ss3_fwdtable(fs, blim = 1660)
+  expect_equal(names(tb)[2:4], c("C_2027", "F_2027", "SSB_2028"))
+  expect_true(tb[Basis == "F0"]$SSB_2028 > tb[Basis == "Fadv"]$SSB_2028)
+  fb <- ss3_fwd(fw["Fadv"], refpts = FLCore::FLPar(Ftgt = 0.285, Btgt = 6640), years = fw$Fadv$startyr:2029)
+  expect_equal(attr(fb[[1]], "basis")$B, "Btgt")
+})

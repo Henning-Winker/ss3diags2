@@ -258,6 +258,8 @@ print.ss3mvln <- function(x, ...){
 #' @param name stock name
 #' @param source \code{"auto"}, \code{"derived"} or \code{"timeseries"} (MLE only)
 #' @param btgt biomass target as a fraction of B0 for \code{source = "timeseries"} (default the SS3 \code{btarg})
+#' @param years years to include (default the model years, plus the next year with \code{fwd = TRUE}); e.g.
+#'   \code{startyr:2029} for the SS3 forecast years of a forecast run
 #' @param area for area-structured models: return \code{FLStocks} with the stock (as \code{output = "mle"}) and one
 #'   FLStockR per area (MLE). By area, SSB is the spawning output at spawning time, recruitment and catch (expected
 #'   catch of the fleets of the area) are summed over seasons, and F is the F experienced in the area: the Fbar over the
@@ -282,7 +284,8 @@ print.ss3mvln <- function(x, ...){
 #' @export
 ss3stk <- function(x, output = NULL, iters = 1000, method = c("joint", "annual"), rel = FALSE, thin = 1, Fref = NULL,
                    fwd = FALSE, catch = c("Exp", "Obs", "kill_bio", "dead_bio", "ret_bio"), blim = NULL,
-                   bpa = NULL, name = "ss3", source = c("auto", "derived", "timeseries"), btgt = NULL, area = FALSE){
+                   bpa = NULL, name = "ss3", source = c("auto", "derived", "timeseries"), btgt = NULL, area = FALSE,
+                   years = NULL){
   method <- match.arg(method); catch <- match.arg(catch); source <- match.arg(source)
   if(area){
     if(!.is_ss3rep(x)) stop("area = TRUE needs the SS3 report (r4ss::SS_output())", call. = FALSE)
@@ -304,14 +307,14 @@ ss3stk <- function(x, output = NULL, iters = 1000, method = c("joint", "annual")
                 if(isTRUE((btgt %||% ss3rep$btarg %||% -1) > 0)) " and Btgt" else "")
         mv <- .ss3_ts_mle(ss3rep, btgt); mv$method <- "timeseries"
       } else {
-        j <- .mvln_joint(ss3rep, Fref = Fref, mc = 0, forecast = fwd, catch = catch)
+        j <- .mvln_joint(ss3rep, Fref = Fref, years = years, mc = 0, forecast = fwd, catch = catch)
         mv <- list(mle = j$mle, refpts = FLCore::FLPar(Ftgt = j$rp.mle$Ftgt, Btgt = j$rp.mle$Btgt, MSY = j$rp.mle$MSY,
                                                        B0 = j$rp.mle$B0, R0 = j$rp.mle$R0),
                    basis = list(B = j$b$Bref, F = j$b$Fref, C = j$b$Cref, bbasis = j$b$bbasis, fbasis = j$b$fbasis,
                                 Btgtref = j$b$bref, ssbunits = ss3rep$SpawnOutputUnits %||% "biomass"), method = "mle")
         se <- .se_log(ss3rep, mv$mle$year)
       }
-    } else mv <- ss3mvln(ss3rep, mc = iters, method = method, Fref = Fref, fwd = fwd, catch = catch)
+    } else mv <- ss3mvln(ss3rep, mc = iters, method = method, Fref = Fref, years = years, fwd = fwd, catch = catch)
   }
   output <- match.arg(output, c("mle", "iters"))
   if(output == "iters" && is.null(mv$kb)) stop("no draws in this ss3mvln object", call. = FALSE)
