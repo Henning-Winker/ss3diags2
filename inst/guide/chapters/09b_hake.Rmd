@@ -1,0 +1,130 @@
+# Worked example: European hake in the Adriatic Sea
+
+European hake (*Merluccius merluccius*) in the Adriatic Sea (GFCM geographical subareas 17-18) was benchmarked in
+2024 with a two-sex, multi-fleet Stock Synthesis model (FAO GFCM 2024). It is a good example for sex-structured
+data: length compositions by sex for most fleets, conditional age-at-length data for the Italian trawl (ITA_OTB_18)
+and longline (ITA_LLS_18) fleets in GSA 18, Richards growth by sex and a male natural mortality twice that of females.
+This section goes through the diagnostics specific to such data and explains how to read them.
+
+```{r hke-data, fig.height = 5}
+hke <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))
+ss3_fleets(hke)[, .(name, type, ncatch, nindex, nlen)]
+lfh <- ss3_lencomp(hke)
+lxh <- ss3_lencomp(hke, what = "exp")
+ss3plot_data(catch = ss3_catch(hke), indices = ss3_indices(hke), lencomp = lfh)
+```
+
+## Growth by sex
+
+`ss3_lhpar()` returns the growth parameters by sex (unit). The model uses Richards growth (Schnute
+parameterisation); the curves of the plots use it, while `linf`, `k` and `t0` are a von Bertalanffy approximation
+for FLicc:
+
+```{r hke-growth, fig.height = 4.5, fig.width = 8}
+lhh <- ss3_lhpar(hke)
+lhh[c("L1", "L2", "A1", "A2", "K", "richards", "CVmin", "CVmax", "M"), ]
+ss3plot_growth(hke, lfd = lfh)
+```
+
+> **Reading the growth plot.** Lines are the SS3 mean length at age by sex with $\pm$ 2 SD bands from the CV of
+> length at age; horizontal lines are the largest observed length of each fleet. Females grow to about 80 cm at age
+> 12, males to about 62 cm, and the sexes separate from about age 3. The bands set how far a fish of a given age can
+> be from the mean: they are the key to the conditional age-at-length fits below. The Linf lines belong to the von
+> Bertalanffy approximation (the Richards curve has no Linf of its own) and are only a guide.
+
+## Length compositions and sex ratios
+
+```{r hke-lenfit, fig.height = 7, fig.width = 10}
+ss3plot_comps(lfh, fit = lxh, by = "unit", fleets = c("ITA_OTB_18", "ITA_LLS_18", "HRV_OTB_17", "MEDITS_ITA",
+                                                      "MEDITS_HRV", "SOLEMON_17"))
+```
+
+With two sexes, the length compositions also carry the sex ratio. `ss3plot_sexratio()` shows the observed and
+expected proportion of females by length (pooled over years) or by year (pooled over lengths):
+
+```{r hke-sexratio, fig.height = 6, fig.width = 10}
+ss3plot_sexratio(lfh, fit = lxh)
+ss3plot_sexratio(lfh, fit = lxh, type = "year")
+```
+
+> **Reading sex ratios.** Hake males grow more slowly and die faster (M 0.5 against 0.25), so the share of females
+> rises with length to 100% above about 45 cm. The model follows this switch in all fleets. Where the observed points
+> rise earlier than the line (about 25-40 cm in HRV_OTB_17, MEDITS_ITA, MEDITS_HRV), there are more females at
+> intermediate lengths than the model expects: males drop out of the larger lengths faster than modelled (lower
+> male growth or higher male mortality), or females are more selected at these lengths. A sex ratio that drifts
+> over years, away from the expected line, points to a time-varying process or a change in sampling.
+
+## Conditional age-at-length
+
+The conditional age-at-length compositions are strongly down-weighted (SS3 variance adjustments 0.01 and 0.11), so
+with the adjusted sample size most length bins hold less than one fish and give no residual. With
+`nsamp = "input"` the residuals use the number of aged fish per length bin:
+
+```{r hke-caal, fig.height = 6.5, fig.width = 10}
+cl <- ss3_resid(hke, quant = "con", long = TRUE, nsamp = "input")
+ss3plot_caal(cl, fleet = "ITA_LLS_18", years = 2018:2023, lhpar = lhh)
+ss3plot_caal(cl, fleet = "ITA_OTB_18", years = 2018:2023, lhpar = lhh)
+```
+
+> **Reading the conditional age-at-length plot.** Each panel is a year; x is age (females as circles to the left,
+> males as triangles to the right of each age), y is length. Each row of bubbles (one length bin) is one sample: the
+> ages of the fish of that length. The OSA residual compares the observed with the expected share of each age
+> within the bin, conditioned from the youngest age up (blue: more fish of that age than expected; red: fewer).
+> The curves are the SS3 growth by sex at the sampling time (solid females, dashed males) with $\pm$ 2 SD of length
+> at age (grey).
+>
+> - **Diamonds and bars** are the observed and expected mean length at age of the aged fish. Both depend on how
+>   the fish were selected by length (here longline fish are large for their age), so they are compared with each
+>   other, not with the curve. A diamond away from its bar means the mean growth is off for that age and sex.
+> - **Bubbles at the edges of the band** with one colour (blue above and red below the curve) mean length at age
+>   varies more than the model's CV allows.
+> - **A diagonal of one colour** moving one age per year is a year class with different growth.
+>
+> For Adriatic hake the observed means sit on the expected ones for both sexes and fleets, so the mean growth is
+> consistent with the data: the males above the dashed curve on the longline are large-for-age fish caught by
+> the gear, and the model expects them there. The residual pattern is in the spread: blue at the upper edges of
+> ages 4-8 (longline) and ages 0-3 (trawl), red below. Length at age varies more than the fixed CVs (0.20 young,
+> 0.10 old) allow, in particular for young fish: a sensitivity run estimating the CVs is the natural next step.
+> The residuals use the input sample sizes, which the model down-weights, so their size (SD 1.5-2.4) shows
+> overdispersion; the patterns, not the bubble sizes, matter.
+
+The Francis weights of the conditional age-at-length data compare the mean age by length bin with its expected
+value, combined over the bins of each year:
+
+```{r hke-francis, fig.height = 3.5, fig.width = 9}
+fwc <- ss3_francis(hke, "con")
+fwc
+ss3plot_francis(fwc)
+```
+
+> **Reading the Francis weights.** The weight multiplies the current variance adjustment (`var_adj.new`). For
+> ITA_OTB_18 it is `r round(fwc$w[1], 2)`, so the current adjustment of 0.01 is about right; for ITA_LLS_18
+> `r round(fwc$w[2], 2)`, suggesting `r round(fwc$var_adj.new[2], 3)` instead of 0.11. The wide intervals
+> (`r nrow(attr(fwc, "comps"))` years in total) show that these weights are only roughly determined.
+
+## Runs tests and joint residuals
+
+```{r hke-runs, fig.height = 4, fig.width = 9}
+ss3plot_runs(hke, quant = "con")
+ss3_runs(hke, quant = "len")[, .(index, runs.p, test)]
+ss3plot_jres(hke)
+```
+
+> **Reading the runs tests.** Both conditional age-at-length fleets fail the runs test of the mean age by length
+> (p < 0.05): the mean ages at length run above or below the expected values for several years in a row. Together
+> with the residual plots, this points to time-varying growth or variation in length at age that the model does not
+> capture. The indices and the mean lengths of all fleets pass.
+
+## Fishing by gear and its impact
+
+```{r hke-gear, fig.height = 4.5, fig.width = 8}
+gear <- list(OTB = c("ITA_OTB_17", "HRV_OTB_17", "ITA_OTB_18", "MNE_OTB_18", "ALB_OTB_18"),
+             LLS = c("HRV_LLS_17", "ITA_LLS_18"), GNS = "HRV_GNS_17")
+ss3plot_partialF(ss3_partialF(hke, groups = gear))
+imp <- ss3_impact(hke, groups = gear)
+ss3plot_impact(imp)
+```
+
+> **Reading the impact plot.** The projection is done by sex, because males and females have different M,
+> selectivity and spawning output; its no-fishing run reproduces the SS3 dynamic B0. Bottom trawls account for
+> nearly all of the SSB lost to fishing; longlines and gillnets for about 1%.

@@ -105,7 +105,8 @@ ss3_resid <- function(ss3rep, quant = c("len", "age", "con", "size"), type = c("
   } else d[, data := pearson]
   setnames(d, "q", qn)
   if(quant == "con" && long){
-    d <- d[, c("fleet", "name", "partname", "lbin", qn, .flqdims, "data", "obs", "exp", "n", "a0"), with = FALSE]
+    d <- d[, c("fleet", "name", "partname", "lbin", qn, .flqdims, "data", "obs", "exp", "n", "a0", "pobs", "pexp"),
+           with = FALSE]
     setattr(d, "type", type); setattr(d, "quant", "con")
     return(d[])
   }
@@ -132,7 +133,8 @@ utils::globalVariables(c("comp", "a0", "neff", "N", "pobs", "repl", "np"))
 #'
 #' OSA (or Pearson) residuals of conditional age-at-length compositions by age (x) and length bin (y), one panel per
 #' year, for one fleet: bubbles sized by the absolute residual, blue for observed > expected, red for observed <
-#' expected. Growth curves (\code{lhpar}) show the mean length at age.
+#' expected. Growth curves (\code{lhpar}) show the mean length at age with \eqn{\pm} 2 SD bands; diamonds and bars
+#' give the observed and expected mean length at age of the aged fish.
 #'
 #' @param x long data.table from \code{ss3_resid(ss3rep, quant = "con", long = TRUE)}
 #' @param fleet fleet name (default: the first fleet with data)
@@ -142,38 +144,63 @@ utils::globalVariables(c("comp", "a0", "neff", "N", "pobs", "repl", "np"))
 #' @param lhpar optional FLPar from \code{\link{ss3_lhpar}()} (SS3 von Bertalanffy or Richards growth) or the SS3 report
 #'   (SS3 mean length at age) for the growth curves by unit (solid females, dashed males)
 #' @param timing fraction of the year at sampling: the curve is drawn at age class + \code{timing} (default mid-year)
+#' @param band shade \eqn{\pm} 2 SD of length at age around the curves (SS3 CV of length at age)
+#' @param means add the mean length at age of the aged fish per year: observed (diamonds) and expected (bars), both
+#'   under the sampling by length bin of the data (so they compare with each other, not with the population curve)
 #' @param cap residuals capped at this absolute value for the bubble size
 #' @param ncol number of panel columns
 #' @return ggplot
 #' @export
-ss3plot_caal <- function(x, fleet = NULL, years = NULL, units = NULL, lhpar = NULL, timing = 0.5, cap = 4, ncol = NULL){
+ss3plot_caal <- function(x, fleet = NULL, years = NULL, units = NULL, lhpar = NULL, timing = 0.5, band = TRUE,
+                         means = TRUE, cap = 4, ncol = NULL){
   if(!is.data.frame(x) || !"lbin" %in% names(x))
     stop("x must be the long table of ss3_resid(ss3rep, quant = \"con\", long = TRUE)", call. = FALSE)
-  d <- as.data.table(x)[is.finite(data)]
-  fl <- fleet %||% d$partname[1]
-  d <- d[partname %in% fl | name %in% fl]
-  if(!is.null(years)) d <- d[year %in% years]
-  if(!is.null(units)) d <- d[unit %in% units]
-  if(!nrow(d)) stop("no residuals for this fleet / years", call. = FALSE)
-  d[, `:=`(age = as.numeric(as.character(age)), r = pmin(abs(data), cap), sign = ifelse(data > 0, "obs > exp", "obs < exp"))]
-  # two sexes in one composition: females left, males right of the age (circles / triangles)
-  us <- sort(unique(d$unit)); nu <- length(us)
-  d[, xa := age + if(nu > 1) (match(unit, us) - (nu + 1)/2)*0.3 else 0]
+  d0 <- as.data.table(x)
+  fl <- fleet %||% d0$partname[1]
+  d0 <- d0[partname %in% fl | name %in% fl]
+  if(!is.null(years)) d0 <- d0[year %in% years]
+  if(!is.null(units)) d0 <- d0[unit %in% units]
+  if(!nrow(d0)) stop("no residuals for this fleet / years", call. = FALSE)
+  # length bins at their mid points
+  lb <- sort(unique(d0$lbin)); w <- if(length(lb) > 1) stats::median(diff(lb)) else 0
+  d0[, `:=`(age = as.numeric(as.character(age)), L = lbin + w/2)]
+  us <- sort(unique(d0$unit)); nu <- length(us)
+  off <- function(u) if(nu > 1) (match(u, us) - (nu + 1)/2)*0.3 else 0
+  d <- d0[is.finite(data)]
+  d[, `:=`(r = pmin(abs(data), cap), sign = ifelse(data > 0, "obs > exp", "obs < exp"), xa = age + off(unit))]
   shp <- stats::setNames(c(21, 24, 22)[seq_len(nu)], us)
-  p <- ggplot2::ggplot(d, ggplot2::aes(xa, lbin)) +
+  p <- ggplot2::ggplot(d, ggplot2::aes(xa, L))
+  if(!is.null(lhpar)){
+    # mean length of an age class at the sampling time: curve at real age = age class + timing; band +/- 2 SD of
+    # length at age (SS3 CV of length at age)
+    gc <- .growth_curves(lhpar, maxage = max(d0$age) + 1)[, age := age - timing][age >= -0.5]
+    gc <- gc[L <= max(d0$L)*1.1]
+    if(band && "sd" %in% names(gc) && any(is.finite(gc$sd)))
+      p <- p + ggplot2::geom_ribbon(data = gc[is.finite(sd)], ggplot2::aes(age, ymin = pmax(L - 2*sd, 0), ymax = L + 2*sd,
+                                                                         group = unit), fill = "grey50", alpha = 0.12,
+                                    inherit.aes = FALSE)
+    p <- p + ggplot2::geom_line(data = gc, ggplot2::aes(age, L, linetype = unit), colour = "grey40", inherit.aes = FALSE)
+  }
+  p <- p +
     ggplot2::geom_point(ggplot2::aes(size = r, fill = sign, shape = unit), colour = "grey30", stroke = 0.2, alpha = 0.8) +
     ggplot2::scale_shape_manual(values = shp, guide = if(nu > 1) ggplot2::guide_legend(override.aes = list(size = 3, fill = "grey70")) else "none") +
     ggplot2::guides(fill = ggplot2::guide_legend(override.aes = list(shape = 21, size = 3))) +
     ggplot2::scale_fill_manual(values = c(`obs > exp` = "#3C78B4", `obs < exp` = "#D2604B"), name = NULL) +
     ggplot2::scale_size_area(max_size = 4, limits = c(0, cap), name = "|residual|")
-  if(!is.null(lhpar)){
-    # mean length of an age class at the sampling time: curve at real age = age class + timing
-    gc <- .growth_curves(lhpar, maxage = max(d$age) + 1)[, age := age - timing][age >= -0.5]
-    gc <- gc[L <= max(d$lbin)*1.05]
-    p <- p + ggplot2::geom_line(data = gc, ggplot2::aes(age, L, linetype = unit), colour = "grey40", inherit.aes = FALSE)
+  if(means && all(c("pobs", "pexp", "n") %in% names(d0))){
+    # mean length at age of the aged fish, observed and expected under the same sampling by length bin
+    mn <- d0[, .(obs = sum(L*n*pobs)/sum(n*pobs), exp = sum(L*n*pexp)/sum(n*pexp), nf = sum(n*pobs)),
+             by = .(year, unit, age)][is.finite(obs) & is.finite(exp) & nf >= 1]
+    mn[, xa := age + off(unit)]
+    p <- p + ggplot2::geom_segment(data = mn, ggplot2::aes(x = xa - 0.18, xend = xa + 0.18, y = exp, yend = exp),
+                                   colour = "black", linewidth = 0.6, inherit.aes = FALSE) +
+      ggplot2::geom_point(data = mn, ggplot2::aes(xa, obs), shape = 23, fill = "gold", colour = "black", size = 1.6,
+                          stroke = 0.4, inherit.aes = FALSE)
   }
+  cap_txt <- paste(c(if(!is.null(lhpar) && band) "band: +/- 2 SD of length at age",
+                     if(means) "diamonds: observed, bars: expected mean length at age of the aged fish"), collapse = "; ")
   p + ggplot2::facet_wrap(~ year, ncol = ncol) +
-    ggplot2::labs(x = "Age", y = "Length bin", title = fl[1],
+    ggplot2::labs(x = "Age", y = "Length", title = fl[1], caption = if(nzchar(cap_txt)) cap_txt,
                   subtitle = paste(attr(x, "type") %||% "osa", "residuals, conditional age-at-length")) +
     theme_ss3() + ggplot2::theme(legend.title = ggplot2::element_text(size = 8))
 }

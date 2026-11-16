@@ -155,3 +155,51 @@ ss3plot_ridges <- function(comps, fit = NULL, type = c("obs", "exp", "both"), by
 }
 
 utils::globalVariables(c("qlo", "qhi", "tot", "p", "mx", "y", "what", "Len_Mid", "SD_Mid", "Age_Mid", "L", "sd"))
+
+#' Plot sex ratios of compositions
+#'
+#' Observed (points) and expected (line) proportion of females by length (or age) bin, pooled over years
+#' (\code{type = "len"}), or by year, pooled over bins (\code{type = "year"}), for the fleets with sex-specific
+#' compositions (units "F" and "M"). The proportions use the numbers of the compositions (\code{scale = "n"}), so
+#' years and bins are weighted by their sample sizes.
+#'
+#' @param comps FLQuants of compositions with units F and M (\code{ss3_lencomp()}, \code{ss3_agecomp()})
+#' @param fit optional FLQuants of expected compositions (\code{what = "exp"})
+#' @param type \code{"len"} (by bin, default) or \code{"year"}
+#' @param fleets,units fleets to plot (as \code{\link{ss3plot_comps}()}; units are F and M)
+#' @param ncol number of panel columns
+#' @return ggplot
+#' @examples
+#' \dontrun{
+#' ss3plot_sexratio(ss3_lencomp(ss3rep), fit = ss3_lencomp(ss3rep, what = "exp"))
+#' }
+#' @export
+ss3plot_sexratio <- function(comps, fit = NULL, type = c("len", "year"), fleets = NULL, ncol = NULL){
+  type <- match.arg(type)
+  comps <- .subset_flqs(comps, fleets, NULL)
+  keep <- names(comps)[vapply(comps, function(q) all(c("F", "M") %in% dimnames(q)$unit), TRUE)]
+  if(!length(keep)) stop("no compositions with units F and M", call. = FALSE)
+  sr <- function(x, what){
+    d <- .flq_long(x[intersect(keep, names(x))], 1, what)[unit %in% c("F", "M") & is.finite(data)]
+    d[, q := as.numeric(as.character(quant))]
+    by <- c("name", if(type == "len") "q" else "year")
+    d <- dcast(d[, .(v = sum(data)), by = c(by, "unit")], stats::as.formula(paste(paste(by, collapse = "+"), "~ unit")),
+               value.var = "v")
+    d[, `:=`(pF = F/(F + M), n = F + M, what = what)][is.finite(pF)]
+  }
+  o <- sr(comps, "observed")
+  p <- ggplot2::ggplot(o, ggplot2::aes(if(type == "len") q else year, pF)) +
+    ggplot2::geom_hline(yintercept = 0.5, linetype = 3, colour = "grey50") +
+    ggplot2::geom_point(ggplot2::aes(size = n), shape = 21, fill = "grey60", colour = "grey20", alpha = 0.8) +
+    ggplot2::scale_size_area(max_size = 3, guide = "none")
+  if(!is.null(fit)){
+    e <- sr(fit, "expected")
+    # expected composition scaled like the observed: use the observed totals by bin / year as weights
+    p <- p + ggplot2::geom_line(data = e, ggplot2::aes(if(type == "len") q else year, pF), colour = ss3unitcols[["F"]],
+                                linewidth = 0.8, inherit.aes = FALSE)
+  }
+  p + ggplot2::facet_wrap(~ name, ncol = ncol) + ggplot2::coord_cartesian(ylim = c(0, 1)) +
+    ggplot2::labs(x = if(type == "len") "Length" else "Year", y = "Proportion female",
+                  caption = paste0("points: observed (size: numbers)", if(!is.null(fit)) "; line: expected")) +
+    theme_ss3()
+}

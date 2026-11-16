@@ -11,6 +11,8 @@ ss3plot_caal(
   units = NULL,
   lhpar = NULL,
   timing = 0.5,
+  band = TRUE,
+  means = TRUE,
   cap = 4,
   ncol = NULL
 )
@@ -30,6 +32,11 @@ males as triangles)}
 
 \item{timing}{fraction of the year at sampling: the curve is drawn at age class + \code{timing} (default mid-year)}
 
+\item{band}{shade \eqn{\pm} 2 SD of length at age around the curves (SS3 CV of length at age)}
+
+\item{means}{add the mean length at age of the aged fish per year: observed (diamonds) and expected (bars), both
+under the sampling by length bin of the data (so they compare with each other, not with the population curve)}
+
 \item{cap}{residuals capped at this absolute value for the bubble size}
 
 \item{ncol}{number of panel columns}
@@ -40,5 +47,6 @@ ggplot
 \description{
 OSA (or Pearson) residuals of conditional age-at-length compositions by age (x) and length bin (y), one panel per
 year, for one fleet: bubbles sized by the absolute residual, blue for observed > expected, red for observed <
-expected. Growth curves (\code{lhpar}) show the mean length at age.
+expected. Growth curves (\code{lhpar}) show the mean length at age with \eqn{\pm} 2 SD bands; diamonds and bars
+give the observed and expected mean length at age of the aged fish.
 }

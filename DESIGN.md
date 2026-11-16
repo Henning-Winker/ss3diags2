@@ -270,6 +270,12 @@ maturity/fecundity at age (Bio), SPR curves (SPR), parameter table with priors (
   spawning; recruit sex ratio kept): hake dynamic B0 7e-6 (pooled: 4%); Pandalus (hermaphrodite) stays pooled.
 - Pacific hake 2024 (SS 3.30.22, DM_theta_Age naming) checked: no CAAL; works with all functions; not added.
 
+- Growth curves use the SS3 Richards (Schnute) parameters (`K`, `richards` in ss3_lhpar); ss3plot_caal: curve at
+  sampling time, +/- 2 SD band, observed vs expected mean length at age of the aged fish (same length sampling).
+- `ss3plot_sexratio()`: observed vs expected proportion female by length or year.
+- Guide: worked example chapter "European hake in the Adriatic Sea" (growth by sex, length fits, sex ratios, CAAL,
+  Francis, runs, partial F and impact by gear) with interpretation boxes.
+
 ## Flagged for later: NUTS (11 Nov)
 
 - `ss3nuts(dir, ...)`: wrapper of `adnuts::sample_nuts()` on the SS3 executable (after an `-hbf` MLE run), chains,

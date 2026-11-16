@@ -36,11 +36,11 @@ How ss3diags functions map to ss3diags2:
 
 ## About this guide
 
-**Part I** (sections 3-9) goes through the diagnostics of an assessment, from the data to the prediction skill,
+**Part I** (sections 3-10, with a worked example for a two-sex assessment with conditional age-at-length data) goes through the diagnostics of an assessment, from the data to the prediction skill,
 with **checks** at each step (what to look at, what is a red flag, what to do about it), following the
-diagnostics cookbook. **Part II** (sections 10-14) covers stock status and its uncertainty, the timing of F and
+diagnostics cookbook. **Part II** (sections 11-16) covers stock status and its uncertainty, the timing of F and
 SSB in Kobe plots, the production function, season-, sex- and area-structured models (F by area, stock by area,
-partial impact of fleets) and the FLR outputs. Section 15 summarises the checks and the functions.
+partial impact of fleets) and the FLR outputs. Section 17 summarises the checks and the functions.
 
 The examples ship with the package:
 
@@ -49,5 +49,5 @@ The examples ship with the package:
 | `ss3simple` | simulated two-sex model, one fishery and two surveys (r4ss "simple_small"; the example of the PIFSC ss3diags) | quick start, data, residuals |
 | `ss3sma`, `retro.sma`, `aspm.sma` | North Atlantic shortfin mako (cookbook) | runs tests, retrospective, status, Kobe |
 | `ss3phk`, `retro.phk`, `aspm.phk` | Pacific hake (cookbook) | Dirichlet-multinomial OSA residuals, hindcast |
-| `hke.37.17-18.rds` | European hake in the Adriatic Sea (GFCM benchmark 2024), two sexes, eight fleets, three surveys, conditional age-at-length | conditional age-at-length residuals and Francis weights |
+| `hke.37.17-18.rds` | European hake in the Adriatic Sea (GFCM benchmark 2024), two sexes, eight fleets, three surveys, conditional age-at-length | worked example: growth by sex, sex ratios, conditional age-at-length, impact by gear |
 | `pra.27.3a4a.rds` | northern shrimp, four seasons, hermaphrodite, two areas, six area-specific fleets | structured models, F by area, impact |

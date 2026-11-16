@@ -60,6 +60,9 @@ blockquote p { margin-bottom: 0.4em; }
 ```{r child = "chapters/09_hindcast.Rmd"}
 ```
 
+```{r child = "chapters/09b_hake.Rmd"}
+```
+
 ```{r child = "chapters/10_status.Rmd"}
 ```
 
