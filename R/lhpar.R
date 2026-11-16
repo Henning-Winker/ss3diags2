@@ -6,11 +6,14 @@
 #' FLicc / FLRef names: \code{linf}, \code{k}, \code{t0} (von Bertalanffy; \code{t0} is the age at length 0 implied by
 #' the SS3 L1-L2 parameterisation), \code{L50} and \code{mat.slope} (length-logistic maturity), \code{a}, \code{b}
 #' (weight-length, kg and cm), \code{M} (natural mortality of the oldest ages), \code{CVmin}, \code{CVmax} (CV of
-#' length at age), \code{A1}, \code{A2}, \code{L1}, \code{L2}. With two sexes the FLPar has a \code{unit} dimension
+#' length at age), \code{A1}, \code{A2}, \code{L1}, \code{L2}, \code{K} and \code{richards} (SS3 growth in the Schnute
+#' (1981) parameterisation; \code{richards} = 1 for von Bertalanffy, the Richards shape for SS3 growth option 2, NA
+#' otherwise). With two sexes the FLPar has a \code{unit} dimension
 #' ("F", "M"), as the FLQuants of the compositions.
 #'
-#' Growth other than von Bertalanffy (SS3 Richards, age-specific K, growth cessation) is approximated by a
-#' von Bertalanffy curve fitted to the SS3 mean length at age (\code{endgrowth}), with a message. Maturity other than
+#' For growth other than von Bertalanffy, \code{linf}, \code{k}, \code{t0} are a von Bertalanffy curve fitted to the
+#' SS3 mean length at age (\code{endgrowth}), with a message; the growth curves of the plots use the SS3 Richards
+#' (Schnute) curve when \code{richards} is available. Maturity other than
 #' length-logistic leaves \code{L50} and \code{mat.slope} as NA.
 #'
 #' @param ss3rep output of \code{r4ss::SS_output()}
@@ -28,7 +31,17 @@ ss3_lhpar <- function(ss3rep, year = NULL){
   gp <- gp[!duplicated(Sex)]
   nsx <- ss3rep$nsexes %||% 1
   vb <- (ss3rep$GrowthModel_option %||% 1) == 1
-  pars <- c("linf", "k", "t0", "L50", "mat.slope", "a", "b", "M", "CVmin", "CVmax", "A1", "A2", "L1", "L2")
+  gm <- ss3rep$GrowthModel_option %||% 1
+  pars <- c("linf", "k", "t0", "L50", "mat.slope", "a", "b", "M", "CVmin", "CVmax", "A1", "A2", "L1", "L2", "K",
+            "richards")
+  # SS3 growth (Schnute 1981 parameterisation): K and the Richards shape (1 = von Bertalanffy; NA for other models)
+  rich <- function(s){
+    if(gm == 1) return(1)
+    if(gm != 2) return(NA_real_)
+    pp <- ss3rep$parameters
+    lab <- grep(paste0("^Richards_", c("Fem", "Mal")[s]), rownames(pp), value = TRUE)
+    if(length(lab)) pp[lab[1], "Value"] else NA_real_
+  }
   if(nsx == 2 && !2 %in% gp$Sex){
     message("no male growth parameters in Growth_Parameters: male values set to the female values")
     gp <- rbind(gp, copy(gp[Sex == 1])[, Sex := 2])
@@ -48,9 +61,10 @@ ss3_lhpar <- function(ss3rep, year = NULL){
       L50 = if((ss3rep$Maturity_option %||% 1) == 1) fem$Mat1 else NA_real_,
       mat.slope = if((ss3rep$Maturity_option %||% 1) == 1) fem$Mat2 else NA_real_,
       a = g$WtLen1, b = g$WtLen2, M = .col(g, "M_nages", NA_real_), CVmin = g$CVmin, CVmax = g$CVmax,
-      A1 = g$A1, A2 = g$A2, L1 = g$L_a_A1, L2 = g$L_a_A2)
+      A1 = g$A1, A2 = g$A2, L1 = g$L_a_A1, L2 = g$L_a_A2, K = g$K, richards = rich(s))
   }
-  if(!vb) message("growth is not von Bertalanffy: linf, k, t0 fitted to the SS3 mean length at age")
+  if(!vb) message(if(gm == 2) "Richards growth: linf, k, t0 are a von Bertalanffy fit to the SS3 mean length at age; growth curves use the Richards (Schnute) parameters A1, A2, L1, L2, K, richards"
+                  else "growth is not von Bertalanffy: linf, k, t0 fitted to the SS3 mean length at age")
   if(nsx == 1) return(FLCore::FLPar(one(1)[pars], params = pars))
   arr <- array(c(one(1)[pars], one(2)[pars]), dim = c(length(pars), 2, 1),
                dimnames = list(params = pars, unit = c("F", "M"), iter = 1))

@@ -139,12 +139,14 @@ utils::globalVariables(c("comp", "a0", "neff", "N", "pobs", "repl", "np"))
 #' @param years years to plot (default: all with data)
 #' @param units units (sexes) to plot (default all; two sexes are drawn side by side at each age, females as circles,
 #'   males as triangles)
-#' @param lhpar optional FLPar from \code{\link{ss3_lhpar}()} for the growth curves by unit
+#' @param lhpar optional FLPar from \code{\link{ss3_lhpar}()} (SS3 von Bertalanffy or Richards growth) or the SS3 report
+#'   (SS3 mean length at age) for the growth curves by unit (solid females, dashed males)
+#' @param timing fraction of the year at sampling: the curve is drawn at age class + \code{timing} (default mid-year)
 #' @param cap residuals capped at this absolute value for the bubble size
 #' @param ncol number of panel columns
 #' @return ggplot
 #' @export
-ss3plot_caal <- function(x, fleet = NULL, years = NULL, units = NULL, lhpar = NULL, cap = 4, ncol = NULL){
+ss3plot_caal <- function(x, fleet = NULL, years = NULL, units = NULL, lhpar = NULL, timing = 0.5, cap = 4, ncol = NULL){
   if(!is.data.frame(x) || !"lbin" %in% names(x))
     stop("x must be the long table of ss3_resid(ss3rep, quant = \"con\", long = TRUE)", call. = FALSE)
   d <- as.data.table(x)[is.finite(data)]
@@ -165,8 +167,9 @@ ss3plot_caal <- function(x, fleet = NULL, years = NULL, units = NULL, lhpar = NU
     ggplot2::scale_fill_manual(values = c(`obs > exp` = "#3C78B4", `obs < exp` = "#D2604B"), name = NULL) +
     ggplot2::scale_size_area(max_size = 4, limits = c(0, cap), name = "|residual|")
   if(!is.null(lhpar)){
-    gc <- .growth_curves(lhpar, maxage = max(d$age))
-    gc <- gc[L >= min(d$lbin) & L <= max(d$lbin)*1.05]
+    # mean length of an age class at the sampling time: curve at real age = age class + timing
+    gc <- .growth_curves(lhpar, maxage = max(d$age) + 1)[, age := age - timing][age >= -0.5]
+    gc <- gc[L <= max(d$lbin)*1.05]
     p <- p + ggplot2::geom_line(data = gc, ggplot2::aes(age, L, linetype = unit), colour = "grey40", inherit.aes = FALSE)
   }
   p + ggplot2::facet_wrap(~ year, ncol = ncol) +

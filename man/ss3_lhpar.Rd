@@ -19,12 +19,15 @@ Growth, maturity, weight-length and natural mortality parameters of an SS3 model
 FLicc / FLRef names: \code{linf}, \code{k}, \code{t0} (von Bertalanffy; \code{t0} is the age at length 0 implied by
 the SS3 L1-L2 parameterisation), \code{L50} and \code{mat.slope} (length-logistic maturity), \code{a}, \code{b}
 (weight-length, kg and cm), \code{M} (natural mortality of the oldest ages), \code{CVmin}, \code{CVmax} (CV of
-length at age), \code{A1}, \code{A2}, \code{L1}, \code{L2}. With two sexes the FLPar has a \code{unit} dimension
+length at age), \code{A1}, \code{A2}, \code{L1}, \code{L2}, \code{K} and \code{richards} (SS3 growth in the Schnute
+(1981) parameterisation; \code{richards} = 1 for von Bertalanffy, the Richards shape for SS3 growth option 2, NA
+otherwise). With two sexes the FLPar has a \code{unit} dimension
 ("F", "M"), as the FLQuants of the compositions.
 }
 \details{
-Growth other than von Bertalanffy (SS3 Richards, age-specific K, growth cessation) is approximated by a
-von Bertalanffy curve fitted to the SS3 mean length at age (\code{endgrowth}), with a message. Maturity other than
+For growth other than von Bertalanffy, \code{linf}, \code{k}, \code{t0} are a von Bertalanffy curve fitted to the
+SS3 mean length at age (\code{endgrowth}), with a message; the growth curves of the plots use the SS3 Richards
+(Schnute) curve when \code{richards} is available. Maturity other than
 length-logistic leaves \code{L50} and \code{mat.slope} as NA.
 }
 \examples{

@@ -14,8 +14,15 @@
     g <- function(p) if(p %in% dimnames(x)$params) { a <- x@.Data; if(length(dim(a)) == 3) a[p, if(u %in% units) u else 1, 1] else a[p, 1] } else NA
     am <- maxage %||% (vb[["t0"]] + log(20)/vb[["k"]])
     age <- seq(0, am, length.out = 200)
-    L <- pmax(vb[["linf"]]*(1 - exp(-vb[["k"]]*(age - vb[["t0"]]))), 0)
     cv1 <- g("CVmin"); cv2 <- g("CVmax"); L1 <- g("L1"); L2 <- g("L2")
+    A1 <- g("A1"); A2 <- g("A2"); K <- g("K"); bb <- g("richards")
+    L <- if(all(is.finite(c(A1, A2, L1, L2, K, bb))) && L1 > 0){
+      # SS3 growth, Schnute (1981): Richards (bb != 1) or von Bertalanffy (bb = 1) between L1 at A1 and L2 at A2;
+      # linear from 0 below A1
+      fr <- (1 - exp(-K*(age - A1)))/(1 - exp(-K*(A2 - A1)))
+      s <- if(abs(bb) > 1e-8) (L1^bb + (L2^bb - L1^bb)*fr)^(1/bb) else L1*exp(log(L2/L1)*fr)
+      ifelse(age < A1, L1*age/A1, s)
+    } else pmax(vb[["linf"]]*(1 - exp(-vb[["k"]]*(age - vb[["t0"]]))), 0)
     cv <- if(all(is.finite(c(cv1, cv2, L1, L2)))) cv1 + (cv2 - cv1)*pmin(pmax((L - L1)/(L2 - L1), 0), 1) else NA_real_
     data.table(unit = u, age = age, L = L, sd = cv*L)
   }))

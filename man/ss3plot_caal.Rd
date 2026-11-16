@@ -10,6 +10,7 @@ ss3plot_caal(
   years = NULL,
   units = NULL,
   lhpar = NULL,
+  timing = 0.5,
   cap = 4,
   ncol = NULL
 )
@@ -24,7 +25,10 @@ ss3plot_caal(
 \item{units}{units (sexes) to plot (default all; two sexes are drawn side by side at each age, females as circles,
 males as triangles)}
 
-\item{lhpar}{optional FLPar from \code{\link{ss3_lhpar}()} for the growth curves by unit}
+\item{lhpar}{optional FLPar from \code{\link{ss3_lhpar}()} (SS3 von Bertalanffy or Richards growth) or the SS3 report
+(SS3 mean length at age) for the growth curves by unit (solid females, dashed males)}
+
+\item{timing}{fraction of the year at sampling: the curve is drawn at age class + \code{timing} (default mid-year)}
 
 \item{cap}{residuals capped at this absolute value for the bubble size}
 
