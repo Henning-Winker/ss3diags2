@@ -9,7 +9,8 @@ ss3plot_catch(
   by = NULL,
   type = c("bar", "line", "share"),
   iter = 1,
-  ylab = NULL
+  ylab = NULL,
+  text = TRUE
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ two dimensions give a grid, e.g. \code{by = c("season", "area")}); other dimensi
 \item{iter}{iteration to plot}
 
 \item{ylab}{y-axis label (default from the units)}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

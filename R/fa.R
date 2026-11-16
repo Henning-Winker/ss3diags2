@@ -200,7 +200,8 @@ ss3_partialF <- function(ss3rep, groups = NULL, method = c("catch", "fbar", "api
 #' pf <- ss3_partialF(pra, groups = "area")
 #' ss3plot_partialF(pf, type = "share")
 #' @export
-ss3plot_partialF <- function(x, type = NULL, total = TRUE, ylab = NULL){
+ss3plot_partialF <- function(x, type = NULL, total = TRUE, ylab = NULL, text = TRUE){
+  .drop_text((function(){
   method <- attr(x, "method") %||% "catch"
   type <- match.arg(type %||% if(method == "catch") "area" else "line", c("area", "line", "share"))
   d <- .flq_long(x, 1, "F")
@@ -223,6 +224,7 @@ ss3plot_partialF <- function(x, type = NULL, total = TRUE, ylab = NULL){
       ggplot2::labs(caption = "black line: total F (F_std)")
   if(bys) p <- p + ggplot2::facet_wrap(~ season, labeller = ggplot2::labeller(season = function(s) paste("season", s)))
   p + ggplot2::labs(x = "Year", y = ylab, fill = NULL, colour = NULL) + scale_x_year() + theme_ss3()
+  })(), text)
 }
 
 #' Plot F-at-age by fleet
@@ -233,12 +235,14 @@ ss3plot_partialF <- function(x, type = NULL, total = TRUE, ylab = NULL){
 #' @param fa FLQuants from \code{\link{ss3_fa}()}
 #' @param years years to average (default: the last three)
 #' @param ncol number of panel columns
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
 #' ss3plot_fa(ss3_fa(pra), years = 2015:2024)
 #' @export
-ss3plot_fa <- function(fa, years = NULL, ncol = NULL){
+ss3plot_fa <- function(fa, years = NULL, ncol = NULL, text = TRUE){
+  .drop_text((function(){
   d <- .flq_long(fa, 1, "F")
   years <- years %||% utils::tail(sort(unique(d$year)), 3)
   d <- d[year %in% years, .(data = mean(data)), by = .(name, quant, unit, season)]
@@ -259,4 +263,5 @@ ss3plot_fa <- function(fa, years = NULL, ncol = NULL){
     theme_ss3() + ggplot2::theme(legend.title = ggplot2::element_text())
   if(length(unique(d$unit)) == 1) p <- p + ggplot2::guides(linetype = "none")
   p
+  })(), text)
 }

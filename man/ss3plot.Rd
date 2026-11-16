@@ -11,7 +11,8 @@ ss3plot(
   lag = 0,
   indices = TRUE,
   fwd = FALSE,
-  probs = c(0.05, 0.2, 0.5, 0.8, 0.95)
+  probs = c(0.05, 0.2, 0.5, 0.8, 0.95),
+  text = TRUE
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ ss3plot(
 \item{fwd}{show the SS3 forecast years in the trajectories (default \code{FALSE}: assessment years only)}
 
 \item{probs}{quantiles for the uncertainty bands}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 a patchwork of ggplots (needs the patchwork package)

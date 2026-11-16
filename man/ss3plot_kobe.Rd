@@ -11,7 +11,8 @@ ss3plot_kobe(
   npoints = 2000,
   contours = c(0.5, 0.8, 0.95),
   style = c("points", "contours"),
-  labels = 0
+  labels = 0,
+  text = TRUE
 )
 }
 \arguments{
@@ -29,6 +30,8 @@ trajectory is drawn}
 \item{style}{\code{"points"} (draws with contour lines) or \code{"contours"} (filled 50/80/95\% regions)}
 
 \item{labels}{label years on the trajectory every \code{labels} years (0 for first and last only)}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

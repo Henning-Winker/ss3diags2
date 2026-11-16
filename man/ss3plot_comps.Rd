@@ -13,7 +13,8 @@ ss3plot_comps(
   ncol = NULL,
   iter = 1,
   fleets = NULL,
-  units = NULL
+  units = NULL,
+  text = TRUE
 )
 }
 \arguments{
@@ -39,6 +40,8 @@ conventions: unique green, F red, M blue; r4ss season colours)}
 
 \item{units}{units (sexes) to plot, e.g. \code{"F"}, \code{"M"} or \code{"unique"} (combined-sex data); fleets
 without these units are dropped (default: all)}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

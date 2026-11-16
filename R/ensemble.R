@@ -116,6 +116,7 @@ ss3_ensemble <- function(x, weights = NULL, iters = 1000, joint = TRUE, method =
 #' @param start,end first and last year to plot
 #' @param colours model colours (default r4ss colours; the joint ensemble is black)
 #' @param ... further arguments to \code{\link{ss3plot_trj}()}
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' her <- readRDS(system.file("extdata", "her.27.25-2932", "her.27.25-2932.rds", package = "ss3diags2"))
@@ -124,7 +125,8 @@ ss3_ensemble <- function(x, weights = NULL, iters = 1000, joint = TRUE, method =
 #' ss3plot_ensemble(ens, models = FALSE, type = c("B/Btgt", "F/Ftgt"))
 #' @export
 ss3plot_ensemble <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftgt"), models = TRUE, joint = TRUE,
-                             probs = c(0.05, 0.2, 0.5, 0.8, 0.95), colours = NULL, start = NULL, end = NULL, ...){
+                             probs = c(0.05, 0.2, 0.5, 0.8, 0.95), colours = NULL, start = NULL, end = NULL, ..., text = TRUE){
+  .drop_text((function(){
   nm <- names(x); mods <- setdiff(nm, "Joint")
   sel <- c(if(models) mods, if(joint && "Joint" %in% nm) "Joint")
   if(!length(sel)) stop("nothing to plot", call. = FALSE)
@@ -136,4 +138,5 @@ ss3plot_ensemble <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "
                                                                                collapse = ", ")))
   if(length(sel) == 1) p <- p + ggplot2::theme(legend.position = "none")
   p
+  })(), text)
 }

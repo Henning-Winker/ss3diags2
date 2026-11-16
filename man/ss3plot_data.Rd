@@ -10,7 +10,8 @@ ss3plot_data(
   lencomp = NULL,
   agecomp = NULL,
   by = NULL,
-  iter = 1
+  iter = 1,
+  text = TRUE
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ ss3plot_data(
 \item{by}{dimensions kept separate, any of \code{"unit"}, \code{"season"}, \code{"area"} (panels by column)}
 
 \item{iter}{iteration}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

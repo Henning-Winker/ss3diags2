@@ -83,6 +83,7 @@
 #'   \code{DK3a.discard} and \code{DK3a.retained}) or positions in the FLQuants (default: all)
 #' @param units units (sexes) to plot, e.g. \code{"F"}, \code{"M"} or \code{"unique"} (combined-sex data); fleets
 #'   without these units are dropped (default: all)
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' data(ss3simple)
@@ -93,8 +94,9 @@
 #' @export
 ss3plot_resid <- function(x, type = c("bubble", "len", "qq"), by = "unit", lhpar = NULL, cohorts = TRUE,
                           cohort_by = 2, cap = 4, ncol = NULL,
-                          fleets = NULL, units = NULL){
-  type <- match.arg(type); dims <- .bydims(by)
+                          fleets = NULL, units = NULL, text = TRUE){
+  .drop_text((function(){
+  type <- match.arg(type, c("bubble", "len", "qq")); dims <- .bydims(by)
   rtype <- attr(x, "type") %||% "osa"
   x <- .subset_flqs(x, fleets, units)
   lab <- paste(if(rtype == "osa") "OSA" else "Pearson", "residual")
@@ -143,6 +145,7 @@ ss3plot_resid <- function(x, type = c("bubble", "len", "qq"), by = "unit", lhpar
     ggplot2::facet_wrap(~ panel, scales = "free", ncol = ncol) +
     ggplot2::labs(x = "Year", y = xlab) + scale_x_year(n = 4) + theme_ss3() +
     ggplot2::theme(legend.title = ggplot2::element_text(size = 8))
+  })(), text)
 }
 
 utils::globalVariables(c("panel", "birth", "lunit", "q", "r", "sign", "capped"))

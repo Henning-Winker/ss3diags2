@@ -4,12 +4,14 @@
 \alias{ss3plot_sr}
 \title{Plot the stock-recruitment relationship}
 \usage{
-ss3plot_sr(ss3rep, type = c("sr", "devs"))
+ss3plot_sr(ss3rep, type = c("sr", "devs"), text = TRUE)
 }
 \arguments{
 \item{ss3rep}{output of \code{r4ss::SS_output()}}
 
 \item{type}{\code{"sr"} (stock-recruit, default) or \code{"devs"} (recruitment deviations)}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

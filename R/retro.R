@@ -83,12 +83,14 @@ ss3_mohn <- function(x, quants = c("SSB", "F"), endyrs = NULL){
 #' @param ci confidence level of the reference interval (0 for none)
 #' @param xmin first year shown (default: 2 x number of peels before the last end year... all years if NULL)
 #' @param ncol facet columns
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' data(retro.sma)
 #' ss3plot_retro(ss3_retro(retro.sma), type = c("SSB", "F", "B/Btgt", "F/Ftgt"), xmin = 1990)
 #' @export
-ss3plot_retro <- function(x, type = c("SSB", "F"), fcast = TRUE, ci = 0.95, xmin = NULL, ncol = NULL){
+ss3plot_retro <- function(x, type = c("SSB", "F"), fcast = TRUE, ci = 0.95, xmin = NULL, ncol = NULL, text = TRUE){
+  .drop_text((function(){
   if(!is(x, "FLStocks")) x <- ss3_retro(x)
   ey <- vapply(seq_along(x), function(i) attr(x[[i]], "endyr") %||% as.numeric(names(x)[i]), 0)
   rho <- ss3_mohn(x, type, ey)[peel == "Combined"]
@@ -126,6 +128,7 @@ ss3plot_retro <- function(x, type = c("SSB", "F"), fcast = TRUE, ci = 0.95, xmin
     ggplot2::facet_wrap(~ quant, scales = "free_y", ncol = ncol, labeller = ggplot2::as_labeller(lab)) +
     ggplot2::coord_cartesian(xlim = c(xmin, max(ey) + if(fcast) 1 else 0)) + ggplot2::expand_limits(y = 0) +
     ggplot2::labs(x = "Year", y = NULL) + scale_x_year() + theme_ss3()
+  })(), text)
 }
 
 utils::globalVariables(c("peel", "endyr", "rho", "fcrho"))

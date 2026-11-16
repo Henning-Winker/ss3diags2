@@ -14,7 +14,8 @@ ss3plot_resid(
   cap = 4,
   ncol = NULL,
   fleets = NULL,
-  units = NULL
+  units = NULL,
+  text = TRUE
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ tracks of length compositions (not needed for ages); \code{NULL} for none}
 
 \item{units}{units (sexes) to plot, e.g. \code{"F"}, \code{"M"} or \code{"unique"} (combined-sex data); fleets
 without these units are dropped (default: all)}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

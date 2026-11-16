@@ -61,12 +61,14 @@ ss3_sel <- function(ss3rep, what = c("len", "ret", "keep", "dead", "mort", "age"
 #' @param sel FLQuants from \code{\link{ss3_sel}()}
 #' @param ret optional FLQuants of retention (\code{ss3_sel(ss3rep, "ret")}), drawn dashed
 #' @param ncol number of panel columns
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
 #' ss3plot_sel(ss3_sel(pra, years = 2024), ret = ss3_sel(pra, "ret", years = 2024))
 #' @export
-ss3plot_sel <- function(sel, ret = NULL, ncol = NULL){
+ss3plot_sel <- function(sel, ret = NULL, ncol = NULL, text = TRUE){
+  .drop_text((function(){
   prep <- function(x, lab){
     d <- .flq_long(x, 1, "sel")
     d[, x := as.numeric(as.character(quant))][, what := lab]
@@ -88,6 +90,7 @@ ss3plot_sel <- function(sel, ret = NULL, ncol = NULL){
     ggplot2::labs(x = if(is(sel[[1]], "FLQuant") && names(dimnames(sel[[1]]))[1] == "age") "Age" else "Length",
                   y = "Selectivity", colour = "From year", linetype = NULL) +
     theme_ss3() + ggplot2::theme(legend.title = ggplot2::element_text())
+  })(), text)
 }
 
 #' Spawning stock, biomass and recruitment by area
@@ -125,13 +128,15 @@ ss3_byarea <- function(ss3rep, years = NULL){
 #'
 #' @param x FLQuants from \code{\link{ss3_byarea}()}
 #' @param type \code{"area"} (default) or \code{"share"}
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
 #' ss3plot_byarea(ss3_byarea(pra))
 #' @export
-ss3plot_byarea <- function(x, type = c("area", "share")){
-  type <- match.arg(type)
+ss3plot_byarea <- function(x, type = c("area", "share"), text = TRUE){
+  .drop_text((function(){
+  type <- match.arg(type, c("area", "share"))
   d <- .flq_long(x, 1, "x")
   d[, area := factor(paste("area", area), levels = paste("area", .lev(area)))]
   cols <- stats::setNames(ss3cols(nlevels(d$area)), levels(d$area))
@@ -141,6 +146,7 @@ ss3plot_byarea <- function(x, type = c("area", "share")){
     ggplot2::facet_wrap(~ name, scales = "free_y", ncol = 1, strip.position = "left") +
     ggplot2::labs(x = "Year", y = if(type == "share") "Share by area" else NULL, fill = NULL) +
     scale_x_year() + theme_ss3() + ggplot2::theme(strip.placement = "outside")
+  })(), text)
 }
 
 #' Plot the stock-recruitment relationship
@@ -150,14 +156,16 @@ ss3plot_byarea <- function(x, type = c("area", "share")){
 #'
 #' @param ss3rep output of \code{r4ss::SS_output()}
 #' @param type \code{"sr"} (stock-recruit, default) or \code{"devs"} (recruitment deviations)
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' data(ss3sma)
 #' ss3plot_sr(ss3sma)
 #' ss3plot_sr(ss3sma, type = "devs")
 #' @export
-ss3plot_sr <- function(ss3rep, type = c("sr", "devs")){
-  type <- match.arg(type)
+ss3plot_sr <- function(ss3rep, type = c("sr", "devs"), text = TRUE){
+  .drop_text((function(){
+  type <- match.arg(type, c("sr", "devs"))
   rc <- as.data.table(ss3rep$recruit)[Yr >= ss3rep$startyr & Yr <= ss3rep$endyr]
   if(type == "devs")
     return(ggplot2::ggplot(rc[!is.na(dev)], ggplot2::aes(Yr, dev)) + ggplot2::geom_hline(yintercept = 0, colour = "grey50") +
@@ -178,4 +186,5 @@ ss3plot_sr <- function(ss3rep, type = c("sr", "devs")){
     ggplot2::expand_limits(x = 0, y = 0) +
     ggplot2::labs(x = paste0("Spawning output (", ss3rep$SpawnOutputUnits %||% "", ")"), y = "Recruitment",
                   fill = "Year") + theme_ss3() + ggplot2::theme(legend.title = ggplot2::element_text())
+  })(), text)
 }

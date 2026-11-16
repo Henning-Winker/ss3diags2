@@ -139,6 +139,7 @@
 #' @param fwd show the years after the assessment end year (default \code{FALSE}: a stock built with
 #'   \code{ss3stk(fwd = TRUE)} for the lagged Kobe plot is shown up to the end year; F and catch of the next year are
 #'   SS3 forecast values)
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' data(ss3sma)
@@ -149,7 +150,8 @@
 #' @export
 ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftgt"),
                         probs = c(0.05, 0.2, 0.5, 0.8, 0.95), refpts = TRUE, colours = NULL, colour = "grey45",
-                        ncol = NULL, label.size = 2.5, fwd = FALSE, ci = TRUE, refnames = NULL){
+                        ncol = NULL, label.size = 2.5, fwd = FALSE, ci = TRUE, refnames = NULL, text = TRUE){
+  .drop_text((function(){
   sl <- .stklist(x)
   if(!fwd) sl <- lapply(sl, .trim_endyr)
   nr <- length(sl)
@@ -221,6 +223,7 @@ ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftg
   }
   if(nr == 1) p <- p + ggplot2::theme(legend.position = "none")
   p
+  })(), text)
 }
 
 #' Kobe plot
@@ -255,6 +258,7 @@ ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftg
 #' @param contours highest-density contour levels (\code{NULL} or \code{FALSE} for none; needs MASS)
 #' @param style \code{"points"} (draws with contour lines) or \code{"contours"} (filled 50/80/95% regions)
 #' @param labels label years on the trajectory every \code{labels} years (0 for first and last only)
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' data(ss3sma)
@@ -263,8 +267,9 @@ ss3plot_trj <- function(x, type = c("SSB", "F", "Rec", "Catch", "B/Btgt", "F/Ftg
 #' ss3plot_kobe(stk, style = "contours", labels = 5)
 #' @export
 ss3plot_kobe <- function(x, year = NULL, lag = 0, npoints = 2000, contours = c(0.5, 0.8, 0.95),
-                         style = c("points", "contours"), labels = 0){
-  style <- match.arg(style)
+                         style = c("points", "contours"), labels = 0, text = TRUE){
+  .drop_text((function(){
+  style <- match.arg(style, c("points", "contours"))
   if(!is(x, "FLStockR")) stop("x must be an FLStockR with refpts Btgt and Ftgt", call. = FALSE)
   if(!lag %in% c(0, 1)) stop("lag must be 0 or 1", call. = FALSE)
   btgt <- .rp(x, "Btgt"); ftgt <- .rp(x, "Ftgt")
@@ -321,6 +326,7 @@ ss3plot_kobe <- function(x, year = NULL, lag = 0, npoints = 2000, contours = c(0
     ggplot2::labs(x = if(lag > 0) paste0("B/", bl, " (year + ", lag, ")") else paste0("B/", bl), y = paste0("F/", fl),
                   subtitle = if(lag > 0) paste0("F(y) against B(y + ", lag, "); years labelled by F year") else NULL) +
     theme_ss3(legend.position = "right") + ggplot2::theme(legend.title = ggplot2::element_text(size = 8))
+  })(), text)
 }
 
 #' Highest-density regions of the Kobe cloud
@@ -366,6 +372,7 @@ ss3plot_kobe <- function(x, year = NULL, lag = 0, npoints = 2000, contours = c(0
 #' @param rel relative axes: SSB/B0 and yield/MSY
 #' @param spm overlay the Pella-Tomlinson fit to the equilibrium curve, extrapolated to SSB = 0 and K: \code{TRUE}
 #'   (default: fitted with \code{\link{ss3_spm}()}), an \code{ss3spm} object, or \code{FALSE}
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' data(ss3sma)
@@ -373,8 +380,9 @@ ss3plot_kobe <- function(x, year = NULL, lag = 0, npoints = 2000, contours = c(0
 #' ss3plot_production(stk)
 #' ss3plot_production(stk, type = "dyn")
 #' @export
-ss3plot_production <- function(x, eq = NULL, type = c("phase", "dyn"), rel = FALSE, spm = TRUE){
-  type <- match.arg(type)
+ss3plot_production <- function(x, eq = NULL, type = c("phase", "dyn"), rel = FALSE, spm = TRUE, text = TRUE){
+  .drop_text((function(){
+  type <- match.arg(type, c("phase", "dyn"))
   if(!is(x, "FLStockR")) stop("x must be an FLStockR", call. = FALSE)
   if(identical(attr(x, "basis")$ssbunits, "numbers"))
     warning("SSB is spawning output in numbers, not biomass: yield and surplus production are not on the same scale",
@@ -430,6 +438,7 @@ ss3plot_production <- function(x, eq = NULL, type = c("phase", "dyn"), rel = FAL
   p + ggplot2::scale_shape_manual(values = c(22, 21, 24), name = NULL) +
     ggplot2::scale_linetype_manual(values = ltys, name = NULL) + ggplot2::scale_linewidth_manual(values = lws, name = NULL) +
     theme_ss3()
+  })(), text)
 }
 
 utils::globalVariables(c("est", "lci", "uci", "lo1", "hi1", "run", "i.data", "xmin", "xmax", "ymin", "ymax", "zone",

@@ -16,7 +16,8 @@ ss3plot_fwd(
   colours = NULL,
   probs = c(0.05, 0.2, 0.5, 0.8, 0.95),
   ncol = 2,
-  ...
+  ...,
+  text = TRUE
 )
 }
 \arguments{
@@ -45,6 +46,8 @@ all, including B0, R0 and MSY)}
 \item{ncol}{facet columns}
 
 \item{...}{further arguments to \code{\link{ss3plot_trj}()}}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

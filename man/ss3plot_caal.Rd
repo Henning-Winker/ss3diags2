@@ -14,7 +14,8 @@ ss3plot_caal(
   band = TRUE,
   means = TRUE,
   cap = 4,
-  ncol = NULL
+  ncol = NULL,
+  text = TRUE
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ under the sampling by length bin of the data (so they compare with each other, n
 \item{cap}{residuals capped at this absolute value for the bubble size}
 
 \item{ncol}{number of panel columns}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

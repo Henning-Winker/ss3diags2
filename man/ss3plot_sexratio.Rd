@@ -11,7 +11,8 @@ ss3plot_sexratio(
   fleets = NULL,
   ncol = NULL,
   ci = 0.95,
-  min.n = 5
+  min.n = 5,
+  text = TRUE
 )
 }
 \arguments{
@@ -32,6 +33,8 @@ the expected compositions}
 
 \item{min.n}{minimum (effective) number of fish in a bin for an interval; bins with fewer, mostly the largest
 lengths, are nearly uninformative and their intervals span most of 0-1}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

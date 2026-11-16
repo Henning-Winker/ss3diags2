@@ -4,7 +4,7 @@
 \alias{ss3plot_partialF}
 \title{Plot partial F}
 \usage{
-ss3plot_partialF(x, type = NULL, total = TRUE, ylab = NULL)
+ss3plot_partialF(x, type = NULL, total = TRUE, ylab = NULL, text = TRUE)
 }
 \arguments{
 \item{x}{FLQuants from \code{\link{ss3_partialF}()} (or any FLQuants of F by group)}

@@ -12,7 +12,8 @@ ss3plot_flqs(
   median = TRUE,
   worm.col = c("colour", "grey"),
   alpha = 0.5,
-  ncol = 2
+  ncol = 2,
+  text = TRUE
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ ss3plot_flqs(
 \item{alpha}{transparency of the worms}
 
 \item{ncol}{number of panel columns}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

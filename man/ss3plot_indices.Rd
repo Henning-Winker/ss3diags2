@@ -13,7 +13,8 @@ ss3plot_indices(
   combine = FALSE,
   time = FALSE,
   ncol = NULL,
-  iter = 1
+  iter = 1,
+  text = TRUE
 )
 }
 \arguments{
@@ -35,6 +36,8 @@ indices, matched by name}
 \item{ncol}{number of panel columns}
 
 \item{iter}{iteration to plot}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

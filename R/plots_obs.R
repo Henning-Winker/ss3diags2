@@ -11,14 +11,16 @@
 #' @param type \code{"bar"} (stacked, default), \code{"line"} or \code{"share"} (proportion by fleet)
 #' @param iter iteration to plot
 #' @param ylab y-axis label (default from the units)
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' data(ss3sma)
 #' ss3plot_catch(ss3_catch(ss3sma))
 #' ss3plot_catch(ss3_catch(ss3sma), type = "share")
 #' @export
-ss3plot_catch <- function(catch, by = NULL, type = c("bar", "line", "share"), iter = 1, ylab = NULL){
-  type <- match.arg(type); dims <- .bydims(by)
+ss3plot_catch <- function(catch, by = NULL, type = c("bar", "line", "share"), iter = 1, ylab = NULL, text = TRUE){
+  .drop_text((function(){
+  type <- match.arg(type, c("bar", "line", "share")); dims <- .bydims(by)
   d <- .flq_long(catch, iter, "catch")
   un <- unique(vapply(if(is(catch, "FLQuant")) list(catch) else catch, FLCore::units, ""))
   d <- .collapse(d, dims)[!is.na(data)]
@@ -35,6 +37,7 @@ ss3plot_catch <- function(catch, by = NULL, type = c("bar", "line", "share"), it
   if(length(dims)) p <- p + .facet_by(dims, if(type == "share") "fixed" else "free_y")
   if(length(un) > 1 && type != "share") warning("catch in mixed units: ", paste(un, collapse = ", "), call. = FALSE)
   p + ggplot2::labs(x = "Year", y = ylab) + scale_x_year() + theme_ss3()
+  })(), text)
 }
 
 #' Plot abundance indices
@@ -53,6 +56,7 @@ ss3plot_catch <- function(catch, by = NULL, type = c("bar", "line", "share"), it
 #' @param time x axis as year + timing within the year (\code{range} startf, and season for seasonal indices)
 #' @param ncol number of panel columns
 #' @param iter iteration to plot
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' data(ss3sma)
@@ -61,7 +65,8 @@ ss3plot_catch <- function(catch, by = NULL, type = c("bar", "line", "share"), it
 #' ss3plot_indices(idx, combine = TRUE, log = TRUE)
 #' @export
 ss3plot_indices <- function(indices, fit = NULL, by = NULL, ci = 0.95, log = FALSE, combine = FALSE, time = FALSE,
-                            ncol = NULL, iter = 1){
+                            ncol = NULL, iter = 1, text = TRUE){
+  .drop_text((function(){
   dims <- .bydims(by)
   d <- .fli_long(indices, iter)
   ns <- max(1, length(setdiff(unique(d$season), "all")))
@@ -103,6 +108,7 @@ ss3plot_indices <- function(indices, fit = NULL, by = NULL, ci = 0.95, log = FAL
   p <- p + scale_x_year() + theme_ss3()
   if(!length(dims)) p <- p + ggplot2::theme(legend.position = "none")
   p
+  })(), text)
 }
 
 #' Plot length or age compositions
@@ -125,6 +131,7 @@ ss3plot_indices <- function(indices, fit = NULL, by = NULL, ci = 0.95, log = FAL
 #'   \code{DK3a.discard} and \code{DK3a.retained}) or positions in the FLQuants (default: all)
 #' @param units units (sexes) to plot, e.g. \code{"F"}, \code{"M"} or \code{"unique"} (combined-sex data); fleets
 #'   without these units are dropped (default: all)
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' data(ss3simple)
@@ -135,10 +142,11 @@ ss3plot_indices <- function(indices, fit = NULL, by = NULL, ci = 0.95, log = FAL
 #' ss3plot_comps(lfd, type = "mean")
 #' @export
 ss3plot_comps <- function(comps, fit = NULL, by = NULL, type = c("pooled", "annual", "bubble", "mean"),
-                          years = NULL, ncol = NULL, iter = 1, fleets = NULL, units = NULL){
+                          years = NULL, ncol = NULL, iter = 1, fleets = NULL, units = NULL, text = TRUE){
+  .drop_text((function(){
   comps <- .subset_flqs(comps, fleets, units)
   if(!is.null(fit)) fit <- .subset_flqs(fit, fleets, units)
-  type <- match.arg(type); dims <- .bydims(by)
+  type <- match.arg(type, c("pooled", "annual", "bubble", "mean")); dims <- .bydims(by)
   q0 <- if(is(comps, "FLQuant")) comps else comps[[1]]
   qn <- FLCore::quant(q0)
   xlab <- switch(qn, len = "Length", age = "Age", qn)
@@ -210,6 +218,7 @@ ss3plot_comps <- function(comps, fit = NULL, by = NULL, type = c("pooled", "annu
   p <- p + theme_ss3()
   if(!length(dims)) p <- p + ggplot2::theme(legend.position = "none")
   p
+  })(), text)
 }
 
 #' Bin width for bars
@@ -227,12 +236,14 @@ ss3plot_comps <- function(comps, fit = NULL, by = NULL, type = c("pooled", "annu
 #' @param comps FLQuants (or FLQuant) of numbers at length or age
 #' @param by dimensions kept separate, any of \code{"unit"}, \code{"season"}, \code{"area"}
 #' @param iter iteration
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' data(ss3sma)
 #' ss3plot_nsamp(ss3_lencomp(ss3sma))
 #' @export
-ss3plot_nsamp <- function(comps, by = NULL, iter = 1){
+ss3plot_nsamp <- function(comps, by = NULL, iter = 1, text = TRUE){
+  .drop_text((function(){
   dims <- .bydims(by)
   d <- .collapse(.flq_long(comps, iter, "comps"), dims)
   a <- d[, .(data = sum(data, na.rm = TRUE)), by = .(name, year, unit, season, area)][data > 0]
@@ -248,6 +259,7 @@ ss3plot_nsamp <- function(comps, by = NULL, iter = 1){
     ggplot2::labs(x = "Year", y = "Sample size") + scale_x_year() + theme_ss3()
   if(!length(dims)) p <- p + ggplot2::theme(legend.position = "none")
   p
+  })(), text)
 }
 
 #' Plot data coverage
@@ -261,12 +273,14 @@ ss3plot_nsamp <- function(comps, by = NULL, iter = 1){
 #' @param lencomp,agecomp FLQuants of numbers at length / age
 #' @param by dimensions kept separate, any of \code{"unit"}, \code{"season"}, \code{"area"} (panels by column)
 #' @param iter iteration
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' data(ss3sma)
 #' ss3plot_data(catch = ss3_catch(ss3sma), indices = ss3_indices(ss3sma), lencomp = ss3_lencomp(ss3sma))
 #' @export
-ss3plot_data <- function(catch = NULL, indices = NULL, lencomp = NULL, agecomp = NULL, by = NULL, iter = 1){
+ss3plot_data <- function(catch = NULL, indices = NULL, lencomp = NULL, agecomp = NULL, by = NULL, iter = 1, text = TRUE){
+  .drop_text((function(){
   dims <- .bydims(by)
   keep <- c("name", "year", "unit", "season", "area", "data", "dtype")
   out <- list()
@@ -303,4 +317,5 @@ ss3plot_data <- function(catch = NULL, indices = NULL, lencomp = NULL, agecomp =
     ggplot2::labs(x = "Year", y = NULL) + scale_x_year() + theme_ss3() +
     ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 0))
   p
+  })(), text)
 }

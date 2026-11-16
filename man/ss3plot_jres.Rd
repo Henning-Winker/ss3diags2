@@ -4,12 +4,14 @@
 \alias{ss3plot_jres}
 \title{Plot joint residuals}
 \usage{
-ss3plot_jres(x, ...)
+ss3plot_jres(x, ..., text = TRUE)
 }
 \arguments{
 \item{x}{FLQuants of residuals or an SS3 report}
 
 \item{...}{passed to \code{ss3_iresid()} when \code{x} is an SS3 report}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot; the RMSE table (by index and combined) in \code{attr(p, "rmse")}

@@ -10,7 +10,8 @@ ss3plot_retro(
   fcast = TRUE,
   ci = 0.95,
   xmin = NULL,
-  ncol = NULL
+  ncol = NULL,
+  text = TRUE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ ss3plot_retro(
 \item{xmin}{first year shown (default: 2 x number of peels before the last end year... all years if NULL)}
 
 \item{ncol}{facet columns}
+
+\item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
 ggplot

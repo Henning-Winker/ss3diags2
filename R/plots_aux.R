@@ -263,3 +263,18 @@ utils::globalVariables(c("seg", "group", "prop", "pexp", "mu", "mexp", "lo", "hi
   }
   if(one && length(x) == 1) x[[1]] else x
 }
+
+#' Drop the title, subtitle and caption of a plot
+#'
+#' Used by the \code{text} argument of the ss3plot functions: labels inside the plot (annotations, reference point
+#' labels) and the legends stay.
+#'
+#' @param p ggplot or patchwork
+#' @param text keep the title, subtitle and caption
+#' @return the plot
+#' @noRd
+.drop_text <- function(p, text = TRUE){
+  if(isTRUE(text) || !inherits(p, "ggplot")) return(p)
+  nl <- ggplot2::labs(title = NULL, subtitle = NULL, caption = NULL)
+  if(inherits(p, "patchwork")) p & nl else p + nl
+}
