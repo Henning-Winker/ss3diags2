@@ -32,7 +32,7 @@ ss3plot(
 \item{probs}{quantiles for the uncertainty bands}
 
 \item{legend}{position of the index legend, drawn once outside the panels: \code{"bottom"} (default),
-\code{"right"}, \code{"top"} or \code{"none"}}
+\code{"right"}, \code{"top"} or \code{"none"}; \code{TRUE} / \code{FALSE} for \code{"bottom"} / \code{"none"}}
 
 \item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }

@@ -55,7 +55,7 @@
 #' @param lag Kobe lag: 0 pairs F(y) with B(y), 1 pairs F(y) with B(y + 1) (see \code{\link{ss3plot_kobe}()})
 #' @param indices show the observed indices scaled to SSB
 #' @param legend position of the index legend, drawn once outside the panels: \code{"bottom"} (default),
-#'   \code{"right"}, \code{"top"} or \code{"none"}
+#'   \code{"right"}, \code{"top"} or \code{"none"}; \code{TRUE} / \code{FALSE} for \code{"bottom"} / \code{"none"}
 #' @param fwd show the SS3 forecast years in the trajectories (default \code{FALSE}: assessment years only)
 #' @param probs quantiles for the uncertainty bands
 #' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
@@ -69,6 +69,7 @@
 ss3plot <- function(ss3rep, stk = NULL, iters = 1000, lag = 0, indices = TRUE, fwd = FALSE,
                     probs = c(0.05, 0.2, 0.5, 0.8, 0.95), legend = c("bottom", "right", "top", "none"), text = TRUE){
   .drop_text((function(){
+  if(is.logical(legend)) legend <- if(isTRUE(legend[1])) "bottom" else "none"
   legend <- match.arg(legend, c("bottom", "right", "top", "none"))
   .need("patchwork", "package 'patchwork' is required for ss3plot()")
   if(!.is_ss3rep(ss3rep)) stop("ss3rep must be an r4ss::SS_output() list", call. = FALSE)
