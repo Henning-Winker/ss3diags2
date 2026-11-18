@@ -4,7 +4,14 @@
 \alias{ss3plot_sel}
 \title{Plot selectivity by fleet}
 \usage{
-ss3plot_sel(sel, ret = NULL, ncol = NULL, text = TRUE)
+ss3plot_sel(
+  sel,
+  ret = NULL,
+  ncol = NULL,
+  years = NULL,
+  fleets = NULL,
+  text = TRUE
+)
 }
 \arguments{
 \item{sel}{FLQuants from \code{\link{ss3_sel}()}}
@@ -12,6 +19,10 @@ ss3plot_sel(sel, ret = NULL, ncol = NULL, text = TRUE)
 \item{ret}{optional FLQuants of retention (\code{ss3_sel(ss3rep, "ret")}), drawn dashed}
 
 \item{ncol}{number of panel columns}
+
+\item{years}{years to show: the selectivity blocks in force in these years (default: all blocks)}
+
+\item{fleets}{fleets (names or numbers) to show}
 
 \item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }

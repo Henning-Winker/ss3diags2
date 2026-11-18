@@ -62,14 +62,17 @@ ss3_sel <- function(ss3rep, what = c("len", "ret", "keep", "dead", "mort", "age"
 #' @param sel FLQuants from \code{\link{ss3_sel}()}
 #' @param ret optional FLQuants of retention (\code{ss3_sel(ss3rep, "ret")}), drawn dashed
 #' @param ncol number of panel columns
+#' @param years years to show: the selectivity blocks in force in these years (default: all blocks)
+#' @param fleets fleets (names or numbers) to show
 #' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' pra <- readRDS(system.file("extdata", "pra.27.3a4a", "pra.27.3a4a.rds", package = "ss3diags2"))
 #' ss3plot_sel(ss3_sel(pra, years = 2024), ret = ss3_sel(pra, "ret", years = 2024))
 #' @export
-ss3plot_sel <- function(sel, ret = NULL, ncol = NULL, text = TRUE){
+ss3plot_sel <- function(sel, ret = NULL, ncol = NULL, years = NULL, fleets = NULL, text = TRUE){
   .drop_text((function(){
+  if(!is.null(fleets)) sel <- sel[if(is.numeric(fleets)) names(sel)[fleets] else intersect(fleets, names(sel))]
   prep <- function(x, lab){
     d <- .flq_long(x, 1, "sel")
     d[, x := as.numeric(as.character(quant))][, what := lab]
@@ -77,6 +80,12 @@ ss3plot_sel <- function(sel, ret = NULL, ncol = NULL, text = TRUE){
   }
   d <- prep(sel, "selectivity")
   if(!is.null(ret)) d <- rbind(d, prep(ret[intersect(names(ret), names(sel))], "retention"))
+  if(!is.null(years)){
+    # time blocks: keep the blocks in force in the years (a block starts in its 'year')
+    keep <- d[, { b <- sort(unique(year)); b[unique(findInterval(years, b))] }, by = name]
+    d <- d[keep, on = c("name", year = "V1"), nomatch = 0]
+    if(!nrow(d)) stop("no selectivity for these years", call. = FALSE)
+  }
   d[, name := factor(as.character(name), levels = names(sel))]
   d[, block := factor(year)]
   d[, lt := if(length(unique(unit)) > 1) paste(what, unit) else what]
@@ -85,12 +94,17 @@ ss3plot_sel <- function(sel, ret = NULL, ncol = NULL, text = TRUE){
   lts <- stats::setNames(c("solid", "dashed", "dotted", "dotdash")[seq_along(lv)], lv)
   ggplot2::ggplot(d, ggplot2::aes(x, data, colour = block, linetype = lt,
                                   group = interaction(block, lt))) +
-    ggplot2::geom_line(linewidth = 0.7) + ggplot2::scale_colour_manual(values = cols) +
-    ggplot2::scale_linetype_manual(values = lts, breaks = lv) +
+    ggplot2::geom_line(linewidth = 0.7) +
+    ggplot2::scale_colour_manual(values = cols, guide = if(nlevels(d$block) > 1)
+      ggplot2::guide_legend(nrow = ceiling(nlevels(d$block)/12), byrow = TRUE, title.position = "left",
+                            override.aes = list(linewidth = 1.5)) else "none") +
+    ggplot2::scale_linetype_manual(values = lts, breaks = lv, guide = if(length(lv) > 1) "legend" else "none") +
+    ggplot2::scale_y_continuous(breaks = c(0, 0.5, 1)) +
     ggplot2::facet_wrap(~ name, ncol = ncol) +
     ggplot2::labs(x = if(is(sel[[1]], "FLQuant") && names(dimnames(sel[[1]]))[1] == "age") "Age" else "Length",
                   y = "Selectivity", colour = "From year", linetype = NULL) +
-    theme_ss3() + ggplot2::theme(legend.title = ggplot2::element_text())
+    theme_ss3() + ggplot2::theme(legend.title = ggplot2::element_text(), legend.box = "vertical",
+                                 legend.key.width = grid::unit(1.2, "lines"))
   })(), text)
 }
 
