@@ -183,7 +183,8 @@ ss3plot_sr <- function(ss3rep, type = c("sr", "devs"), text = TRUE){
     ggplot2::geom_line(data = cv, ggplot2::aes(SpawnBio, R), colour = "black", linewidth = 0.8) +
     ggplot2::geom_path(colour = "grey70") +
     ggplot2::geom_point(ggplot2::aes(fill = Yr), shape = 21, size = 2.5) +
-    ggplot2::scale_fill_viridis_c(option = "D", end = 0.85) +                  # years: purple (early) to green (recent)
+    ggplot2::scale_fill_viridis_c(option = "D", end = 0.85,                   # years: purple (early) to green (recent)
+                                  guide = ggplot2::guide_colourbar(barwidth = grid::unit(12, "lines"))) +
     ggplot2::expand_limits(x = 0, y = 0) +
     ggplot2::labs(x = paste0("Spawning output (", ss3rep$SpawnOutputUnits %||% "", ")"), y = "Recruitment",
                   fill = "Year") + theme_ss3() + ggplot2::theme(legend.title = ggplot2::element_text())
