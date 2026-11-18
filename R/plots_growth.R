@@ -10,8 +10,10 @@
 #' @noRd
 .growth_curves <- function(x, maxage = NULL){
   if(.is_ss3rep(x)){
-    eg <- as.data.table(x$endgrowth)[Seas == 1]
-    eg <- eg[!duplicated(eg[, .(Sex, Age_Beg)])]
+    # all seasons: mean length at the middle of each season (one point per year with one season)
+    eg <- as.data.table(x$endgrowth)
+    eg <- eg[!duplicated(eg[, .(Sex, Age_Mid)])][order(Sex, Age_Mid)]
+    eg <- eg[Age_Mid >= .settle_seas(x, time = TRUE)]                      # not yet settled: no length
     nsx <- x$nsexes %||% 1
     return(eg[, .(unit = if(nsx == 1) "unique" else c("F", "M")[Sex], age = Age_Mid, L = Len_Mid, sd = SD_Mid)])
   }
@@ -19,19 +21,28 @@
   rbindlist(lapply(units, function(u){
     vb <- .vb_unit(x, u)
     g <- function(p) if(p %in% dimnames(x)$params) { a <- x@.Data; if(length(dim(a)) == 3) a[p, if(u %in% units) u else 1, 1] else a[p, 1] } else NA
-    am <- maxage %||% (vb[["t0"]] + log(20)/vb[["k"]])
+    am <- maxage %||% max(vb[["t0"]] + log(20)/vb[["k"]], g("amax") + 1, na.rm = TRUE)
     age <- seq(0, am, length.out = 200)
     cv1 <- g("CVmin"); cv2 <- g("CVmax"); L1 <- g("L1"); L2 <- g("L2")
     A1 <- g("A1"); A2 <- g("A2"); K <- g("K"); bb <- g("richards")
+    st <- g("settle"); if(!is.finite(st)) st <- 0
     L <- if(all(is.finite(c(A1, A2, L1, L2, K, bb))) && L1 > 0){
-      # SS3 growth, Schnute (1981): Richards (bb != 1) or von Bertalanffy (bb = 1) between L1 at A1 and L2 at A2;
-      # linear from 0 below A1
-      fr <- (1 - exp(-K*(age - A1)))/(1 - exp(-K*(A2 - A1)))
-      s <- if(abs(bb) > 1e-8) (L1^bb + (L2^bb - L1^bb)*fr)^(1/bb) else L1*exp(log(L2/L1)*fr)
-      ifelse(age < A1, L1*age/A1, s)
+      # SS3 growth, Schnute (1981): Richards (bb != 1) or von Bertalanffy (bb = 1) between L1 at A1 and L2 at A2,
+      # linear from 0 below A1; A1 and A2 are ages since settlement, the curve is drawn against calendar age
+      ga <- age - st
+      fr <- (1 - exp(-K*(ga - A1)))/(1 - exp(-K*(A2 - A1)))
+      s <- suppressWarnings(if(abs(bb) > 1e-8) (L1^bb + (L2^bb - L1^bb)*fr)^(1/bb) else L1*exp(log(L2/L1)*fr))
+      ifelse(ga < A1, pmax(L1*ga/A1, 0), s)
     } else pmax(vb[["linf"]]*(1 - exp(-vb[["k"]]*(age - vb[["t0"]]))), 0)
-    cv <- if(all(is.finite(c(cv1, cv2, L1, L2)))) cv1 + (cv2 - cv1)*pmin(pmax((L - L1)/(L2 - L1), 0), 1) else NA_real_
-    data.table(unit = u, age = age, L = L, sd = cv*L)
+    # CV (or SD) of length at age, linear between A1 and A2 in length (f(LAA)) or age (f(A)), as SS3; A2 = 999
+    # stands for the accumulator age
+    ct <- g("cvtype"); if(!is.finite(ct)) ct <- 0
+    if(ct %in% c(1, 3) && all(is.finite(c(A1, A2)))){
+      A2c <- if(A2 >= 999) g("amax") else A2
+      fr <- pmin(pmax((age - st - A1)/(A2c - A1), 0), 1)
+    } else fr <- if(all(is.finite(c(L1, L2)))) pmin(pmax((L - L1)/(L2 - L1), 0), 1) else NA_real_
+    v <- if(all(is.finite(c(cv1, cv2)))) cv1 + (cv2 - cv1)*fr else NA_real_
+    data.table(unit = u, age = age, L = L, sd = if(ct >= 2) v else v*L)
   }))
 }
 

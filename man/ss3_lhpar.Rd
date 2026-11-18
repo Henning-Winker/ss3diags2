@@ -21,10 +21,17 @@ the SS3 L1-L2 parameterisation), \code{L50} and \code{mat.slope} (length-logisti
 (weight-length, kg and cm), \code{M} (natural mortality of the oldest ages), \code{CVmin}, \code{CVmax} (CV of
 length at age), \code{A1}, \code{A2}, \code{L1}, \code{L2}, \code{K} and \code{richards} (SS3 growth in the Schnute
 (1981) parameterisation; \code{richards} = 1 for von Bertalanffy, the Richards shape for SS3 growth option 2, NA
-otherwise). With two sexes the FLPar has a \code{unit} dimension
-("F", "M"), as the FLQuants of the compositions.
+otherwise), \code{settle}, the time of settlement as a fraction of the year ((Settle_Month - 1)/12),
+\code{cvtype} (SS3 CV pattern: 0 CV = f(length at age), 1 CV = f(age), 2 SD = f(length at age), 3 SD = f(age);
+\code{CVmin}, \code{CVmax} are SDs for 2 and 3) and \code{amax} (accumulator age, used for A2 = 999). With two
+sexes the FLPar has a \code{unit} dimension ("F", "M"), as the FLQuants of the compositions.
 }
 \details{
+Ages: SS3 data and \code{endgrowth} use calendar ages (age 0 from 1 January), and so do \code{linf}, \code{k},
+\code{t0} (SS3 \code{A_a_L0}); the Schnute parameters \code{A1} and \code{A2} are ages since settlement, so the
+growth curves evaluate them at calendar age - \code{settle}. This matters for seasonal models with settlement after
+January (e.g. Settle_Month 6: fish are 5 months younger than their calendar age).
+
 For growth other than von Bertalanffy, \code{linf}, \code{k}, \code{t0} are a von Bertalanffy curve fitted to the
 SS3 mean length at age (\code{endgrowth}), with a message; the growth curves of the plots use the SS3 Richards
 (Schnute) curve when \code{richards} is available. Maturity other than

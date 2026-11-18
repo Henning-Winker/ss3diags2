@@ -37,6 +37,7 @@ ss3_sel <- function(ss3rep, what = c("len", "ret", "keep", "dead", "mort", "age"
   if(is.null(years)) yrs <- unique(c(ss3rep$startyr, yrs))
   s[Yr < ss3rep$startyr, Yr := ss3rep$startyr]
   s <- s[Yr %in% yrs][, .SD[.N], by = .(Fleet, Yr, Sex)]
+  for(b in bins) set(s, j = b, value = as.numeric(s[[b]]))                   # mixed integer/double columns
   d <- melt(s, id.vars = c("Fleet", "Yr", "Sex"), measure.vars = bins, variable.name = "bin", value.name = "data",
             variable.factor = FALSE)
   # drop years identical to the previous reported year (no change)

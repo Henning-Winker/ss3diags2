@@ -8,17 +8,48 @@
 #' @param era SS3 era (\code{"TIME"} or \code{"FORE"})
 #' @param seas season
 #' @param sex sex (1 female, 2 male); \code{NULL} for all
+#' @param settle take age 0 at the start of the settlement season when it is after season 1
 #' @return matrix ages x years, summed over areas, sexes and morphs
 #' @noRd
-.natage_mat <- function(ss3rep, era = c("TIME", "FORE"), seas = 1, sex = NULL){
-  na <- as.data.table(ss3rep$natage)
-  bm <- .col(na, c("Beg/Mid", "BegMid"))
-  na <- na[bm == "B" & Era %in% era & Seas == seas]
-  if(!is.null(sex)) na <- na[Sex %in% sex]
-  ages <- names(na)[grepl("^[0-9]+$", names(na))]
-  d <- na[, lapply(.SD, sum), by = Yr, .SDcols = ages]
-  m <- t(as.matrix(d[, ages, with = FALSE])); colnames(m) <- d$Yr
-  m[, order(d$Yr), drop = FALSE]
+.natage_mat <- function(ss3rep, era = c("TIME", "FORE"), seas = 1, sex = NULL, settle = TRUE){
+  na0 <- as.data.table(ss3rep$natage)
+  bm <- .col(na0, c("Beg/Mid", "BegMid"))
+  na0 <- na0[bm == "B" & Era %in% era]
+  if(!is.null(sex)) na0 <- na0[Sex %in% sex]
+  ages <- names(na0)[grepl("^[0-9]+$", names(na0))]
+  mat <- function(ss){
+    d <- na0[Seas == ss, lapply(.SD, sum), by = Yr, .SDcols = ages]
+    m <- t(as.matrix(d[, ages, with = FALSE])); colnames(m) <- d$Yr
+    m[, order(d$Yr), drop = FALSE]
+  }
+  m <- mat(seas)
+  # settlement after the start of the year: age 0 is not yet present in season 1, so age 0 is taken at the start of
+  # the settlement season (its mortality then covers the rest of the year)
+  ss <- .settle_seas(ss3rep)
+  if(settle && seas == 1 && ss > 1 && nrow(m)){
+    m0 <- mat(ss)
+    yy <- intersect(colnames(m), colnames(m0))
+    m[1, yy] <- m0[1, yy]
+  }
+  m
+}
+
+#' Settlement season and time
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param time return the fraction of the year at the start of the settlement season instead of the season
+#' @return season of the main settlement event (1 if not reported), or the fraction of the year before it
+#' @noRd
+.settle_seas <- function(ss3rep, time = FALSE){
+  rd <- ss3rep$recruitment_dist$recruit_dist
+  ss <- 1
+  if(is.data.frame(rd) && "Seas" %in% names(rd) && nrow(rd)){
+    w <- rowSums(rd[, grep("^recr_dist", names(rd)), drop = FALSE])
+    ss <- as.integer(rd$Seas[which.max(w)])
+  }
+  if(!time) return(ss)
+  dur <- ss3rep$seasdurations %||% 1
+  sum(dur[seq_len(ss - 1)])
 }
 
 #' Spawning output at age
@@ -223,6 +254,7 @@ ss3_impact <- function(ss3rep, groups = NULL, type = c("cumulative", "remove"), 
     Ctot <- Reduce(`+`, Ff)
     bad <- !is.finite(Z) | Z <= 0 | D <= 0
     Mb <- if(M == "ss3") .ss3_M(ss3rep, rownames(N), sex = sx) else NULL
+    if(!is.null(Mb)) Mb[1] <- Mb[1]*(1 - .settle_seas(ss3rep, time = TRUE))   # age 0: from settlement to year end
     if(is.null(Mb)){
       # Baranov: F_f = Z C_f / D, M the remainder
       Ff <- lapply(Ff, function(m){ r <- m/D*Z; r[bad | !is.finite(r)] <- 0; r })
