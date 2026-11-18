@@ -84,12 +84,14 @@ ss3_hindcast <- function(retro, quant = c("cpue", "len", "age", "con", "size"), 
   ref <- runs[peel == as.character(ey[1])]
   ref <- ref[use > 0 & !is.na(like)]
   if(!is.null(fleets)){ fn <- if(is.numeric(fleets)) .fleetnames(retro[[1]])[fleets] else fleets; ref <- ref[name %in% fn] }
-  # first season of each index only (as SSmase Season = "default")
-  ref <- ref[, .SD[season == season[1]], by = name]
+  # one observation per year: all of them, whatever the season (e.g. a survey whose month varies between years);
+  # several per year (seasonal index): the first season only, as ss3diags::SSmase(Season = "default")
+  ref <- ref[, if(anyDuplicated(year)) .SD[season == season[1]] else .SD, by = name]
   eyrs <- sort(ey)
   dat <- rbindlist(lapply(unique(ref$name), function(f){
     r <- ref[name == f]
-    p <- runs[name == f & season == r$season[1] & peel != as.character(ey[1]) & year <= endyr + 1 & year %in% r$year]
+    p <- runs[name == f & paste(year, season) %in% paste(r$year, r$season) & peel != as.character(ey[1]) &
+                year <= endyr + 1]
     p[, pred := year == endyr + 1]
     rbind(r[, .(name, year, obs, se, ref = exp, peel = "Ref", exp = exp, endyr = ey[1], pred = FALSE)],
           merge(p[, .(name, year, peel, exp, endyr, pred)], r[, .(year, obs, se, ref = exp)], by = "year"),
