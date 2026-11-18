@@ -44,8 +44,10 @@
   rd <- ss3rep$recruitment_dist$recruit_dist
   ss <- 1
   if(is.data.frame(rd) && "Seas" %in% names(rd) && nrow(rd)){
-    w <- rowSums(rd[, grep("^recr_dist", names(rd)), drop = FALSE])
-    ss <- as.integer(rd$Seas[which.max(w)])
+    w <- rowSums(rd[, grep("^recr_dist", names(rd)), drop = FALSE], na.rm = TRUE)   # NA for males of 1-sex models
+    i <- if(any(w > 0)) which.max(w) else 1
+    ss <- suppressWarnings(as.integer(as.character(rd$Seas[i])))
+    if(length(ss) != 1 || !is.finite(ss) || ss < 1) ss <- 1
   }
   if(!time) return(ss)
   dur <- ss3rep$seasdurations %||% 1
@@ -123,6 +125,10 @@
     v <- numeric(A); v[match(x$age, as.numeric(ages))] <- x$data; v[A - 1] <- v[A] <- v[A - 1] + v[A]; v }, numeric(A))
   if(!is.matrix(cf)) cf <- matrix(cf, ncol = length(fleets), dimnames = list(NULL, fleets))
   sh <- cf/rowSums(cf); sh[!is.finite(sh)] <- 0
+  # no initial catch at an age (e.g. no initial F: virgin start): the INIT survival is all M there, so the
+  # equilibrium with all fleets equals the SS3 initial numbers
+  Fi[rowSums(cf) <= 0] <- 0
+  if(!any(cf > 0)) return(function(fl) rep(1, A))
   pr <- function(Z){ s <- exp(-Z); l <- cumprod(c(1, s[-A])); l[A] <- l[A]/(1 - s[A]); l }
   Zall <- M + Fi
   lall <- pr(Zall)

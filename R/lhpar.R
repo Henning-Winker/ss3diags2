@@ -54,8 +54,10 @@ ss3_lhpar <- function(ss3rep, year = NULL){
   rd <- ss3rep$recruitment_dist$recruit_dist
   settle <- 0
   if(is.data.frame(rd) && "Settle_Month" %in% names(rd) && nrow(rd)){
-    w <- rowSums(rd[, grep("^recr_dist", names(rd)), drop = FALSE])
-    settle <- (as.numeric(rd$Settle_Month[which.max(w)]) - 1)/12
+    w <- rowSums(rd[, grep("^recr_dist", names(rd)), drop = FALSE], na.rm = TRUE)   # NA for males of 1-sex models
+    i <- if(any(w > 0)) which.max(w) else 1
+    settle <- (suppressWarnings(as.numeric(as.character(rd$Settle_Month[i]))) - 1)/12
+    if(length(settle) != 1 || !is.finite(settle) || settle < 0) settle <- 0
   }
   # SS3 growth (Schnute 1981 parameterisation): K and the Richards shape (1 = von Bertalanffy; NA for other models)
   rich <- function(s){
