@@ -12,6 +12,7 @@ ss3plot(
   indices = TRUE,
   fwd = FALSE,
   probs = c(0.05, 0.2, 0.5, 0.8, 0.95),
+  legend = c("bottom", "right", "top", "none"),
   text = TRUE
 )
 }
@@ -29,6 +30,9 @@ ss3plot(
 \item{fwd}{show the SS3 forecast years in the trajectories (default \code{FALSE}: assessment years only)}
 
 \item{probs}{quantiles for the uncertainty bands}
+
+\item{legend}{position of the index legend, drawn once outside the panels: \code{"bottom"} (default),
+\code{"right"}, \code{"top"} or \code{"none"}}
 
 \item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }

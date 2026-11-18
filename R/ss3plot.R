@@ -54,6 +54,8 @@
 #' @param iters number of MVLN draws when \code{stk} is built
 #' @param lag Kobe lag: 0 pairs F(y) with B(y), 1 pairs F(y) with B(y + 1) (see \code{\link{ss3plot_kobe}()})
 #' @param indices show the observed indices scaled to SSB
+#' @param legend position of the index legend, drawn once outside the panels: \code{"bottom"} (default),
+#'   \code{"right"}, \code{"top"} or \code{"none"}
 #' @param fwd show the SS3 forecast years in the trajectories (default \code{FALSE}: assessment years only)
 #' @param probs quantiles for the uncertainty bands
 #' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
@@ -65,8 +67,9 @@
 #' ss3plot(pra, iters = 200, lag = 1)
 #' @export
 ss3plot <- function(ss3rep, stk = NULL, iters = 1000, lag = 0, indices = TRUE, fwd = FALSE,
-                    probs = c(0.05, 0.2, 0.5, 0.8, 0.95), text = TRUE){
+                    probs = c(0.05, 0.2, 0.5, 0.8, 0.95), legend = c("bottom", "right", "top", "none"), text = TRUE){
   .drop_text((function(){
+  legend <- match.arg(legend, c("bottom", "right", "top", "none"))
   .need("patchwork", "package 'patchwork' is required for ss3plot()")
   if(!.is_ss3rep(ss3rep)) stop("ss3rep must be an r4ss::SS_output() list", call. = FALSE)
   stk <- stk %||% ss3stk(ss3rep, output = "iters", iters = iters, fwd = TRUE)
@@ -84,12 +87,12 @@ ss3plot <- function(ss3rep, stk = NULL, iters = 1000, lag = 0, indices = TRUE, f
       cols <- stats::setNames(ss3cols(length(unique(ix$name))), unique(ix$name))
       pt <- function(d) list(ggplot2::geom_point(data = d, ggplot2::aes(year, value, fill = name), shape = 21,
                                                  size = 1.8, inherit.aes = FALSE),
-                             ggplot2::scale_fill_manual(values = cols),
-                             ggplot2::theme(legend.position = "inside", legend.position.inside = c(0.98, 0.98),
-                                            legend.justification = c(1, 1),
-                                            legend.background = ggplot2::element_blank()))
-      pB <- pB + pt(ix)
-      if(is.finite(bt)) pBr <- pBr + pt(ix[, .(name, year, value = value/bt)])
+                             ggplot2::scale_fill_manual(values = cols, name = NULL),
+                             ggplot2::guides(fill = ggplot2::guide_legend(nrow = if(legend %in% c("bottom", "top"))
+                               ceiling(length(cols)/5) else NULL, override.aes = list(size = 2.5))))
+      # the index legend is drawn once, collected outside the panels (see legend)
+      pB <- pB + pt(ix) + ggplot2::theme(legend.position = legend)
+      if(is.finite(bt)) pBr <- pBr + pt(ix[, .(name, year, value = value/bt)]) + noleg
     }
   }
   pK <- .strip(ss3plot_kobe(stk, lag = lag) + noleg, "Kobe")
@@ -102,6 +105,8 @@ ss3plot <- function(ss3rep, stk = NULL, iters = 1000, lag = 0, indices = TRUE, f
              ggplot2::labs(x = NULL, y = "log scale") + scale_x_year() + theme_ss3(), "Recruitment deviation")
   pP <- .strip(ss3plot_production(ss3stk(ss3rep), type = "phase") + noleg + ggplot2::labs(x = "SSB"),
                "Surplus production phase")
-  patchwork::wrap_plots(pB, trj("F"), trj("Catch"), pBr, trj("F/Ftgt"), pK, pSR, pR, pP, ncol = 3)
+  patchwork::wrap_plots(pB, trj("F"), trj("Catch"), pBr, trj("F/Ftgt"), pK, pSR, pR, pP, ncol = 3) +
+    patchwork::plot_layout(guides = "collect") +
+    patchwork::plot_annotation(theme = ggplot2::theme(legend.position = legend))
   })(), text)
 }
