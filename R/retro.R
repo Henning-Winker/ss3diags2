@@ -8,7 +8,10 @@
 #' one-year-ahead (forecast) Mohn's rho and the forecast segments of \code{\link{ss3plot_retro}()}. Each stock carries
 #' its end year in \code{attr(x, "endyr")}.
 #'
-#' @param retro list of SS3 reports (reference run first)
+#' @param retro list of SS3 reports (reference run first, e.g. \code{r4ss::SSgetoutput()}), or their
+#'   \code{r4ss::SSsummarize()} summary (indices only for the hindcast)
+#' @param peels years peeled from each run (default \code{0:(n - 1)}); needed only when the reports do not give the
+#'   peel end year (\code{Retro_year}), e.g. for a summary
 #' @param fwd include the year after each peel's end year (default TRUE)
 #' @param ... passed to \code{ss3stk()}
 #' @return FLStocks (named by peel end year)
@@ -18,8 +21,10 @@
 #' ss3_mohn(rt)
 #' ss3plot_retro(rt)
 #' @export
-ss3_retro <- function(retro, fwd = TRUE, ...){
-  if(.is_ss3rep(retro)) stop("retro must be a list of SS3 reports (reference run first)", call. = FALSE)
+ss3_retro <- function(retro, fwd = TRUE, peels = NULL, ...){
+  if(!.is_summary(retro) && .is_ss3rep(retro))
+    stop("retro must be a list of SS3 reports (reference run first)", call. = FALSE)
+  retro <- .retro_reps(retro, peels)
   ey <- vapply(retro, .endyr, 0)
   stks <- lapply(seq_along(retro), function(i)
     suppressMessages(ss3stk(retro[[i]], output = "mle", fwd = fwd, name = as.character(ey[i]), ...)))
@@ -113,7 +118,7 @@ ss3plot_retro <- function(x, type = c("SSB", "F"), fcast = TRUE, ci = 0.95, xmin
     ref[quant == k, `:=`(lo = est*exp(-z*s[match(year, yy)]), hi = est*exp(z*s[match(year, yy)]))]
   }
   peels <- d[peel != pl[1] & year <= endyr]
-  fc <- d[peel != pl[1] & year %in% c(endyr, endyr + 1)][order(peel, quant, year)]
+  fc <- d[peel != pl[1] & (year == endyr | year == endyr + 1)][order(peel, quant, year)]   # each peel's own end year
   fc <- fc[, if(.N == 2) .SD, by = .(peel, quant)]
   xmin <- xmin %||% (min(ey) - max(10, 2*length(x)))
   cols <- stats::setNames(c("black", ss3cols(length(x) - 1)), pl)

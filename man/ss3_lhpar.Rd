@@ -4,12 +4,15 @@
 \alias{ss3_lhpar}
 \title{Life-history parameters}
 \usage{
-ss3_lhpar(ss3rep, year = NULL)
+ss3_lhpar(ss3rep, year = NULL, gp = NULL)
 }
 \arguments{
 \item{ss3rep}{output of \code{r4ss::SS_output()}}
 
 \item{year}{year of the (possibly time-varying) parameters (default: last year with parameters)}
+
+\item{gp}{growth pattern (default: the one with the largest share of the recruitment); models with several growth
+patterns (and settlement events) have a set of growth parameters for each}
 }
 \value{
 FLPar (params x unit with two sexes)
@@ -23,7 +26,8 @@ length at age), \code{A1}, \code{A2}, \code{L1}, \code{L2}, \code{K} and \code{r
 (1981) parameterisation; \code{richards} = 1 for von Bertalanffy, the Richards shape for SS3 growth option 2, NA
 otherwise), \code{settle}, the time of settlement as a fraction of the year ((Settle_Month - 1)/12),
 \code{cvtype} (SS3 CV pattern: 0 CV = f(length at age), 1 CV = f(age), 2 SD = f(length at age), 3 SD = f(age);
-\code{CVmin}, \code{CVmax} are SDs for 2 and 3) and \code{amax} (accumulator age, used for A2 = 999). With two
+\code{CVmin}, \code{CVmax} are SDs for 2 and 3), \code{amax} (accumulator age, used for A2 = 999) and \code{sdadd}
+(a constant SS3 adds to the SD of length at age, estimated from \code{endgrowth}; 0 for most models). With two
 sexes the FLPar has a \code{unit} dimension ("F", "M"), as the FLQuants of the compositions.
 }
 \details{

@@ -6,14 +6,18 @@
 #'
 #' @param x SS3 report (endgrowth, exact) or FLPar (Schnute or von Bertalanffy, CV linear in length)
 #' @param maxage maximum age
+#' @param gp growth pattern of an SS3 report (default: the one with the largest share of the recruitment)
 #' @return data.table unit, age, L, sd
 #' @noRd
-.growth_curves <- function(x, maxage = NULL){
+.growth_curves <- function(x, maxage = NULL, gp = NULL){
   if(.is_ss3rep(x)){
-    # all seasons: mean length at the middle of each season (one point per year with one season)
+    # all seasons: mean length at the middle of each season (one point per year with one season), for the morphs
+    # of the growth pattern (and its settlement), as ss3_lhpar()
     eg <- as.data.table(x$endgrowth)
+    mo <- .gp_morph(x, gp)
+    if(!is.null(mo$morph) && "Morph" %in% names(eg) && any(eg$Morph %in% mo$morph)) eg <- eg[Morph %in% mo$morph]
     eg <- eg[!duplicated(eg[, .(Sex, Age_Mid)])][order(Sex, Age_Mid)]
-    eg <- eg[Age_Mid >= .settle_seas(x, time = TRUE)]                      # not yet settled: no length
+    eg <- eg[Age_Mid >= mo$settle]                                         # not yet settled: no length
     nsx <- x$nsexes %||% 1
     return(eg[, .(unit = if(nsx == 1) "unique" else c("F", "M")[Sex], age = Age_Mid, L = Len_Mid, sd = SD_Mid)])
   }
@@ -42,7 +46,8 @@
       fr <- pmin(pmax((age - st - A1)/(A2c - A1), 0), 1)
     } else fr <- if(all(is.finite(c(L1, L2)))) pmin(pmax((L - L1)/(L2 - L1), 0), 1) else NA_real_
     v <- if(all(is.finite(c(cv1, cv2)))) cv1 + (cv2 - cv1)*fr else NA_real_
-    data.table(unit = u, age = age, L = L, sd = if(ct >= 2) v else v*L)
+    sa <- g("sdadd"); if(!is.finite(sa)) sa <- 0
+    data.table(unit = u, age = age, L = L, sd = (if(ct >= 2) v else v*L) + sa)
   }))
 }
 
@@ -60,6 +65,8 @@
 #' @param lhpar optional FLPar for Linf and L50 lines when \code{x} is an SS3 report (default \code{ss3_lhpar(x)})
 #' @param lfd optional FLQuants of length compositions: largest observed length by fleet as reference lines
 #' @param maxage maximum age shown
+#' @param gp growth pattern (models with several growth patterns; default: the one with the largest share of the
+#'   recruitment)
 #' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
@@ -69,10 +76,10 @@
 #' hke <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))
 #' ss3plot_growth(hke)                               # two sexes, Richards (Schnute) growth
 #' @export
-ss3plot_growth <- function(x, lhpar = NULL, lfd = NULL, maxage = NULL, text = TRUE){
+ss3plot_growth <- function(x, lhpar = NULL, lfd = NULL, maxage = NULL, gp = NULL, text = TRUE){
   .drop_text((function(){
-  d <- .growth_curves(x, maxage)
-  lh <- lhpar %||% (if(.is_ss3rep(x)) ss3_lhpar(x) else x)
+  d <- .growth_curves(x, maxage, gp)
+  lh <- lhpar %||% (if(.is_ss3rep(x)) suppressMessages(ss3_lhpar(x, gp = gp)) else x)
   if(!is.null(maxage)) d <- d[age <= maxage]
   # two-sex model with the same growth for both sexes (e.g. male offsets of zero): one curve, labelled "F = M"
   same <- FALSE
@@ -261,4 +268,32 @@ ss3plot_sexratio <- function(comps, fit = NULL, type = c("len", "year"), fleets 
                     paste0(", bars: ", round(100*ci), "% binomial CI"), if(!is.null(fit)) "; line: expected")) +
     theme_ss3()
   })(), text)
+}
+
+
+#' Growth pattern, settlement and morphs of an SS3 model
+#'
+#' @param ss3rep SS3 report (\code{r4ss::SS_output()})
+#' @param gp growth pattern (default: the one with the largest share of the recruitment)
+#' @return list: gp, settle (time of settlement as a fraction of the year), sseas (settlement season) and morph
+#'   (morph index of females and males, or \code{NULL} without morph indexing)
+#' @noRd
+.gp_morph <- function(ss3rep, gp = NULL){
+  rd <- ss3rep$recruitment_dist$recruit_dist
+  settle <- 0; sseas <- 1L
+  if(is.data.frame(rd) && "Settle_Month" %in% names(rd) && nrow(rd)){
+    w <- rowSums(rd[, grep("^recr_dist", names(rd)), drop = FALSE], na.rm = TRUE)
+    rgp <- if("G_pattern" %in% names(rd)) as.integer(as.character(rd$G_pattern)) else rep(1L, nrow(rd))
+    if(is.null(gp)) gp <- rgp[if(any(w > 0)) which.max(w) else 1]
+    i <- which(rgp == gp); if(!length(i)) i <- seq_along(rgp)
+    i <- i[which.max(w[i])]
+    settle <- (suppressWarnings(as.numeric(as.character(rd$Settle_Month[i]))) - 1)/12
+    sseas <- suppressWarnings(as.integer(as.character(rd$Seas[i])))
+    if(length(settle) != 1 || !is.finite(settle) || settle < 0) settle <- 0
+  }
+  gp <- gp %||% 1L
+  mi <- ss3rep$morph_indexing; morph <- NULL
+  if(is.data.frame(mi) && all(c("Index", "GP", "Sex", "BirthSeas") %in% names(mi)))
+    morph <- mi$Index[mi$GP == gp & mi$BirthSeas == sseas]
+  list(gp = gp, settle = settle, sseas = sseas, morph = morph)
 }

@@ -7,14 +7,36 @@
 #' @param x \code{SSsummarize()} list
 #' @return named list of minimal reports (derived quantities, years, F basis, targets)
 #' @noRd
-.summ2reps <- function(x){
+.summ2reps <- function(x, peels = NULL){
   q <- x$quants; qs <- x$quantsSD
   nm <- x$modelnames %||% paste0("model", seq_len(x$n))
-  stats::setNames(lapply(seq_len(x$n), function(i)
-    list(derived_quants = data.frame(Label = q$Label, Value = q[[i]], StdDev = qs[[i]]),
-         startyr = x$startyrs[i], endyr = x$endyrs[i], F_std_basis = x$FvalueLabels[i] %||% "_abs_F",
-         btarg = x$btargs[i], sprtarg = x$sprtargs[i], SpawnOutputUnits = x$SpawnOutputUnits[i],
-         nsexes = x$nsexes[i], summary = TRUE)), nm)
+  ix <- x$indices
+  stats::setNames(lapply(seq_len(x$n), function(i){
+    r <- list(derived_quants = data.frame(Label = q$Label, Value = q[[i]], StdDev = qs[[i]]),
+              startyr = x$startyrs[i], endyr = x$endyrs[i], F_std_basis = x$FvalueLabels[i] %||% "_abs_F",
+              btarg = x$btargs[i], sprtarg = x$sprtargs[i], SpawnOutputUnits = x$SpawnOutputUnits[i],
+              nsexes = x$nsexes[i], summary = TRUE)
+    fn <- x$FleetNames
+    r$FleetNames <- if(is.list(fn)) fn[[i]] else fn
+    if(is.data.frame(ix) && "imodel" %in% names(ix)) r$cpue <- ix[ix$imodel == i, , drop = FALSE]
+    if(!is.null(peels)) r$Retro_year <- x$endyrs[i] - peels[i]           # retrospective peel end year
+    r
+  }), nm)
+}
+
+#' Retrospective runs as a list of reports
+#'
+#' A list of SS3 reports, or an \code{r4ss::SSsummarize()} list of the reference run and its peels converted to
+#' minimal reports with the peel end years (SS3 retrospective runs keep endyr; the peels are 0, 1, 2, ... years)
+#'
+#' @param retro list of SS3 reports or \code{SSsummarize()} list (reference run first)
+#' @param peels years peeled from each run (default \code{0:(n - 1)})
+#' @return list of reports
+#' @noRd
+.retro_reps <- function(retro, peels = NULL){
+  if(.is_summary(retro)) return(.summ2reps(retro, peels %||% (seq_len(retro$n) - 1)))
+  if(!is.null(peels)) for(i in seq_along(retro)) retro[[i]]$Retro_year <- retro[[i]]$endyr - peels[i]
+  retro
 }
 
 #' Is x an \code{r4ss::SSsummarize()} list?

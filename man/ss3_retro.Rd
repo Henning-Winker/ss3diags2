@@ -4,12 +4,16 @@
 \alias{ss3_retro}
 \title{Retrospective runs as FLStocks}
 \usage{
-ss3_retro(retro, fwd = TRUE, ...)
+ss3_retro(retro, fwd = TRUE, peels = NULL, ...)
 }
 \arguments{
-\item{retro}{list of SS3 reports (reference run first)}
+\item{retro}{list of SS3 reports (reference run first, e.g. \code{r4ss::SSgetoutput()}), or their
+\code{r4ss::SSsummarize()} summary (indices only for the hindcast)}
 
 \item{fwd}{include the year after each peel's end year (default TRUE)}
+
+\item{peels}{years peeled from each run (default \code{0:(n - 1)}); needed only when the reports do not give the
+peel end year (\code{Retro_year}), e.g. for a summary}
 
 \item{...}{passed to \code{ss3stk()}}
 }

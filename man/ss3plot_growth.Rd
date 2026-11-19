@@ -4,7 +4,14 @@
 \alias{ss3plot_growth}
 \title{Plot growth curves by sex}
 \usage{
-ss3plot_growth(x, lhpar = NULL, lfd = NULL, maxage = NULL, text = TRUE)
+ss3plot_growth(
+  x,
+  lhpar = NULL,
+  lfd = NULL,
+  maxage = NULL,
+  gp = NULL,
+  text = TRUE
+)
 }
 \arguments{
 \item{x}{SS3 report or FLPar (\code{linf}, \code{k}, \code{t0}; optional \code{CVmin}, \code{CVmax}, \code{L1},
@@ -15,6 +22,9 @@ ss3plot_growth(x, lhpar = NULL, lfd = NULL, maxage = NULL, text = TRUE)
 \item{lfd}{optional FLQuants of length compositions: largest observed length by fleet as reference lines}
 
 \item{maxage}{maximum age shown}
+
+\item{gp}{growth pattern (models with several growth patterns; default: the one with the largest share of the
+recruitment)}
 
 \item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
