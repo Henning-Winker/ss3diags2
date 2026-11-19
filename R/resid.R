@@ -140,8 +140,16 @@ ss3_resid <- function(ss3rep, quant = c("len", "age", "con", "size"), type = c("
   d <- d[, c("fleet", "name", "partname", quant, .flqdims, "data", "obs", "exp", "n", "a0"), with = FALSE]
   setattr(d, "type", type)
   if(long) return(d[])
+  # compositions without any informative residual (e.g. adjusted sample sizes of 1): dropped with a hint
+  ok <- unique(d[is.finite(data)]$partname); bad <- setdiff(unique(d$partname), ok)
+  if(length(bad)){
+    hint <- if(nsamp == "adj" && type == "osa" && all(d$n <= 1, na.rm = TRUE))
+      " (adjusted sample sizes of 1: try nsamp = \"input\")" else ""
+    if(!length(ok)) stop("no informative residuals", hint, call. = FALSE)
+    warning("no informative residuals for ", paste(bad, collapse = ", "), hint, call. = FALSE)
+  }
   out <- long2flqs(d[is.finite(data)], quant = quant, units = paste(type, "residual"), by = "partname",
-                   order = unique(d$partname))
+                   order = intersect(unique(d$partname), ok))
   attr(out, "type") <- type
   out
 }
