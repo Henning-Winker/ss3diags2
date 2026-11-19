@@ -93,7 +93,7 @@ ss3plot_growth <- function(x, lhpar = NULL, lfd = NULL, maxage = NULL, gp = NULL
   ref <- rbindlist(lapply(units, function(u){
     vb <- .vb_unit(lh, u)
     l50 <- tryCatch({ a <- lh@.Data; if(length(dim(a)) == 3) a["L50", 1, 1] else a["L50", 1] }, error = function(e) NA)
-    data.table(unit = u, what = c("Linf", "L50"), L = c(vb[["linf"]], if(u %in% c("F", "unique")) l50 else NA))
+    data.table(unit = u, what = c("Linf", "L50"), L = c(.linf_unit(lh, u), if(u %in% c("F", "unique")) l50 else NA))
   }))[is.finite(L)]
   cols <- ss3unitcols[units]
   if(same){
@@ -296,4 +296,25 @@ ss3plot_sexratio <- function(comps, fit = NULL, type = c("len", "year"), fleets 
   if(is.data.frame(mi) && all(c("Index", "GP", "Sex", "BirthSeas") %in% names(mi)))
     morph <- mi$Index[mi$GP == gp & mi$BirthSeas == sseas]
   list(gp = gp, settle = settle, sseas = sseas, morph = morph)
+}
+
+
+#' Asymptotic length of a unit
+#'
+#' Asymptote of the SS3 (Schnute) growth curve, \eqn{[L_1^b + (L_2^b - L_1^b)/(1 - e^{-K(A_2 - A_1)})]^{1/b}} (L2 for
+#' A2 = 999), or the von Bertalanffy linf when the Schnute parameters are not available
+#'
+#' @param lh FLPar of life-history parameters (\code{ss3_lhpar()})
+#' @param u unit
+#' @return numeric Linf
+#' @noRd
+.linf_unit <- function(lh, u){
+  d <- dimnames(lh); a <- lh@.Data
+  g <- function(p) if(p %in% d$params) { if("unit" %in% names(d)) as.numeric(a[p, if(u %in% d$unit) u else 1, 1])
+                                         else as.numeric(a[p, 1]) } else NA_real_
+  L1 <- g("L1"); L2 <- g("L2"); K <- g("K"); A1 <- g("A1"); A2 <- g("A2"); bb <- g("richards")
+  if(!all(is.finite(c(L1, L2, K, A1, A2, bb))) || L1 <= 0) return(.vb_unit(lh, u)[["linf"]])
+  if(A2 >= 999) return(L2)
+  den <- 1 - exp(-K*(A2 - A1))
+  if(abs(bb) > 1e-8) (L1^bb + (L2^bb - L1^bb)/den)^(1/bb) else L1*exp(log(L2/L1)/den)
 }
