@@ -61,7 +61,10 @@
 #' than the naive forecast. \code{MASE.adj} uses \code{max(MAE.naive, MAE.base.adj)} as the scaler, to avoid inflated
 #' MASE for nearly flat series.
 #'
-#' @param retro list of SS3 reports (reference run first)
+#' @param retro list of SS3 reports (reference run first, e.g. \code{r4ss::SSgetoutput()}), or their
+#'   \code{r4ss::SSsummarize()} summary (indices only for the hindcast)
+#' @param peels years peeled from each run (default \code{0:(n - 1)}); needed only when the reports do not give the
+#'   peel end year (\code{Retro_year}), e.g. for a summary
 #' @param quant \code{"cpue"} (default), \code{"len"}, \code{"age"}, \code{"con"} (conditional age-at-length:
 #'   mean age by length bin combined over bins) or \code{"size"} (generalised size compositions); for compositions
 #'   the observations excluded from the peels (SS3 ghost data) are included
@@ -76,8 +79,13 @@
 #' hc$mase
 #' ss3plot_hcxval(hc)
 #' @export
-ss3_hindcast <- function(retro, quant = c("cpue", "len", "age", "con", "size"), MAE.base.adj = 0.1, fleets = NULL){
+ss3_hindcast <- function(retro, quant = c("cpue", "len", "age", "con", "size"), MAE.base.adj = 0.1, fleets = NULL,
+                         peels = NULL){
   quant <- match.arg(quant)
+  if(.is_summary(retro) && quant != "cpue")
+    stop("SSsummarize() output holds the indices only: quant = \"cpue\" (full reports for compositions)",
+         call. = FALSE)
+  retro <- .retro_reps(retro, peels)
   ey <- vapply(retro, .endyr, 0)
   runs <- rbindlist(lapply(seq_along(retro), function(i) .hc_obs(retro[[i]], quant)[, `:=`(peel = as.character(ey[i]),
                                                                                          endyr = ey[i])]))
@@ -166,7 +174,7 @@ ss3plot_hcxval <- function(x, ci = 0.95, xmin = NULL, ncol = NULL, text = TRUE){
   z <- stats::qnorm(1 - (1 - ci)/2)
   o[, `:=`(lo = obs*exp(-z*se), hi = obs*exp(z*se))]
   pe <- d[peel != "Ref"][order(panel, peel, year)]
-  fit <- pe[year <= endyr]; fc <- pe[year %in% c(endyr, endyr + 1)][, if(.N == 2) .SD, by = .(panel, peel)]
+  fit <- pe[year <= endyr]; fc <- pe[year == endyr | year == endyr + 1][, if(.N == 2) .SD, by = .(panel, peel)]
   pp <- d[pred == TRUE]
   p <- ggplot2::ggplot(mapping = ggplot2::aes(year))
   if(any(is.finite(o$lo))) p <- p + ggplot2::geom_ribbon(data = o[is.finite(lo)], ggplot2::aes(ymin = lo, ymax = hi),

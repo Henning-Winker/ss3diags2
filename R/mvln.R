@@ -293,7 +293,10 @@ print.ss3mvln <- function(x, ...){
 #' @param thin keep every \code{thin}-th iteration
 #' @param Fref,fwd,catch passed to \code{\link{ss3mvln}()} (\code{fwd = TRUE}: add the year after the end year, for
 #'   SSB(y + 1) in Kobe plots with \code{lag = 1})
-#' @param blim,bpa optional Blim and Bpa as fractions of Btgt, added to the reference points
+#' @param blim,bpa optional Blim and Bpa, added to the reference points: fractions (<= 1) of Btgt or B0 (see
+#'   \code{rpbase}), or absolute values (> 1, e.g. tonnes)
+#' @param rpbase reference of fractional \code{blim} and \code{bpa}: \code{"Btgt"} (default) or \code{"B0"} (e.g.
+#'   \code{blim = 0.1, rpbase = "B0"} for Blim = 10\% B0)
 #' @param name stock name
 #' @param source \code{"auto"}, \code{"derived"} or \code{"timeseries"} (MLE only)
 #' @param btgt biomass target as a fraction of B0 for \code{source = "timeseries"} (default the SS3 \code{btarg})
@@ -321,7 +324,8 @@ print.ss3mvln <- function(x, ...){
 ss3stk <- function(x, output = NULL, iters = 1000, method = c("joint", "annual"), rel = FALSE, thin = 1, Fref = NULL,
                    fwd = FALSE, catch = c("Exp", "Obs", "kill_bio", "dead_bio", "ret_bio"), blim = NULL,
                    bpa = NULL, name = "ss3", source = c("auto", "derived", "timeseries"), btgt = NULL, area = FALSE,
-                   years = NULL){
+                   years = NULL, rpbase = c("Btgt", "B0")){
+  rpbase <- match.arg(rpbase)
   method <- match.arg(method); catch <- match.arg(catch); source <- match.arg(source)
   if(area){
     if(!.is_ss3rep(x)) stop("area = TRUE needs the SS3 report (r4ss::SS_output())", call. = FALSE)
@@ -372,7 +376,10 @@ ss3stk <- function(x, output = NULL, iters = 1000, method = c("joint", "annual")
   extra <- c(Blim = blim %||% NA, Bpa = bpa %||% NA); extra <- extra[is.finite(extra)]
   if(length(extra)){
     nm <- c(dimnames(rp)$params, names(extra)); ni <- dim(rp)[length(dim(rp))]
-    a <- rbind(matrix(rp@.Data, nrow = dim(rp)[1]), outer(extra, as.numeric(rp["Btgt"]))[, seq_len(ni), drop = FALSE])
+    # fractions (<= 1) of Btgt or B0 (rpbase), absolute values (> 1) as given
+    base <- as.numeric(rp[if(rpbase %in% dimnames(rp)$params) rpbase else "Btgt"])
+    ex <- t(vapply(extra, function(v) if(v > 1) rep(v, length(base)) else v*base, numeric(length(base))))
+    a <- rbind(matrix(rp@.Data, nrow = dim(rp)[1]), matrix(ex, nrow = length(extra))[, seq_len(ni), drop = FALSE])
     rp <- FLCore::FLPar(array(a, dim = c(length(nm), ni), dimnames = list(params = nm, iter = seq_len(ni))))
   }
   out <- FLCore::FLStockR(stk, refpts = rp)

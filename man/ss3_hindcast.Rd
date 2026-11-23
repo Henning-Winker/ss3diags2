@@ -8,11 +8,13 @@ ss3_hindcast(
   retro,
   quant = c("cpue", "len", "age", "con", "size"),
   MAE.base.adj = 0.1,
-  fleets = NULL
+  fleets = NULL,
+  peels = NULL
 )
 }
 \arguments{
-\item{retro}{list of SS3 reports (reference run first)}
+\item{retro}{list of SS3 reports (reference run first, e.g. \code{r4ss::SSgetoutput()}), or their
+\code{r4ss::SSsummarize()} summary (indices only for the hindcast)}
 
 \item{quant}{\code{"cpue"} (default), \code{"len"}, \code{"age"}, \code{"con"} (conditional age-at-length:
 mean age by length bin combined over bins) or \code{"size"} (generalised size compositions); for compositions
@@ -21,6 +23,9 @@ the observations excluded from the peels (SS3 ghost data) are included}
 \item{MAE.base.adj}{minimum naive MAE for \code{MASE.adj}}
 
 \item{fleets}{optional fleets (numbers or names)}
+
+\item{peels}{years peeled from each run (default \code{0:(n - 1)}); needed only when the reports do not give the
+peel end year (\code{Retro_year}), e.g. for a summary}
 }
 \value{
 list of class \code{ss3hc}: \code{data} (data.table: name, year, obs, se, ref (reference fit), peel,
