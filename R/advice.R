@@ -224,3 +224,108 @@ ss3_fwdprobs <- function(x, years = NULL, btrigger = 1, long = FALSE){
 
 utils::globalVariables(c("Fratio", "B1ratio", "SSB0", "SSB1", "SSBchange", "pBlim", "pBtrigger", "panel", "ref",
                          "basis"))
+
+#' Kobe II strategy matrices
+#'
+#' Kobe II strategy matrices (K2SM) of catch scenarios: probabilities by catch scenario (rows) and year (columns) of a
+#' single model or a model ensemble, in the formats of tuna RFMO advice. ICCAT: the probability of the green Kobe
+#' quadrant (SSB >= SSBtgt and F <= Ftgt), and of SSB >= SSBtgt and F <= Ftgt separately. IOTC: the risk of violating the
+#' target and limit reference points, P(SSB < SSBtgt), P(F > Ftgt), P(SSB < SSBlim) and P(F > Flim). Probabilities
+#' use each draw's own reference points (each model's own for an ensemble).
+#'
+#' @param x FLStocks of catch scenarios with iterations (\code{\link{ss3_fwdensemble}()} or
+#'   \code{ss3_fwd(output = "iters")})
+#' @param style \code{"iccat"} or \code{"iotc"}
+#' @param years projection years (default: all forecast years)
+#' @param scenarios scenarios (rows; default all)
+#' @param labels row labels (default the scenario names; e.g. the catch, or the catch as \% of the current catch)
+#' @param flim Flim as a multiple of Ftgt (IOTC; e.g. 1.4 for IOTC tunas); default \code{refpts} "Flim" if present
+#' @return named list of data.tables (rows: scenarios, with the catch of the first year in which the scenarios
+#'   differ; columns: years; values in \%), class \code{ss3k2sm}
+#' @seealso \code{\link{ss3plot_k2sm}()}, \code{\link{ss3_fwdprobs}()}, \code{\link{ss3_catchopts}()}
+#' @examples
+#' \donttest{
+#' fw <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18_fwd.rds", package = "ss3diags2"))
+#' fs <- ss3_fwd(fw, output = "iters", iters = 500, Fref = "Btgt", blim = 0.25, bpa = 0.5)
+#' ss3_k2sm(fs, "iccat")
+#' ss3_k2sm(fs, "iotc", flim = 1.4)
+#' }
+#' @export
+ss3_k2sm <- function(x, style = c("iccat", "iotc"), years = NULL, scenarios = NULL, labels = NULL, flim = NULL){
+  style <- match.arg(style)
+  ey <- attr(x, "endyr") %||% attr(x[[1]], "endyr")
+  ya <- ey + .fwd_nint(x, ey) + 1                                  # first year the scenarios differ
+  sc <- scenarios %||% names(x)
+  yrs <- years %||% seq(ey + 1, max(as.numeric(dimnames(x[[sc[1]]])$year)))
+  lab <- labels %||% sc
+  d <- rbindlist(lapply(seq_along(sc), function(i){
+    s <- x[[sc[i]]]; rp <- FLCore::refpts(s); st <- attr(s, "status")
+    rbindlist(lapply(as.character(yrs[as.character(yrs) %in% dimnames(s)$year]), function(y){
+      b <- as.numeric(FLCore::ssb(s)[, y]); n <- length(b)
+      rpv <- function(p) if(p %in% dimnames(rp)$params) rep_len(as.numeric(rp[p, ]), n) else rep(NA_real_, n)
+      fr <- if(!is.null(st$harvest)) as.numeric(st$harvest[, y]) else as.numeric(FLCore::fbar(s)[, y])/rpv("Ftgt")
+      br <- if(!is.null(st$stock)) as.numeric(st$stock[, y]) else b/rpv("Btgt")
+      fl <- if(!is.null(flim)) rep(flim, n) else rpv("Flim")/rpv("Ftgt")
+      data.table(scenario = lab[i], year = as.numeric(y), green = mean(br >= 1 & fr <= 1), `SSB>=SSBtgt` = mean(br >= 1),
+                 `F<=Ftgt` = mean(fr <= 1), `SSB<SSBtgt` = mean(br < 1), `F>Ftgt` = mean(fr > 1),
+                 `SSB<SSBlim` = mean(br < rpv("Blim")/rpv("Btgt")), `F>Flim` = mean(fr > fl))
+    }))
+  }))
+  catch <- vapply(sc, function(n) stats::median(as.numeric(FLCore::catch(x[[n]])[, as.character(ya)])), 0)
+  pr <- if(style == "iccat") c(green = "green", `SSB>=SSBtgt` = "SSB>=SSBtgt", `F<=Ftgt` = "F<=Ftgt") else
+    c(`SSB<SSBtgt` = "SSB<SSBtgt", `F>Ftgt` = "F>Ftgt", `SSB<SSBlim` = "SSB<SSBlim", `F>Flim` = "F>Flim")
+  out <- lapply(pr, function(k){
+    w <- dcast(d, scenario ~ year, value.var = k)[match(lab, scenario)]
+    for(j in setdiff(names(w), "scenario")) set(w, j = j, value = round(100*w[[j]]))
+    w <- cbind(w[, 1], catch = round(catch), w[, -1])
+    setnames(w, "catch", paste("catch", ya))
+    w })
+  if(style == "iotc" && all(is.na(unlist(out[["F>Flim"]][, -(1:2)])))) out[["F>Flim"]] <- NULL
+  structure(out, class = c("ss3k2sm", "list"), style = style, year = ya)
+}
+
+#' Plot a Kobe II strategy matrix
+#'
+#' Colour-coded Kobe II strategy matrix: ICCAT colours for the probability of the green quadrant (red < 50\%, orange
+#' 50-59\%, yellow 60-69\%, light green 70-79\%, green >= 80\%); for IOTC risk tables the colours run from green (low
+#' risk) to red (high risk).
+#'
+#' @param x output of \code{\link{ss3_k2sm}()}
+#' @param which table (default the first: the green quadrant for ICCAT, P(SSB < SSBtgt) for IOTC)
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
+#' @return ggplot
+#' @examples
+#' \donttest{
+#' fw <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18_fwd.rds", package = "ss3diags2"))
+#' fs <- ss3_fwd(fw, output = "iters", iters = 500, Fref = "Btgt", blim = 0.25, bpa = 0.5)
+#' ss3plot_k2sm(ss3_k2sm(fs, "iccat"))
+#' }
+#' @export
+ss3plot_k2sm <- function(x, which = 1, text = TRUE){
+  nm <- if(is.character(which)) which else names(x)[which]
+  w <- copy(x[[nm]]); cn <- names(w)[2]
+  rows <- paste0(w$scenario, "  (", format(w[[cn]], big.mark = ","), ")")
+  d <- melt(w[, -2][, row := rows], id.vars = c("scenario", "row"), variable.name = "year", value.name = "p")
+  d[, row := factor(row, levels = rev(rows))]
+  risk <- grepl("<SSB|<SSBtgt|<SSBlim|>Ftgt|>Flim|SSB<|F>", nm)
+  cuts <- c(-Inf, 50, 60, 70, 80, Inf); labs <- c("<50", "50-59", "60-69", "70-79", ">=80")
+  pal <- c("#d7301f", "#fc8d59", "#fee08b", "#a6d96a", "#1a9850")
+  d[, cl := cut(if(risk) 100 - p else p, cuts, labels = labs, right = FALSE)]
+  p <- ggplot2::ggplot(d, ggplot2::aes(year, row, fill = cl)) + ggplot2::geom_tile(colour = "white", show.legend = TRUE) +
+    ggplot2::geom_text(ggplot2::aes(label = p), size = 3) +
+    ggplot2::scale_fill_manual(values = stats::setNames(pal, labs), drop = FALSE,
+                               name = if(risk) "100 - risk (%)" else "probability (%)") +
+    ggplot2::labs(x = NULL, y = paste0("scenario (", cn, ")"),
+                  title = paste0(if(attr(x, "style") == "iccat") "ICCAT" else "IOTC", " Kobe II strategy matrix: P(", nm, ")")) +
+    ggplot2::scale_x_discrete(position = "top") + theme_ss3() +
+    ggplot2::theme(panel.grid = ggplot2::element_blank(), legend.position = "right")
+  .drop_text(p, text)
+}
+
+#' @export
+print.ss3k2sm <- function(x, ...){
+  for(n in names(x)){ cat("\nP(", n, ") (%)\n", sep = ""); print(x[[n]]) }
+  invisible(x)
+}
+
+utils::globalVariables(c("cl", "p", "row", "scenario"))

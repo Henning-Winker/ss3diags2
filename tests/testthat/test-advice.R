@@ -19,3 +19,16 @@ test_that("catch options, probabilities and plot from forecast scenarios", {
   s <- fs[[1]]; r <- as.numeric(attr(s, "status")$stock[, "2028"])
   expect_equal(ss3diags2:::.p_below(s, 2028, "Blim"), mean(r < 0.25))
 })
+
+test_that("Kobe II strategy matrices (ICCAT, IOTC)", {
+  fw <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18_fwd.rds", package = "ss3diags2"))
+  fs <- ss3_fwd(fw, output = "iters", iters = 200, Fref = "Btgt", blim = 0.25, bpa = 0.5)
+  k1 <- ss3_k2sm(fs, "iccat")
+  expect_named(k1, c("green", "SSB>=SSBtgt", "F<=Ftgt"))
+  g <- as.matrix(k1$green[, -(1:2)]); b <- as.matrix(k1$`SSB>=SSBtgt`[, -(1:2)])
+  expect_true(all(g <= b + 1))                               # green is a subset of SSB >= SSBtgt
+  k2 <- ss3_k2sm(fs, "iotc", flim = 1.4)
+  expect_true(all(c("SSB<SSBtgt", "F>Ftgt", "SSB<SSBlim", "F>Flim") %in% names(k2)))
+  expect_equal(as.matrix(k2$`SSB<SSBtgt`[, -(1:2)]), 100 - b, tolerance = 1)
+  expect_s3_class(ss3plot_k2sm(k1), "ggplot")
+})
