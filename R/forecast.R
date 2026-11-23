@@ -205,7 +205,10 @@ ss3_fwdtable <- function(x, year = NULL, unc = NULL, blim = NULL){
     b1 <- med(FLCore::ssb(s)[, y1]); b0 <- med(FLCore::ssb(s)[, y])
     bl <- blim %||% .rp(s, "Blim")
     se <- attr(s, "se.log")
-    pb <- if(!is.null(unc) && is.finite(bl)) mean(as.numeric(FLCore::ssb(unc[[n]])[, y1]) < bl) else
+    # Blim of each draw (ensembles: each model's own Blim), else one value
+    bli <- if(is.null(blim) && !is.null(unc) && "Blim" %in% dimnames(FLCore::refpts(unc[[n]]))$params &&
+              FLCore::dims(FLCore::refpts(unc[[n]]))$iter > 1) as.numeric(FLCore::refpts(unc[[n]])["Blim", ]) else bl
+    pb <- if(!is.null(unc) && all(is.finite(bli))) mean(as.numeric(FLCore::ssb(unc[[n]])[, y1]) < bli) else
       if(!is.null(se) && is.finite(bl)) stats::pnorm((log(bl) - log(b1))/as.numeric(se$SSB[, y1])) else NA_real_
     d <- data.table(Basis = n, C = round(med(FLCore::catch(s)[, y]), 1), F = round(med(FLCore::fbar(s)[, y]), 3),
                     SSB = round(b1), SSB_change = round(100*(b1/b0 - 1), 1), P_Blim = round(pb, 3))
@@ -213,4 +216,59 @@ ss3_fwdtable <- function(x, year = NULL, unc = NULL, blim = NULL){
                                                  paste0("P(SSB_", y1, "<Blim)")))
     d
   }))
+}
+
+
+#' Ensemble short-term forecast
+#'
+#' Combines the forecast scenarios of several assessment models into a model ensemble, scenario by scenario: each
+#' model contributes draws in proportion to its weight (as \code{\link{ss3_ensemble}()}, and the ss3diags
+#' \code{SSdeltaMVLN(weight = )} + FLRef \code{ss2FLStockR()} workflow). Ratios to the targets are computed within each
+#' model, and each draw keeps its model's Blim, so \code{\link{ss3_fwdtable}()} gives the ensemble risk
+#' P(SSB < Blim) as the share of draws below their own model's Blim.
+#'
+#' @param x named list of models, each the forecast scenarios of one model: FLStocks from
+#'   \code{ss3_fwd(output = "iters")}, or a named list of SS3 reports (forecast runs, passed to \code{ss3_fwd()}).
+#'   All models need the same scenario names
+#' @param weights model weights (default equal); normalised to sum to one
+#' @param iters average number of draws per model (see \code{\link{ss3_ensemble}()})
+#' @param seed random seed
+#' @param ... further arguments to \code{\link{ss3_fwd}()} for SS3 reports (e.g. \code{Fref}, \code{blim}, \code{bpa})
+#' @return FLStocks of the joint ensemble by scenario, with attributes \code{endyr}, \code{weights} and
+#'   \code{models} (the resampled FLStocks of each model by scenario)
+#' @seealso \code{\link{ss3plot_fwd}()}, \code{\link{ss3_fwdtable}()}
+#' @examples
+#' \donttest{
+#' # two models (here the same run twice, with different seeds) and one scenario
+#' hke <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18.rds", package = "ss3diags2"))
+#' fa <- ss3_fwd(list(Fadv = hke), output = "iters", iters = 200, Fref = "Btgt", bpa = 0.5, blim = 0.25)
+#' fb <- ss3_fwd(list(Fadv = hke), output = "iters", iters = 200, Fref = "Btgt", bpa = 0.5, blim = 0.2)
+#' fe <- ss3_fwdensemble(list(A = fa, B = fb), weights = c(0.6, 0.4), iters = 200)
+#' ss3_fwdtable(fe)
+#' ss3plot_fwd(fe, start = 2010)
+#' }
+#' @export
+ss3_fwdensemble <- function(x, weights = NULL, iters = 1000, seed = 1, ...){
+  if(!is.list(x) || length(x) < 2) stop("x must be a named list of at least two models", call. = FALSE)
+  nm <- names(x); if(is.null(nm) || any(nm == "")) nm <- paste0("model", seq_along(x))
+  names(x) <- nm
+  x <- lapply(x, function(m){
+    if(is(m, "FLStocks")) return(m)
+    if(is.list(m) && length(m) && all(vapply(m, .is_ss3rep, TRUE))) return(ss3_fwd(m, output = "iters", iters = iters, ...))
+    stop("each model must be FLStocks from ss3_fwd(output = \"iters\") or a list of SS3 forecast reports",
+         call. = FALSE)
+  })
+  sc <- Reduce(intersect, lapply(x, names))
+  if(!length(sc)) stop("the models have no scenario names in common", call. = FALSE)
+  miss <- setdiff(unique(unlist(lapply(x, names))), sc)
+  if(length(miss)) warning("scenarios not in all models dropped: ", paste(miss, collapse = ", "), call. = FALSE)
+  ens <- lapply(sc, function(s) suppressWarnings(ss3_ensemble(lapply(x, `[[`, s), weights = weights, iters = iters,
+                                                              seed = seed)))
+  out <- FLCore::FLStocks(stats::setNames(lapply(ens, function(e) e[["Joint"]]), sc))
+  for(s in sc) attr(out[[s]], "endyr") <- min(vapply(x, function(m) attr(m[[s]], "endyr") %||% NA_real_, 1), na.rm = TRUE)
+  attr(out, "endyr") <- min(vapply(x, function(m) attr(m, "endyr") %||% attr(m[[1]], "endyr") %||% NA_real_, 1),
+                            na.rm = TRUE)
+  attr(out, "weights") <- attr(ens[[1]], "weights")
+  attr(out, "models") <- stats::setNames(lapply(ens, function(e) e[setdiff(names(e), "Joint")]), sc)
+  out
 }

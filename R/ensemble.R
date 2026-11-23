@@ -67,10 +67,13 @@ ss3_ensemble <- function(x, weights = NULL, iters = 1000, joint = TRUE, method =
     if(nit < 2) stop("FLStockR '", nm[i], "' has no iterations; use ss3stk(output = \"iters\")", call. = FALSE)
     id <- sample(seq_len(nit), ni[i], replace = ni[i] > nit)
     st <- ss3_flqs(m, c("B/Btgt", "F/Ftgt"))
-    s <- FLCore::iter(m, id); FLCore::refpts(s) <- FLCore::iter(FLCore::refpts(m), if(FLCore::dims(FLCore::refpts(m))$iter > 1) id else 1)
+    # resampled draws (with replacement when more are needed than the model has) are renumbered 1..n
+    reit <- function(q) { q <- FLCore::iter(q, id); dimnames(q)$iter <- as.character(seq_len(ni[i])); q }
+    s <- FLCore::iter(m, id); dimnames(s) <- list(iter = as.character(seq_len(ni[i])))
+    rp <- FLCore::refpts(m)
+    FLCore::refpts(s) <- if(FLCore::dims(rp)$iter > 1) reit(rp) else rp
     attributes(s)[c("basis", "endyr")] <- attributes(m)[c("basis", "endyr")]
-    if(!is.null(attr(m, "status"))) attr(s, "status") <- list(stock = FLCore::iter(st[["B/Btgt"]], id),
-                                                             harvest = FLCore::iter(st[["F/Ftgt"]], id))
+    attr(s, "status") <- list(stock = reit(st[["B/Btgt"]]), harvest = reit(st[["F/Ftgt"]]))
     s
   })
   keep <- !vapply(stks, is.null, TRUE)
@@ -87,10 +90,12 @@ ss3_ensemble <- function(x, weights = NULL, iters = 1000, joint = TRUE, method =
     js <- .stk_build(d, "Joint")
     rp <- lapply(seq_along(stks), function(i){
       r <- FLCore::refpts(stks[[i]]); n <- FLCore::dims(stks[[i]])$iter
-      a <- array(NA_real_, dim = c(5, n), dimnames = list(params = c("Ftgt", "Btgt", "MSY", "B0", "R0"), iter = seq_len(n)))
+      a <- array(NA_real_, dim = c(8, n), dimnames = list(params = c("Ftgt", "Btgt", "MSY", "B0", "R0", "Blim", "Bpa",
+                                                                      "Btrigger"), iter = seq_len(n)))
       for(p in intersect(dimnames(a)$params, dimnames(r)$params)) a[p, ] <- rep_len(as.numeric(r[p, ]), n)
       a })
     ra <- do.call(cbind, rp); dimnames(ra) <- list(params = rownames(ra), iter = seq_len(ncol(ra)))
+    ra <- ra[rowSums(is.finite(ra)) > 0, , drop = FALSE]      # Blim etc. per draw: each model's own value
     js <- FLCore::FLStockR(js, refpts = FLCore::FLPar(ra))
     mk <- function(v) long2flq(d[, .(age = "1", year, iter, data = get(v))], quant = "age", units = "")
     attr(js, "status") <- list(stock = mk("stock"), harvest = mk("harvest"))
