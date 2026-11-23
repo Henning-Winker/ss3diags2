@@ -9,7 +9,7 @@ ss3plot_k2sm(x, which = 1, text = TRUE)
 \arguments{
 \item{x}{output of \code{\link{ss3_k2sm}()}}
 
-\item{which}{table (default the first: the green quadrant for ICCAT, P(SSB < SSBtgt) for IOTC)}
+\item{which}{table (name or number; default the first)}
 
 \item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
@@ -17,14 +17,17 @@ ss3plot_k2sm(x, which = 1, text = TRUE)
 ggplot
 }
 \description{
-Colour-coded Kobe II strategy matrix: ICCAT colours for the probability of the green quadrant (red < 50\\%, orange
-50-59\\%, yellow 60-69\\%, light green 70-79\\%, green >= 80\\%); for IOTC risk tables the colours run from green (low
-risk) to red (high risk).
+Colour-coded Kobe II strategy matrix or risk matrix, always shown as the probability (\\%) of meeting the reference
+point: risk tables are converted (P(F > Ftgt) is shown as P(F <= Ftgt), P(SSB < Blim) as P(SSB >= Blim)). Targets
+(green quadrant, SSB >= Btgt, Btrigger or Bpa, F <= Ftgt), where the aim is a probability above 50\\%: red < 20\\%,
+light red 20-39\\%, yellow 40-49\\%, light green 50-79\\%, green >= 80\\%. Limits (Blim, Flim), where the aim is a
+probability of at least 95\\%: red < 50\\%, light red 50-79\\%, light green 80-94\\%, dark green >= 95\\%.
 }
 \examples{
 \donttest{
 fw <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18_fwd.rds", package = "ss3diags2"))
 fs <- ss3_fwd(fw, output = "iters", iters = 500, Fref = "Btgt", blim = 0.25, bpa = 0.5)
 ss3plot_k2sm(ss3_k2sm(fs, "iccat"))
+ss3plot_k2sm(ss3_k2sm(fs, "ices", btrigger = 0.5), "SSB<Blim")
 }
 }

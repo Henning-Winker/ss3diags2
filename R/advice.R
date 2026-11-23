@@ -304,12 +304,14 @@ ss3_k2sm <- function(x, style = c("iccat", "iotc", "ices", "gfcm"), years = NULL
 
 #' Plot a Kobe II strategy matrix
 #'
-#' Colour-coded Kobe II strategy matrix: ICCAT colours for the probability of the green quadrant (red < 50\%, orange
-#' 50-59\%, yellow 60-69\%, light green 70-79\%, green >= 80\%); for IOTC risk tables the colours run from green (low
-#' risk) to red (high risk).
+#' Colour-coded Kobe II strategy matrix or risk matrix, always shown as the probability (\%) of meeting the reference
+#' point: risk tables are converted (P(F > Ftgt) is shown as P(F <= Ftgt), P(SSB < Blim) as P(SSB >= Blim)). Targets
+#' (green quadrant, SSB >= Btgt, Btrigger or Bpa, F <= Ftgt), where the aim is a probability above 50\%: red < 20\%,
+#' light red 20-39\%, yellow 40-49\%, light green 50-79\%, green >= 80\%. Limits (Blim, Flim), where the aim is a
+#' probability of at least 95\%: red < 50\%, light red 50-79\%, light green 80-94\%, dark green >= 95\%.
 #'
 #' @param x output of \code{\link{ss3_k2sm}()}
-#' @param which table (default the first: the green quadrant for ICCAT, P(SSB < SSBtgt) for IOTC)
+#' @param which table (name or number; default the first)
 #' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
@@ -317,6 +319,7 @@ ss3_k2sm <- function(x, style = c("iccat", "iotc", "ices", "gfcm"), years = NULL
 #' fw <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18_fwd.rds", package = "ss3diags2"))
 #' fs <- ss3_fwd(fw, output = "iters", iters = 500, Fref = "Btgt", blim = 0.25, bpa = 0.5)
 #' ss3plot_k2sm(ss3_k2sm(fs, "iccat"))
+#' ss3plot_k2sm(ss3_k2sm(fs, "ices", btrigger = 0.5), "SSB<Blim")
 #' }
 #' @export
 ss3plot_k2sm <- function(x, which = 1, text = TRUE){
@@ -325,17 +328,29 @@ ss3plot_k2sm <- function(x, which = 1, text = TRUE){
   rows <- paste0(w$scenario, "  (", format(w[[cn]], big.mark = ","), ")")
   d <- melt(w[, -2][, row := rows], id.vars = c("scenario", "row"), variable.name = "year", value.name = "p")
   d[, row := factor(row, levels = rev(rows))]
-  risk <- grepl("<|>F", nm)
-  cuts <- c(-Inf, 50, 60, 70, 80, Inf); labs <- c("<50", "50-59", "60-69", "70-79", ">=80")
-  pal <- c("#d7301f", "#fc8d59", "#fee08b", "#a6d96a", "#1a9850")
-  d[, cl := cut(if(risk) 100 - p else p, cuts, labels = labs, right = FALSE)]
+  # risk tables shown as the probability of meeting the reference point
+  flip <- c(`SSB<SSBtgt` = "SSB>=SSBtgt", `F>Ftgt` = "F<=Ftgt", `F>Fmsy` = "F<=Fmsy", `SSB<SSBlim` = "SSB>=Blim",
+            `SSB<Blim` = "SSB>=Blim", `SSB<Btrigger` = "SSB>=Btrigger", `SSB<Bpa` = "SSB>=Bpa", `F>Flim` = "F<=Flim")
+  lab <- nm
+  if(nm %in% names(flip)){ d[, p := 100 - p]; lab <- flip[[nm]] }
+  if(lab == "green") lab <- "green: SSB>=SSBtgt & F<=Ftgt"
+  limit <- grepl("lim", lab)
+  if(limit){
+    cuts <- c(-Inf, 50, 80, 95, Inf); labs <- c("<50", "50-79", "80-94", ">=95")
+    pal <- c("#d7301f", "#fc8d59", "#a6d96a", "#1a9850")
+  } else {
+    cuts <- c(-Inf, 20, 40, 50, 80, Inf); labs <- c("<20", "20-39", "40-49", "50-79", ">=80")
+    pal <- c("#d7301f", "#fc8d59", "#fee08b", "#a6d96a", "#1a9850")
+  }
+  d[, cl := cut(p, cuts, labels = labs, right = FALSE)]
   p <- ggplot2::ggplot(d, ggplot2::aes(year, row, fill = cl)) + ggplot2::geom_tile(colour = "white", show.legend = TRUE) +
     ggplot2::geom_text(ggplot2::aes(label = p), size = 3) +
     ggplot2::scale_fill_manual(values = stats::setNames(pal, labs), drop = FALSE,
-                               name = if(risk) "100 - risk (%)" else "probability (%)") +
+                               name = paste0("P(", sub("^green: ", "", lab), ") (%)")) +
     ggplot2::labs(x = NULL, y = paste0("scenario (", cn, ")"),
                   title = paste0(toupper(attr(x, "style")), if(attr(x, "style") %in% c("iccat", "iotc"))
-                    " Kobe II strategy matrix" else " risk matrix", ": P(", nm, ")")) +
+                    " Kobe II strategy matrix" else " risk matrix", ": P(", lab, ")"),
+                  subtitle = if(limit) "limit: aim P >= 95%" else "target: aim P > 50%") +
     ggplot2::scale_x_discrete(position = "top") + theme_ss3() +
     ggplot2::theme(panel.grid = ggplot2::element_blank(), legend.position = "right")
   .drop_text(p, text)
