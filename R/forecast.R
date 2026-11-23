@@ -133,8 +133,8 @@ ss3_fwd <- function(x, refpts = NULL, output = c("mle", "iters"), iters = 1000, 
 #' @param start first year shown (default 10 years before the end year)
 #' @param end last year shown (default all forecast years)
 #' @param ci draw uncertainty bands (needs iterations, \code{ss3_fwd(output = "iters")}, or MLE standard errors)
-#' @param vlines years after the end year for the vertical dashed lines (default: the end year and the last
-#'   intermediate year, i.e. before the first year in which the scenarios differ)
+#' @param vlines years after the end year for the vertical dashed lines (default: the end year and the
+#'   implementation year, with the intermediate years between them)
 #' @param refnames reference points drawn (default the advice benchmarks Btgt, Bpa, Blim, Btrigger, Ftgt; NULL for
 #'   all, including B0, R0 and MSY)
 #' @param colours scenario colours (default r4ss colours)
@@ -157,7 +157,9 @@ ss3plot_fwd <- function(x, stk = NULL, type = c("Rec", "SSB", "F", "Catch"), sta
   if(.is_summary(x) || (is.list(x) && !is(x, "FLStocks") && .is_ss3rep(x[[1]]))) x <- ss3_fwd(x)
   ey <- attr(x, "endyr") %||% attr(x[[1]], "endyr")
   start <- start %||% (ey - 10)
-  vlines <- vlines %||% unique(c(0, .fwd_nint(x, ey)))
+  # reference (end) year and implementation (advice) year, as the FLRef summary sheets: the intermediate years lie
+  # between the two lines
+  vlines <- vlines %||% unique(c(0, .fwd_nint(x, ey) + 1))
   a <- .win_stk(stk %||% x[[1]], start = start, end = ey)
   attr(a, "endyr") <- ey
   ca <- as.numeric(FLCore::iterMedians(FLCore::catch(a)[, as.character(ey)]))

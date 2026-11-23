@@ -33,8 +33,8 @@ ss3plot_fwd(
 
 \item{ci}{draw uncertainty bands (needs iterations, \code{ss3_fwd(output = "iters")}, or MLE standard errors)}
 
-\item{vlines}{years after the end year for the vertical dashed lines (default: the end year and the last
-intermediate year, i.e. before the first year in which the scenarios differ)}
+\item{vlines}{years after the end year for the vertical dashed lines (default: the end year and the
+implementation year, with the intermediate years between them)}
 
 \item{refnames}{reference points drawn (default the advice benchmarks Btgt, Bpa, Blim, Btrigger, Ftgt; NULL for
 all, including B0, R0 and MSY)}

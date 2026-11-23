@@ -49,7 +49,8 @@ ss3_fwdtable(fs)
 ```
 
 > **Reading the forecast plot.** The black line and bands are the assessment, the coloured lines the scenarios
-> from the end year (2024, first dashed line) on. Between the dashed lines are the intermediate years, in which all
-> scenarios take the same catch, so they overlap; they separate in the advice year (2027). SSB responds one year
+> from the end year (2024, first dashed line) on. The second dashed line is the implementation (advice) year (2027);
+> between the lines are the intermediate years (2025-2026), in which all scenarios take the same catch, so they
+> overlap; they separate in the advice year. SSB responds one year
 > later (SSB at the start of 2028 reflects the catch of 2027), which is why the table reports SSB of the year after
 > the advice year. The horizontal lines are the benchmarks (Btgt green, Bpa orange, Blim red; Ftgt green).
