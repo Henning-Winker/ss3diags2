@@ -8,8 +8,9 @@ ss3_fwdensemble(x, weights = NULL, iters = 1000, seed = 1, ...)
 }
 \arguments{
 \item{x}{named list of models, each the forecast scenarios of one model: FLStocks from
-\code{ss3_fwd(output = "iters")}, or a named list of SS3 reports (forecast runs, passed to \code{ss3_fwd()}).
-All models need the same scenario names}
+\code{ss3_fwd(output = "iters")}, a named list of SS3 reports (forecast runs) or their \code{r4ss::SSsummarize()}
+summary (lognormal draws from the MLE and SEs; exact for the marginal risk in a year). All models need the same
+scenario names}
 
 \item{weights}{model weights (default equal); normalised to sum to one}
 

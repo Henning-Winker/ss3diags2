@@ -73,10 +73,12 @@
 #' ss3_fwdtable(fs)
 #' @export
 ss3_fwd <- function(x, refpts = NULL, output = c("mle", "iters"), iters = 1000, years = NULL, ...){
+  # with SSsummarize() input, output = "iters" gives lognormal draws from the MLE and SEs
   output <- match.arg(output)
+  draws <- FALSE
   if(.is_summary(x)){
-    if(output == "iters") warning("SSsummarize() output has no covariance: MLE with standard errors used", call. = FALSE)
-    output <- "mle"; x <- .summ2reps(x)
+    # SSsummarize() output has no covariance: draws from the MLE and the standard errors (lognormal, see .lnorm_iters)
+    draws <- output == "iters"; output <- "mle"; x <- .summ2reps(x)
   }
   if(.is_ss3rep(x) && is.null(x$summary)) x <- list(x)
   nm <- names(x); if(is.null(nm) || any(nm == "")) nm <- paste0("F", seq_along(x)); names(x) <- nm
@@ -87,6 +89,7 @@ ss3_fwd <- function(x, refpts = NULL, output = c("mle", "iters"), iters = 1000, 
     yrs <- years %||% seq(r$startyr, min(max(fy("SSB_")), max(fy("F_")), max(fy("Recr_"))))
     s <- ss3stk(r, output = output, iters = iters, years = yrs, name = n, ...)
     attr(s, "endyr") <- r$endyr
+    if(draws) s <- .lnorm_iters(s, iters, seed = which(nm == n))
     if(!is.null(refpts)){
       FLCore::refpts(s) <- refpts
       attr(s, "basis") <- utils::modifyList(attr(s, "basis") %||% list(), list(B = "Btgt", F = "Ftgt", C = "MSY"))
@@ -228,8 +231,9 @@ ss3_fwdtable <- function(x, year = NULL, unc = NULL, blim = NULL){
 #' P(SSB < Blim) as the share of draws below their own model's Blim.
 #'
 #' @param x named list of models, each the forecast scenarios of one model: FLStocks from
-#'   \code{ss3_fwd(output = "iters")}, or a named list of SS3 reports (forecast runs, passed to \code{ss3_fwd()}).
-#'   All models need the same scenario names
+#'   \code{ss3_fwd(output = "iters")}, a named list of SS3 reports (forecast runs) or their \code{r4ss::SSsummarize()}
+#'   summary (lognormal draws from the MLE and SEs; exact for the marginal risk in a year). All models need the same
+#'   scenario names
 #' @param weights model weights (default equal); normalised to sum to one
 #' @param iters average number of draws per model (see \code{\link{ss3_ensemble}()})
 #' @param seed random seed
@@ -249,6 +253,7 @@ ss3_fwdtable <- function(x, year = NULL, unc = NULL, blim = NULL){
 #' }
 #' @export
 ss3_fwdensemble <- function(x, weights = NULL, iters = 1000, seed = 1, ...){
+  x <- lapply(x, function(m) if(.is_summary(m)) ss3_fwd(m, output = "iters", iters = iters, ...) else m)
   if(!is.list(x) || length(x) < 2) stop("x must be a named list of at least two models", call. = FALSE)
   nm <- names(x); if(is.null(nm) || any(nm == "")) nm <- paste0("model", seq_along(x))
   names(x) <- nm
@@ -271,4 +276,142 @@ ss3_fwdensemble <- function(x, weights = NULL, iters = 1000, seed = 1, ...){
   attr(out, "weights") <- attr(ens[[1]], "weights")
   attr(out, "models") <- stats::setNames(lapply(ens, function(e) e[setdiff(names(e), "Joint")]), sc)
   out
+}
+
+
+#' Lognormal draws from an MLE stock with standard errors
+#'
+#' For forecast runs available only as \code{r4ss::SSsummarize()} output (no covariance): draws of SSB, F and
+#' recruitment from the MLE and the log-scale SEs (\code{attr(s, "se.log")}). One standard normal deviate per draw and
+#' quantity for all years, so the marginal distribution in each year (e.g. P(SSB < Blim)) is exact; correlations
+#' between years and quantities are not represented. Catch is kept at the MLE (fixed in catch scenarios).
+#'
+#' @param s FLStockR (MLE) with \code{attr(s, "se.log")}
+#' @param iters number of draws
+#' @param seed random seed
+#' @return FLStockR with iterations, the attributes of \code{s} and the B/Btgt and F/Ftgt draws in \code{status}
+#' @noRd
+.lnorm_iters <- function(s, iters, seed = 1){
+  se <- attr(s, "se.log")
+  if(is.null(se)) stop("no standard errors: draws need the SEs of the derived quantities", call. = FALSE)
+  old <- if(exists(".Random.seed", envir = globalenv())) get(".Random.seed", envir = globalenv()) else NULL
+  on.exit(if(!is.null(old)) assign(".Random.seed", old, envir = globalenv()), add = TRUE)
+  set.seed(seed)
+  yrs <- as.numeric(dimnames(s)$year)
+  v <- function(q) as.numeric(q)[seq_along(yrs)]
+  sev <- function(k){ x <- v(se[[k]][, as.character(yrs)]); x[!is.finite(x)] <- 0; x }
+  z <- matrix(stats::rnorm(3*iters), ncol = 3)
+  dr <- function(m, sd, zz) exp(log(pmax(m, 1e-12)) - sd^2/2*0 + outer(sd, zz))     # median-unbiased (MLE = median)
+  ssb <- dr(v(FLCore::ssb(s)), sev("SSB"), z[, 1]); fb <- dr(v(FLCore::fbar(s)), sev("F"), z[, 2])
+  rec <- dr(v(FLCore::rec(s)), sev("Rec"), z[, 3])
+  d <- data.table(year = rep(yrs, iters), iter = rep(seq_len(iters), each = length(yrs)), SSB = c(ssb), F = c(fb),
+                  Recr = c(rec), Catch = rep(v(FLCore::catch(s)), iters))
+  out <- FLCore::FLStockR(.stk_build(d, FLCore::name(s)), refpts = FLCore::refpts(s))
+  for(a in c("basis", "endyr", "se.log")) attr(out, a) <- attr(s, a)
+  # MLE trajectories (used e.g. to find the intermediate years, where the draws would differ by chance)
+  attr(out, "mle") <- data.frame(year = yrs, SSB = v(FLCore::ssb(s)), F = v(FLCore::fbar(s)), Catch = v(FLCore::catch(s)))
+  bt <- .rp(s, "Btgt"); ft <- .rp(s, "Ftgt")
+  mk <- function(x) long2flq(data.table(age = "1", year = rep(yrs, iters), iter = rep(seq_len(iters), each = length(yrs)),
+                                        data = c(x)), quant = "age", units = "")
+  attr(out, "status") <- list(stock = mk(ssb/bt), harvest = mk(fb/ft))
+  out
+}
+
+#' Risk and catch by catch scenario
+#'
+#' Fishing opportunities over a grid of catch (TAC) scenarios: catch, F, SSB and P(SSB < Blim) in the advice year by
+#' scenario, for each model and the ensemble (from \code{\link{ss3_fwdensemble}()}), and the catch at which the risk
+#' reaches \code{risk} (linear interpolation between neighbouring scenarios).
+#'
+#' @param x FLStocks of scenarios: \code{\link{ss3_fwdensemble}()} (ensemble and models) or \code{ss3_fwd(output =
+#'   "iters")} (one model)
+#' @param year advice year (catch year; SSB at the start of the next year); default as \code{\link{ss3_fwdtable}()}
+#' @param risk target risk P(SSB < Blim)
+#' @param value numeric value of each scenario (e.g. the TAC or multiplier); default the number in the scenario
+#'   names (TAC_1.25 -> 1.25)
+#' @return list: \code{table} (data.table model, scenario, value, catch, F, SSB, P(SSB < Blim)) and \code{at.risk}
+#'   (value and catch at the target risk by model)
+#' @seealso \code{\link{ss3plot_fwdrisk}()}
+#' @examples
+#' \donttest{
+#' fw <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18_fwd.rds", package = "ss3diags2"))
+#' fs <- ss3_fwd(fw, output = "iters", iters = 500, Fref = "Btgt", blim = 0.6)
+#' ss3_fwdrisk(fs, value = c(1, 0.85, 0))
+#' }
+#' @export
+ss3_fwdrisk <- function(x, year = NULL, risk = 0.05, value = NULL){
+  ey <- attr(x, "endyr") %||% attr(x[[1]], "endyr")
+  y <- as.character(year %||% (ey + .fwd_nint(x, ey) + 1)); y1 <- as.character(as.numeric(y) + 1)
+  val <- value %||% suppressWarnings(as.numeric(sub("^[^0-9.-]*", "", names(x))))
+  if(length(val) != length(x) || any(!is.finite(val))) val <- seq_along(x)
+  one <- function(st, model){
+    rbindlist(lapply(seq_along(st), function(i){
+      s <- st[[i]]
+      b <- as.numeric(FLCore::ssb(s)[, y1])
+      rp <- FLCore::refpts(s)
+      bl <- if("Blim" %in% dimnames(rp)$params) as.numeric(rp["Blim", ]) else NA_real_
+      data.table(model = model, scenario = names(st)[i], value = val[i],
+                 catch = stats::median(as.numeric(FLCore::catch(s)[, y])),
+                 F = stats::median(as.numeric(FLCore::fbar(s)[, y])), SSB = stats::median(b),
+                 risk = if(all(is.finite(bl))) mean(b < bl) else NA_real_)
+    }))
+  }
+  mods <- attr(x, "models")
+  tb <- one(x, if(is.null(mods)) "model" else "Ensemble")
+  if(!is.null(mods)){
+    mn <- names(mods[[1]])
+    tb <- rbind(tb, rbindlist(lapply(mn, function(m)
+      one(FLCore::FLStocks(stats::setNames(lapply(names(x), function(s) mods[[s]][[m]]), names(x))), m))))
+  }
+  setorder(tb, model, value)
+  target <- risk
+  at <- rbindlist(lapply(split(tb, by = "model"), function(d){
+    d <- d[order(value)]; r <- d$risk
+    j <- which(diff(r >= target) != 0)                  # neighbouring scenarios on both sides of the target risk
+    if(!length(j) || anyNA(r[c(j[1], j[1] + 1)])) return(data.table(model = d$model[1], value = NA_real_,
+                                                                      catch = NA_real_))
+    j <- j[1]; f <- (target - r[j])/(r[j + 1] - r[j])
+    data.table(model = d$model[1], value = d$value[j] + f*(d$value[j + 1] - d$value[j]),
+               catch = d$catch[j] + f*(d$catch[j + 1] - d$catch[j]))
+  }))
+  list(table = tb[], at.risk = at[], risk = risk, year = as.numeric(y))
+}
+
+#' Plot risk by catch scenario
+#'
+#' P(SSB < Blim) in the year after the advice year against the catch (TAC) scenario, for each model and the ensemble,
+#' with the target risk and the catch at that risk.
+#'
+#' @param x output of \code{\link{ss3_fwdrisk}()}
+#' @param xvar x axis: \code{"catch"} (catch in the advice year) or \code{"value"} (scenario value, e.g. TAC multiplier)
+#' @param colours model colours (default r4ss colours; the ensemble in black)
+#' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
+#' @return ggplot
+#' @examples
+#' \donttest{
+#' fw <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18_fwd.rds", package = "ss3diags2"))
+#' fs <- ss3_fwd(fw, output = "iters", iters = 500, Fref = "Btgt", blim = 0.6)
+#' ss3plot_fwdrisk(ss3_fwdrisk(fs, value = c(1, 0.85, 0)))
+#' }
+#' @export
+ss3plot_fwdrisk <- function(x, xvar = c("catch", "value"), colours = NULL, text = TRUE){
+  xvar <- match.arg(xvar)
+  tb <- copy(x$table); at <- copy(x$at.risk)
+  ms <- unique(tb$model); oth <- setdiff(ms, "Ensemble")
+  cols <- colours %||% c(stats::setNames(ss3runcols(max(length(oth), 1))[seq_along(oth)], oth), Ensemble = "black")
+  tb[, model := factor(model, levels = c(oth, intersect("Ensemble", ms)))]
+  at[, model := factor(model, levels = levels(tb$model))]
+  tb[, xx := get(xvar)]; at[, xx := get(xvar)]
+  p <- ggplot2::ggplot(tb, ggplot2::aes(xx, risk, colour = model)) +
+    ggplot2::geom_hline(yintercept = x$risk, linetype = 2, colour = "red") +
+    ggplot2::geom_line(ggplot2::aes(linewidth = model == "Ensemble")) + ggplot2::geom_point(size = 1.2) +
+    ggplot2::scale_linewidth_manual(values = c(`FALSE` = 0.6, `TRUE` = 1.2), guide = "none") +
+    ggplot2::scale_colour_manual(values = cols, name = NULL) +
+    ggplot2::labs(x = if(xvar == "catch") paste("Catch", x$year) else "Scenario", y = paste0("P(SSB", x$year + 1, " < Blim)"),
+                  title = "Risk by catch scenario",
+                  subtitle = paste0("dashed: target risk ", x$risk, "; lines: catch at the target risk")) +
+    theme_ss3()
+  if(any(is.finite(at$xx))) p <- p + ggplot2::geom_vline(data = at[is.finite(xx)], ggplot2::aes(xintercept = xx, colour = model),
+                                                          linetype = 3)
+  .drop_text(p, text)
 }

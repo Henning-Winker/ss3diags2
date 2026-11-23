@@ -20,7 +20,8 @@ ss3stk(
   source = c("auto", "derived", "timeseries"),
   btgt = NULL,
   area = FALSE,
-  years = NULL
+  years = NULL,
+  rpbase = c("Btgt", "B0")
 )
 }
 \arguments{
@@ -39,7 +40,8 @@ ss3stk(
 \item{Fref, fwd, catch}{passed to \code{\link{ss3mvln}()} (\code{fwd = TRUE}: add the year after the end year, for
 SSB(y + 1) in Kobe plots with \code{lag = 1})}
 
-\item{blim, bpa}{optional Blim and Bpa as fractions of Btgt, added to the reference points}
+\item{blim, bpa}{optional Blim and Bpa, added to the reference points: fractions (<= 1) of Btgt or B0 (see
+\code{rpbase}), or absolute values (> 1, e.g. tonnes)}
 
 \item{name}{stock name}
 
@@ -57,6 +59,9 @@ the stock Ftgt, and MSY is not defined.}
 
 \item{years}{years to include (default the model years, plus the next year with \code{fwd = TRUE}); e.g.
 \code{startyr:2029} for the SS3 forecast years of a forecast run}
+
+\item{rpbase}{reference of fractional \code{blim} and \code{bpa}: \code{"Btgt"} (default) or \code{"B0"} (e.g.
+\code{blim = 0.1, rpbase = "B0"} for Blim = 10\\% B0)}
 }
 \value{
 FLStockR
