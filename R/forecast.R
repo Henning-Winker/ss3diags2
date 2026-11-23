@@ -89,7 +89,7 @@ ss3_fwd <- function(x, refpts = NULL, output = c("mle", "iters"), iters = 1000, 
     yrs <- years %||% seq(r$startyr, min(max(fy("SSB_")), max(fy("F_")), max(fy("Recr_"))))
     s <- ss3stk(r, output = output, iters = iters, years = yrs, name = n, ...)
     attr(s, "endyr") <- r$endyr
-    if(draws) s <- .lnorm_iters(s, iters, seed = which(nm == n))
+    if(draws) s <- .lnorm_iters(s, iters, seed = 1)    # common random numbers: scenarios differ only by their MLE
     if(!is.null(refpts)){
       FLCore::refpts(s) <- refpts
       attr(s, "basis") <- utils::modifyList(attr(s, "basis") %||% list(), list(B = "Btgt", F = "Ftgt", C = "MSY"))
@@ -111,6 +111,7 @@ ss3_fwd <- function(x, refpts = NULL, output = c("mle", "iters"), iters = 1000, 
 #' @return forecast years before the scenarios differ in F (0 with one scenario)
 #' @noRd
 .fwd_nint <- function(x, ey){
+  if(!is.null(attr(x, "nint"))) return(attr(x, "nint"))
   if(length(x) < 2) return(0)
   yrs <- as.numeric(dimnames(x[[1]])$year)
   # MLE F where available (MVLN draws differ between runs), else medians
@@ -275,6 +276,9 @@ ss3_fwdensemble <- function(x, weights = NULL, iters = 1000, seed = 1, ...){
                             na.rm = TRUE)
   attr(out, "weights") <- attr(ens[[1]], "weights")
   attr(out, "models") <- stats::setNames(lapply(ens, function(e) e[setdiff(names(e), "Joint")]), sc)
+  # intermediate years from the models' MLE (the pooled draws carry no MLE)
+  attr(out, "nint") <- .fwd_nint(x[[1]][sc], attr(out, "endyr"))
+  for(s in sc){ m <- attr(x[[1]][[s]], "mle"); if(!is.null(m)) attr(out[[s]], "mle") <- m }
   out
 }
 
@@ -309,7 +313,10 @@ ss3_fwdensemble <- function(x, weights = NULL, iters = 1000, seed = 1, ...){
   out <- FLCore::FLStockR(.stk_build(d, FLCore::name(s)), refpts = FLCore::refpts(s))
   for(a in c("basis", "endyr", "se.log")) attr(out, a) <- attr(s, a)
   # MLE trajectories (used e.g. to find the intermediate years, where the draws would differ by chance)
-  attr(out, "mle") <- data.frame(year = yrs, SSB = v(FLCore::ssb(s)), F = v(FLCore::fbar(s)), Catch = v(FLCore::catch(s)))
+  bt0 <- .rp(s, "Btgt"); ft0 <- .rp(s, "Ftgt")
+  attr(out, "mle") <- data.table(year = yrs, SSB = v(FLCore::ssb(s)), F = v(FLCore::fbar(s)), Recr = v(FLCore::rec(s)),
+                                 Catch = v(FLCore::catch(s)), stock = v(FLCore::ssb(s))/bt0,
+                                 harvest = v(FLCore::fbar(s))/ft0, type = "fit")
   bt <- .rp(s, "Btgt"); ft <- .rp(s, "Ftgt")
   mk <- function(x) long2flq(data.table(age = "1", year = rep(yrs, iters), iter = rep(seq_len(iters), each = length(yrs)),
                                         data = c(x)), quant = "age", units = "")
