@@ -168,6 +168,13 @@ ss3plot_fwd <- function(x, stk = NULL, type = c("Rec", "SSB", "F", "Catch"), sta
     # catch of the end year from the assessment when the scenario has forecast catch only (SSsummarize input)
     if(is.finite(ca) && all(!is.finite(FLCore::catch(w)[, as.character(ey)]) | FLCore::catch(w)[, as.character(ey)] == 0))
       FLCore::catch(w)[, as.character(ey)] <- ca
+    # the line is drawn from the MLE trajectories where present: fill their end-year catch too
+    m <- attr(w, "mle")
+    if(is.data.frame(m) && "Catch" %in% names(m) && is.finite(ca)){
+      i <- which(m$year == ey)
+      if(length(i) && (!is.finite(m$Catch[i]) || m$Catch[i] == 0)){ m <- data.table::copy(m); m$Catch[i] <- ca
+        attr(w, "mle") <- m }
+    }
     w })
   st <- FLCore::FLStocks(c(list(Assessment = a), sc))
   cols <- c(Assessment = "black", stats::setNames(colours %||% ss3runcols(length(sc)), names(sc)))
