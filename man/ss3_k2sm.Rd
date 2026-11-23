@@ -6,18 +6,20 @@
 \usage{
 ss3_k2sm(
   x,
-  style = c("iccat", "iotc"),
+  style = c("iccat", "iotc", "ices", "gfcm"),
   years = NULL,
   scenarios = NULL,
   labels = NULL,
-  flim = NULL
+  flim = NULL,
+  btrigger = 1,
+  bpa = NULL
 )
 }
 \arguments{
 \item{x}{FLStocks of catch scenarios with iterations (\code{\link{ss3_fwdensemble}()} or
 \code{ss3_fwd(output = "iters")})}
 
-\item{style}{\code{"iccat"} or \code{"iotc"}}
+\item{style}{\code{"iccat"}, \code{"iotc"}, \code{"ices"} or \code{"gfcm"}}
 
 \item{years}{projection years (default: all forecast years)}
 
@@ -26,6 +28,10 @@ ss3_k2sm(
 \item{labels}{row labels (default the scenario names; e.g. the catch, or the catch as \\% of the current catch)}
 
 \item{flim}{Flim as a multiple of Ftgt (IOTC; e.g. 1.4 for IOTC tunas); default \code{refpts} "Flim" if present}
+
+\item{btrigger}{MSY Btrigger as a fraction of Btgt (ICES)}
+
+\item{bpa}{Bpa as a fraction of Btgt (GFCM; default \code{refpts} "Bpa", else \code{btrigger})}
 }
 \value{
 named list of data.tables (rows: scenarios, with the catch of the first year in which the scenarios
@@ -36,7 +42,9 @@ Kobe II strategy matrices (K2SM) of catch scenarios: probabilities by catch scen
 single model or a model ensemble, in the formats of tuna RFMO advice. ICCAT: the probability of the green Kobe
 quadrant (SSB >= SSBtgt and F <= Ftgt), and of SSB >= SSBtgt and F <= Ftgt separately. IOTC: the risk of violating the
 target and limit reference points, P(SSB < SSBtgt), P(F > Ftgt), P(SSB < SSBlim) and P(F > Flim). Probabilities
-use each draw's own reference points (each model's own for an ensemble).
+use each draw's own reference points (each model's own for an ensemble). ICES and GFCM risk matrices: P(SSB < Blim),
+P(SSB < MSY Btrigger) (ICES) or P(SSB < Bpa) (GFCM), P(F > Ftgt) and the green zone; for GFCM also the summary sheet
+table of catch, F/Ftgt, B/Btgt, B/Bpa and B/Blim by year (\code{attr(, "stars")}, as \code{FLRef::fwd2stars()}).
 }
 \examples{
 \donttest{

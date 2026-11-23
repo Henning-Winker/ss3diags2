@@ -32,3 +32,15 @@ test_that("Kobe II strategy matrices (ICCAT, IOTC)", {
   expect_equal(as.matrix(k2$`SSB<SSBtgt`[, -(1:2)]), 100 - b, tolerance = 1)
   expect_s3_class(ss3plot_k2sm(k1), "ggplot")
 })
+
+test_that("ICES and GFCM risk matrices", {
+  fw <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18_fwd.rds", package = "ss3diags2"))
+  fs <- ss3_fwd(fw, output = "iters", iters = 200, Fref = "Btgt", blim = 0.25, bpa = 0.5)
+  k3 <- ss3_k2sm(fs, "ices", btrigger = 0.5)
+  expect_named(k3, c("SSB<Blim", "SSB<Btrigger", "F>Fmsy", "green"))
+  k4 <- ss3_k2sm(fs, "gfcm")
+  expect_named(k4, c("SSB<Blim", "SSB<Bpa", "F>Ftgt", "green"))
+  st <- attr(k4, "stars")
+  expect_true(all(c("C", "F/Ftgt", "B/Btgt", "B/Bpa", "B/Blim") %in% names(st)))
+  expect_equal(st$`B/Blim`, round(st$`B/Btgt`/0.25, 2), tolerance = 0.02)
+})

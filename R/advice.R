@@ -231,15 +231,19 @@ utils::globalVariables(c("Fratio", "B1ratio", "SSB0", "SSB1", "SSBchange", "pBli
 #' single model or a model ensemble, in the formats of tuna RFMO advice. ICCAT: the probability of the green Kobe
 #' quadrant (SSB >= SSBtgt and F <= Ftgt), and of SSB >= SSBtgt and F <= Ftgt separately. IOTC: the risk of violating the
 #' target and limit reference points, P(SSB < SSBtgt), P(F > Ftgt), P(SSB < SSBlim) and P(F > Flim). Probabilities
-#' use each draw's own reference points (each model's own for an ensemble).
+#' use each draw's own reference points (each model's own for an ensemble). ICES and GFCM risk matrices: P(SSB < Blim),
+#' P(SSB < MSY Btrigger) (ICES) or P(SSB < Bpa) (GFCM), P(F > Ftgt) and the green zone; for GFCM also the summary sheet
+#' table of catch, F/Ftgt, B/Btgt, B/Bpa and B/Blim by year (\code{attr(, "stars")}, as \code{FLRef::fwd2stars()}).
 #'
 #' @param x FLStocks of catch scenarios with iterations (\code{\link{ss3_fwdensemble}()} or
 #'   \code{ss3_fwd(output = "iters")})
-#' @param style \code{"iccat"} or \code{"iotc"}
+#' @param style \code{"iccat"}, \code{"iotc"}, \code{"ices"} or \code{"gfcm"}
 #' @param years projection years (default: all forecast years)
 #' @param scenarios scenarios (rows; default all)
 #' @param labels row labels (default the scenario names; e.g. the catch, or the catch as \% of the current catch)
 #' @param flim Flim as a multiple of Ftgt (IOTC; e.g. 1.4 for IOTC tunas); default \code{refpts} "Flim" if present
+#' @param btrigger MSY Btrigger as a fraction of Btgt (ICES)
+#' @param bpa Bpa as a fraction of Btgt (GFCM; default \code{refpts} "Bpa", else \code{btrigger})
 #' @return named list of data.tables (rows: scenarios, with the catch of the first year in which the scenarios
 #'   differ; columns: years; values in \%), class \code{ss3k2sm}
 #' @seealso \code{\link{ss3plot_k2sm}()}, \code{\link{ss3_fwdprobs}()}, \code{\link{ss3_catchopts}()}
@@ -251,7 +255,8 @@ utils::globalVariables(c("Fratio", "B1ratio", "SSB0", "SSB1", "SSBchange", "pBli
 #' ss3_k2sm(fs, "iotc", flim = 1.4)
 #' }
 #' @export
-ss3_k2sm <- function(x, style = c("iccat", "iotc"), years = NULL, scenarios = NULL, labels = NULL, flim = NULL){
+ss3_k2sm <- function(x, style = c("iccat", "iotc", "ices", "gfcm"), years = NULL, scenarios = NULL, labels = NULL,
+                     flim = NULL, btrigger = 1, bpa = NULL){
   style <- match.arg(style)
   ey <- attr(x, "endyr") %||% attr(x[[1]], "endyr")
   ya <- ey + .fwd_nint(x, ey) + 1                                  # first year the scenarios differ
@@ -266,14 +271,21 @@ ss3_k2sm <- function(x, style = c("iccat", "iotc"), years = NULL, scenarios = NU
       fr <- if(!is.null(st$harvest)) as.numeric(st$harvest[, y]) else as.numeric(FLCore::fbar(s)[, y])/rpv("Ftgt")
       br <- if(!is.null(st$stock)) as.numeric(st$stock[, y]) else b/rpv("Btgt")
       fl <- if(!is.null(flim)) rep(flim, n) else rpv("Flim")/rpv("Ftgt")
+      bpr <- if(!is.null(bpa)) rep(bpa, n) else if("Bpa" %in% dimnames(rp)$params) rpv("Bpa")/rpv("Btgt") else rep(btrigger, n)
       data.table(scenario = lab[i], year = as.numeric(y), green = mean(br >= 1 & fr <= 1), `SSB>=SSBtgt` = mean(br >= 1),
                  `F<=Ftgt` = mean(fr <= 1), `SSB<SSBtgt` = mean(br < 1), `F>Ftgt` = mean(fr > 1),
-                 `SSB<SSBlim` = mean(br < rpv("Blim")/rpv("Btgt")), `F>Flim` = mean(fr > fl))
+                 `SSB<SSBlim` = mean(br < rpv("Blim")/rpv("Btgt")), `F>Flim` = mean(fr > fl),
+                 `SSB<Btrigger` = mean(br < btrigger), `SSB<Bpa` = mean(br < bpr),
+                 `B/Btgt` = stats::median(br), `F/Ftgt` = stats::median(fr), `B/Bpa` = stats::median(br/bpr),
+                 `B/Blim` = stats::median(br/(rpv("Blim")/rpv("Btgt"))), C = stats::median(as.numeric(FLCore::catch(s)[, y])))
     }))
   }))
   catch <- vapply(sc, function(n) stats::median(as.numeric(FLCore::catch(x[[n]])[, as.character(ya)])), 0)
-  pr <- if(style == "iccat") c(green = "green", `SSB>=SSBtgt` = "SSB>=SSBtgt", `F<=Ftgt` = "F<=Ftgt") else
-    c(`SSB<SSBtgt` = "SSB<SSBtgt", `F>Ftgt` = "F>Ftgt", `SSB<SSBlim` = "SSB<SSBlim", `F>Flim` = "F>Flim")
+  pr <- switch(style,
+    iccat = c(green = "green", `SSB>=SSBtgt` = "SSB>=SSBtgt", `F<=Ftgt` = "F<=Ftgt"),
+    iotc = c(`SSB<SSBtgt` = "SSB<SSBtgt", `F>Ftgt` = "F>Ftgt", `SSB<SSBlim` = "SSB<SSBlim", `F>Flim` = "F>Flim"),
+    ices = c(`SSB<Blim` = "SSB<SSBlim", `SSB<Btrigger` = "SSB<Btrigger", `F>Fmsy` = "F>Ftgt", green = "green"),
+    gfcm = c(`SSB<Blim` = "SSB<SSBlim", `SSB<Bpa` = "SSB<Bpa", `F>Ftgt` = "F>Ftgt", green = "green"))
   out <- lapply(pr, function(k){
     w <- dcast(d, scenario ~ year, value.var = k)[match(lab, scenario)]
     for(j in setdiff(names(w), "scenario")) set(w, j = j, value = round(100*w[[j]]))
@@ -281,7 +293,13 @@ ss3_k2sm <- function(x, style = c("iccat", "iotc"), years = NULL, scenarios = NU
     setnames(w, "catch", paste("catch", ya))
     w })
   if(style == "iotc" && all(is.na(unlist(out[["F>Flim"]][, -(1:2)])))) out[["F>Flim"]] <- NULL
-  structure(out, class = c("ss3k2sm", "list"), style = style, year = ya)
+  # GFCM summary sheet (FLRef::fwd2stars): C, F/Ftgt and B relative to Btgt, Bpa and Blim in each year
+  if(style == "gfcm"){
+    st <- d[, .(scenario, year, C = round(C), `F/Ftgt` = round(`F/Ftgt`, 2), `B/Btgt` = round(`B/Btgt`, 2),
+                `B/Bpa` = round(`B/Bpa`, 2), `B/Blim` = round(`B/Blim`, 2))]
+    attr(out, "stars") <- st
+  }
+  structure(out, class = c("ss3k2sm", "list"), style = style, year = ya, stars = attr(out, "stars"))
 }
 
 #' Plot a Kobe II strategy matrix
@@ -307,7 +325,7 @@ ss3plot_k2sm <- function(x, which = 1, text = TRUE){
   rows <- paste0(w$scenario, "  (", format(w[[cn]], big.mark = ","), ")")
   d <- melt(w[, -2][, row := rows], id.vars = c("scenario", "row"), variable.name = "year", value.name = "p")
   d[, row := factor(row, levels = rev(rows))]
-  risk <- grepl("<SSB|<SSBtgt|<SSBlim|>Ftgt|>Flim|SSB<|F>", nm)
+  risk <- grepl("<|>F", nm)
   cuts <- c(-Inf, 50, 60, 70, 80, Inf); labs <- c("<50", "50-59", "60-69", "70-79", ">=80")
   pal <- c("#d7301f", "#fc8d59", "#fee08b", "#a6d96a", "#1a9850")
   d[, cl := cut(if(risk) 100 - p else p, cuts, labels = labs, right = FALSE)]
@@ -316,7 +334,8 @@ ss3plot_k2sm <- function(x, which = 1, text = TRUE){
     ggplot2::scale_fill_manual(values = stats::setNames(pal, labs), drop = FALSE,
                                name = if(risk) "100 - risk (%)" else "probability (%)") +
     ggplot2::labs(x = NULL, y = paste0("scenario (", cn, ")"),
-                  title = paste0(if(attr(x, "style") == "iccat") "ICCAT" else "IOTC", " Kobe II strategy matrix: P(", nm, ")")) +
+                  title = paste0(toupper(attr(x, "style")), if(attr(x, "style") %in% c("iccat", "iotc"))
+                    " Kobe II strategy matrix" else " risk matrix", ": P(", nm, ")")) +
     ggplot2::scale_x_discrete(position = "top") + theme_ss3() +
     ggplot2::theme(panel.grid = ggplot2::element_blank(), legend.position = "right")
   .drop_text(p, text)
