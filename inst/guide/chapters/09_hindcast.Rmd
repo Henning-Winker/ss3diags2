@@ -59,19 +59,22 @@ ss3plot_hcxval(hc.age)
 - runs tests of the index residuals (p >= 0.05);
 - retrospective and forecast Mohn's rho of SSB, within [-0.15, 0.2] for long-lived species (Hurtado-Ferro et al.
   2015; `rho = c(-0.22, 0.3)` for short-lived species);
-- hindcast MASE of each index (< 1);
-- the OSA tests of the compositions (`quant = "len"` or `"age"`).
+- hindcast MASE of each index and of the mean length and mean age of each fleet (< 1);
+- the OSA tests of the length and age compositions.
+
+`quant` sets the composition data types (default `c("len", "age")`); types a model does not have are skipped, so
+mako is scored on its lengths and Pacific hake on its ages.
 
 Criteria a model cannot provide (e.g. without retrospective runs) are left grey. Here the mako shark and Pacific
 hake models are side by side, to show the layout:
 
 ```{r scorecard}
 sc <- ss3_scorecard(list(mako = ss3sma, `Pacific hake` = ss3phk), retro = list(mako = retro.sma, `Pacific hake` = retro.phk),
-                    quant = "age", nsim = 199)
+                    nsim = 199)
 sc$table
 ```
 
-```{r scorecard-plot, fig.height = 7, fig.width = 7}
+```{r scorecard-plot, fig.height = 10, fig.width = 7}
 ss3plot_scorecard(sc)
 ```
 

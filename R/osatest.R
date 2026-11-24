@@ -90,14 +90,16 @@ ss3_osatest <- function(x, by = "unit", nsim = 999, alpha = 0.05, seed = 1, ...)
 #' Model diagnostic scorecard
 #'
 #' Pass/fail comparison of several models (Carvalho et al. 2021 diagnostic criteria): runs tests of the index
-#' residuals (p >= \code{runs.p}), the hindcast MASE of each index (< \code{mase}), the retrospective and forecast
+#' residuals (p >= \code{runs.p}), the hindcast MASE of each index and of the mean length / age (< \code{mase}), the retrospective and forecast
 #' Mohn's rho of SSB (within \code{rho}), and the Anderson-Darling test of the OSA residuals of the compositions
 #' (\code{\link{ss3_osatest}()}). Criteria that cannot be computed for a model (e.g. no retrospective runs) are NA.
 #'
 #' @param models named list of SS3 reports
 #' @param retro named list (same names as \code{models}) of retrospective runs (lists of reports or
 #'   \code{SSsummarize()} output, reference run first); models without are skipped for the retro and MASE criteria
-#' @param quant composition data for the OSA test: \code{"len"}, \code{"age"} or \code{NULL} for none
+#' @param quant composition data for the OSA tests and the hindcast MASE of the mean length / age: any of
+#'   \code{"len"}, \code{"age"}, \code{"con"}, \code{"size"}, or \code{NULL} for none; data types a model does not
+#'   have are skipped (default both length and age)
 #' @param rho interval of Mohn's rho of SSB that passes; default \code{c(-0.15, 0.2)} for long-lived species
 #'   (Hurtado-Ferro et al. 2015; \code{c(-0.22, 0.3)} for short-lived species)
 #' @param runs.p,mase thresholds of the runs test p-value and of MASE
@@ -109,12 +111,12 @@ ss3_osatest <- function(x, by = "unit", nsim = 999, alpha = 0.05, seed = 1, ...)
 #' @examples
 #' \donttest{
 #' data(ss3sma); data(retro.sma)
-#' sc <- ss3_scorecard(list(sma = ss3sma), retro = list(sma = retro.sma), quant = "len", nsim = 199)
+#' sc <- ss3_scorecard(list(sma = ss3sma), retro = list(sma = retro.sma), nsim = 199)
 #' sc$table
 #' ss3plot_scorecard(sc)
 #' }
 #' @export
-ss3_scorecard <- function(models, retro = NULL, quant = "len", rho = c(-0.15, 0.2), runs.p = 0.05, mase = 1,
+ss3_scorecard <- function(models, retro = NULL, quant = c("len", "age"), rho = c(-0.15, 0.2), runs.p = 0.05, mase = 1,
                           nsim = 999, ...){
   if(.is_ss3rep(models)) models <- list(model = models)
   nm <- names(models) %||% paste0("model", seq_along(models)); names(models) <- nm
@@ -136,18 +138,27 @@ ss3_scorecard <- function(models, retro = NULL, quant = "len", rho = c(-0.15, 0.
       hc <- tryCatch(ss3_hindcast(retro[[m]])$mase, error = function(e) NULL)
       if(!is.null(hc)) for(i in seq_len(nrow(hc))) add(m, paste("MASE index:", hc$index[i]), hc$MASE[i],
                                                         if(is.finite(hc$MASE[i])) hc$MASE[i] < mase else NA)
+      # hindcasts of the mean length / age (full reports only; skipped where the model has no such compositions)
+      for(q in quant){
+        hq <- tryCatch(suppressMessages(ss3_hindcast(retro[[m]], quant = q))$mase, error = function(e) NULL)
+        if(!is.null(hq)) for(i in seq_len(nrow(hq))) add(m, paste0("MASE ", q, ": ", hq$index[i]), hq$MASE[i],
+                                                          if(is.finite(hq$MASE[i])) hq$MASE[i] < mase else NA)
+      }
     }
-    if(!is.null(quant)){
-      ot <- tryCatch(ss3_osatest(r, nsim = nsim, quant = quant, ...), error = function(e) NULL)
+    for(q in quant){
+      ot <- tryCatch(ss3_osatest(r, nsim = nsim, quant = q, ...), error = function(e) NULL)
       if(!is.null(ot)){
-        osa[[m]] <- cbind(model = m, ot)
-        for(i in seq_len(nrow(ot))) add(m, paste0("OSA ", quant, ": ", ot$panel[i]), ot$p[i], ot$result[i] == "PASS")
+        osa[[paste(m, q)]] <- cbind(model = m, quant = q, ot)
+        lab <- sub(" \\| unique$", "", ot$panel)          # single-unit (pooled) compositions: fleet name only
+        for(i in seq_len(nrow(ot))) add(m, paste0("OSA ", q, ": ", lab[i]), ot$p[i], ot$result[i] == "PASS")
       }
     }
   }
   v <- rbindlist(vals)
   lev <- unique(v$criterion)
-  ord <- c(grep("^Runs", lev, value = TRUE), grep("rho$", lev, value = TRUE), grep("^MASE", lev, value = TRUE),
+  jl <- function(x) c(x[!grepl(": joint$", x)], x[grepl(": joint$", x)])   # joint MASE last in its block
+  ord <- c(grep("^Runs", lev, value = TRUE), grep("rho$", lev, value = TRUE),
+           unlist(lapply(c("index", quant), function(q) jl(grep(paste0("^MASE ", q, ":"), lev, value = TRUE)))),
            grep("^OSA", lev, value = TRUE))
   w <- dcast(v, model ~ factor(criterion, levels = ord), value.var = "pass")
   w <- w[match(nm, model)]
