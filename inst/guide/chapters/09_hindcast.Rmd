@@ -21,3 +21,31 @@ ss3plot_hcxval(ss3_hindcast(retro.sma))
 
 > **Check 5: prediction skill.** MASE > 1 for an index means the model has no prediction skill for it. With
 > indices that vary little the naive error is small and `MAE.base.adj` (default 0.1) limits the scaling.
+
+## All checks at a glance: the model scorecard
+
+`ss3_scorecard()` collects the checks of this guide into one pass/fail table for one or more models:
+
+- runs tests of the index residuals (p >= 0.05);
+- retrospective and forecast Mohn's rho of SSB, within [-0.15, 0.2] for long-lived species (Hurtado-Ferro et al.
+  2015; `rho = c(-0.22, 0.3)` for short-lived species);
+- hindcast MASE of each index (< 1);
+- the OSA tests of the compositions (`quant = "len"` or `"age"`).
+
+Criteria a model cannot provide (e.g. without retrospective runs) are left grey. Here the mako shark and Pacific
+hake models are side by side, to show the layout:
+
+```{r scorecard}
+sc <- ss3_scorecard(list(mako = ss3sma, `Pacific hake` = ss3phk), retro = list(mako = retro.sma, `Pacific hake` = retro.phk),
+                    quant = "age", nsim = 199)
+sc$table
+```
+
+```{r scorecard-plot, fig.height = 7, fig.width = 7}
+ss3plot_scorecard(sc)
+```
+
+> **Using the scorecard.** The scorecard summarises; it does not decide. A model that fails one check is not
+> necessarily worse than one that passes all, and the thresholds are conventions. For ensembles, the scorecard
+> helps to justify which models enter and how they are weighted, but the weights should not be tuned to the advice.
+

@@ -15,6 +15,9 @@ ss3plot_resid(
   ncol = NULL,
   fleets = NULL,
   units = NULL,
+  test = FALSE,
+  envelope = TRUE,
+  nsim = 999,
   text = TRUE
 )
 }
@@ -42,6 +45,13 @@ tracks of length compositions (not needed for ages); \code{NULL} for none}
 \item{units}{units (sexes) to plot, e.g. \code{"F"}, \code{"M"} or \code{"unique"} (combined-sex data); fleets
 without these units are dropped (default: all)}
 
+\item{test}{shade the panel background by the Anderson-Darling test of N(0,1) (\code{\link{ss3_osatest}()}): light
+green PASS, light red FAIL}
+
+\item{envelope}{QQ plots: pointwise 95\\% envelope of the order statistics of a standard normal sample}
+
+\item{nsim}{Monte Carlo simulations of the test}
+
 \item{text}{show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)}
 }
 \value{
@@ -61,6 +71,7 @@ so read patterns along length as conditional, not as a direct excess or deficit 
 \examples{
 data(ss3simple)
 r <- ss3_resid(ss3simple)
+ss3plot_resid(r, test = TRUE, nsim = 199)
 ss3plot_resid(r, lhpar = ss3_lhpar(ss3simple))
 ss3plot_resid(r, type = "qq")
 ss3plot_resid(ss3_resid(ss3simple, "age"), cohorts = FALSE)

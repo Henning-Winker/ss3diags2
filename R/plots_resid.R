@@ -83,18 +83,23 @@
 #'   \code{DK3a.discard} and \code{DK3a.retained}) or positions in the FLQuants (default: all)
 #' @param units units (sexes) to plot, e.g. \code{"F"}, \code{"M"} or \code{"unique"} (combined-sex data); fleets
 #'   without these units are dropped (default: all)
+#' @param test shade the panel background by the Anderson-Darling test of N(0,1) (\code{\link{ss3_osatest}()}): light
+#'   green PASS, light red FAIL
+#' @param envelope QQ plots: pointwise 95\% envelope of the order statistics of a standard normal sample
+#' @param nsim Monte Carlo simulations of the test
 #' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
 #' @examples
 #' data(ss3simple)
 #' r <- ss3_resid(ss3simple)
+#' ss3plot_resid(r, test = TRUE, nsim = 199)
 #' ss3plot_resid(r, lhpar = ss3_lhpar(ss3simple))
 #' ss3plot_resid(r, type = "qq")
 #' ss3plot_resid(ss3_resid(ss3simple, "age"), cohorts = FALSE)
 #' @export
 ss3plot_resid <- function(x, type = c("bubble", "len", "qq"), by = "unit", lhpar = NULL, cohorts = TRUE,
                           cohort_by = 2, cap = 4, ncol = NULL,
-                          fleets = NULL, units = NULL, text = TRUE){
+                          fleets = NULL, units = NULL, test = FALSE, envelope = TRUE, nsim = 999, text = TRUE){
   .drop_text((function(){
   type <- match.arg(type, c("bubble", "len", "qq")); dims <- .bydims(by)
   rtype <- attr(x, "type") %||% "osa"
@@ -109,11 +114,32 @@ ss3plot_resid <- function(x, type = c("bubble", "len", "qq"), by = "unit", lhpar
   if(!"unit" %in% dims) d[, unit := "unique"]
   d <- .add_group(d, dims); d <- .panel(d, dims)
   xlab <- switch(qn, len = "Length", age = "Age", qn)
+  # Anderson-Darling test of each panel (OSA residuals): light green / red background for PASS / FAIL
+  bg <- NULL
+  if(isTRUE(test)){
+    tt <- copy(ss3_osatest(x, by = by, nsim = nsim))
+    tt[, `:=`(panel = factor(panel, levels = levels(d$panel)), x0 = -Inf, x1 = Inf, y0 = -Inf, y1 = Inf)]
+    rect <- function(res, col) if(any(tt$result == res))
+      ggplot2::geom_rect(data = tt[result == res], ggplot2::aes(xmin = x0, xmax = x1, ymin = y0, ymax = y1),
+                         inherit.aes = FALSE, fill = col, alpha = 0.3)
+    bg <- list(rect("PASS", "#a6d96a"), rect("FAIL", "#f4a582"))
+  }
+  tcap <- if(isTRUE(test)) "background: Anderson-Darling test of N(0,1), light green PASS, light red FAIL" else NULL
   if(type == "qq"){
-    return(ggplot2::ggplot(d, ggplot2::aes(sample = data)) +
-             ggplot2::stat_qq(size = 0.7, alpha = 0.5) + ggplot2::stat_qq_line(colour = "#D6604D") +
-             ggplot2::facet_wrap(~ panel, ncol = ncol) +
-             ggplot2::labs(x = "Theoretical N(0,1) quantiles", y = paste(lab, "quantiles")) + theme_ss3())
+    q <- d[order(panel, data), .(sam = data, theo = stats::qnorm(stats::ppoints(.N))), by = panel]
+    p <- ggplot2::ggplot(q, ggplot2::aes(theo, sam))
+    if(!is.null(bg)) p <- p + bg
+    if(isTRUE(envelope)){
+      env <- d[, .qq_envelope(.N), by = panel]
+      p <- p + ggplot2::geom_ribbon(data = env, ggplot2::aes(theo, ymin = lo, ymax = hi), inherit.aes = FALSE,
+                                    fill = "grey60", alpha = 0.35)
+    }
+    p <- p + ggplot2::geom_abline(colour = "#D6604D") + ggplot2::geom_point(size = 0.7, alpha = 0.6) +
+      ggplot2::facet_wrap(~ panel, ncol = ncol) +
+      ggplot2::labs(x = "Theoretical N(0,1) quantiles", y = paste(lab, "quantiles"),
+                    caption = paste(c(if(isTRUE(envelope)) "grey: pointwise 95% envelope of N(0,1) order statistics",
+                                      tcap), collapse = "; ")) + theme_ss3()
+    return(p)
   }
   d[, r := pmax(pmin(data, cap), -cap)]
   d[, sign := factor(ifelse(data >= 0, "positive", "negative"), levels = c("positive", "negative"))]
@@ -121,7 +147,7 @@ ss3plot_resid <- function(x, type = c("bubble", "len", "qq"), by = "unit", lhpar
   if(type == "len"){
     a <- d[, .(data = sum(data)/sqrt(.N)), by = .(panel, q)]
     a[, `:=`(r = pmax(pmin(data, cap), -cap), capped = abs(data) > cap)]
-    return(ggplot2::ggplot(a, ggplot2::aes(q, r)) +
+    return(ggplot2::ggplot(a, ggplot2::aes(q, r)) + bg + ggplot2::labs(caption = tcap) +
              ggplot2::geom_hline(yintercept = c(-2, 2), linetype = "dashed", colour = "grey60") +
              ggplot2::geom_hline(yintercept = 0, colour = "grey30") +
              ggplot2::geom_col(ggplot2::aes(fill = ifelse(r >= 0, "positive", "negative")), width = .bw(a$q)) +
@@ -130,6 +156,7 @@ ss3plot_resid <- function(x, type = c("bubble", "len", "qq"), by = "unit", lhpar
              ggplot2::labs(x = xlab, y = paste(lab, "(years pooled)")) + theme_ss3())
   }
   p <- ggplot2::ggplot(d, ggplot2::aes(year, q))
+  if(!is.null(bg)) p <- p + bg + ggplot2::labs(caption = tcap)
   if(isTRUE(cohorts) && (qn == "age" || !is.null(lhpar))){
     tr <- .cohort_lines(d, qn, lhpar, cohort_by)
     if(nrow(tr)) p <- p + ggplot2::geom_line(data = tr, ggplot2::aes(year, q, group = interaction(birth, lunit),
@@ -148,4 +175,5 @@ ss3plot_resid <- function(x, type = c("bubble", "len", "qq"), by = "unit", lhpar
   })(), text)
 }
 
-utils::globalVariables(c("panel", "birth", "lunit", "q", "r", "sign", "capped"))
+utils::globalVariables(c("panel", "birth", "lunit", "q", "r", "sign", "capped", "x0", "x1", "y0", "y1", "sam"))
+

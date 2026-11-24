@@ -14,6 +14,34 @@ ss3plot_resid(rl, lhpar = lh)
 ss3plot_resid(rl, type = "qq")
 ```
 
+### Testing the OSA residuals
+
+`ss3_osatest()` tests, for each composition (fleet and sex, as the panels of the plots), whether the OSA residuals
+follow their theoretical N(0, 1) distribution:
+
+- the Anderson-Darling statistic against a fixed N(0, 1), with a Monte Carlo p-value: PASS when p >= 0.05;
+- descriptive checks: the mean (near 0), the SD (near 1), the RMSE of the QQ plot from the 1:1 line, and the share
+  of residuals outside +-1.96 (about 5% expected).
+
+```{r res-osatest}
+ss3_osatest(rl, nsim = 499)
+```
+
+`test = TRUE` shades each panel of the residual plots light green (PASS) or light red (FAIL). The QQ plots have
+pointwise 95% envelopes of the order statistics of a standard normal sample (`envelope = TRUE`, the default):
+
+```{r res-osatest-plot, fig.height = 5}
+ss3plot_resid(rl, lhpar = lh, test = TRUE, nsim = 199)
+ss3plot_resid(rl, type = "qq", test = TRUE, nsim = 199)
+```
+
+> **Reading the OSA tests.** A FAIL means the residuals of that composition depart significantly from N(0, 1). A
+> shifted mean points to a bias (e.g. selectivity), an SD above 1 to too little variance in the likelihood (data
+> weighted too much), and an SD below 1 to too much. Treat the results as flags, not as verdicts on the model. The
+> Monte Carlo p-value and the QQ envelopes assume independent residuals, so cohort or year effects make them too
+> strict, and testing many fleets and models raises the chance of false failures. Points outside the envelope in the
+> tails of a QQ plot show where the departures are.
+
 Pacific hake uses the Dirichlet-multinomial for its age compositions:
 
 ```{r res-phk, fig.height = 4}
