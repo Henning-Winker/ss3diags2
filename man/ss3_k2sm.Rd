@@ -25,7 +25,7 @@ ss3_k2sm(
 
 \item{scenarios}{scenarios (rows; default all)}
 
-\item{labels}{row labels (default the scenario names; e.g. the catch, or the catch as \\% of the current catch)}
+\item{labels}{row labels (default the scenario names; e.g. the catch, or the catch as \% of the current catch)}
 
 \item{flim}{Flim as a multiple of Ftgt (IOTC; e.g. 1.4 for IOTC tunas); default \code{refpts} "Flim" if present}
 
@@ -35,7 +35,7 @@ ss3_k2sm(
 }
 \value{
 named list of data.tables (rows: scenarios, with the catch of the first year in which the scenarios
-differ; columns: years; values in \\%), class \code{ss3k2sm}
+differ; columns: years; values in \%), class \code{ss3k2sm}
 }
 \description{
 Kobe II strategy matrices (K2SM) of catch scenarios: probabilities by catch scenario (rows) and year (columns) of a

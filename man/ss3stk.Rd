@@ -61,7 +61,7 @@ the stock Ftgt, and MSY is not defined.}
 \code{startyr:2029} for the SS3 forecast years of a forecast run}
 
 \item{rpbase}{reference of fractional \code{blim} and \code{bpa}: \code{"Btgt"} (default) or \code{"B0"} (e.g.
-\code{blim = 0.1, rpbase = "B0"} for Blim = 10\\% B0)}
+\code{blim = 0.1, rpbase = "B0"} for Blim = 10\% B0)}
 }
 \value{
 FLStockR

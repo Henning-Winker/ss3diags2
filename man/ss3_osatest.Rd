@@ -21,13 +21,13 @@ ss3_osatest(x, by = "unit", nsim = 999, alpha = 0.05, seed = 1, ...)
 \item{...}{arguments to \code{\link{ss3_resid}()} when \code{x} is an SS3 report}
 }
 \value{
-data.table: panel, N, mean, SD, QQ RMSE, AD statistic, p-value, result (PASS/FAIL), \\% outside +-1.96
+data.table: panel, N, mean, SD, QQ RMSE, AD statistic, p-value, result (PASS/FAIL), \% outside +-1.96
 }
 \description{
 Tests whether the OSA residuals of each composition (fleet and unit, as the panels of
 \code{\link{ss3plot_resid}()}) follow their theoretical N(0,1) distribution: the Anderson-Darling statistic against a
 fixed N(0,1) with a Monte Carlo p-value, and descriptive checks (mean near 0, SD near 1, the root mean square
-distance of the QQ plot from the 1:1 line, and the share outside +-1.96, about 5\\% expected).
+distance of the QQ plot from the 1:1 line, and the share outside +-1.96, about 5\% expected).
 }
 \details{
 The Monte Carlo p-value assumes independent residuals; temporal or cohort dependence can make the nominal

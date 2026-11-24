@@ -31,7 +31,7 @@ bin combined over the bins of each year, as \code{r4ss::SSMethod.Cond.TA1.8()}) 
 \item{seed}{random seed for the bootstrap}
 }
 \value{
-data.table by fleet: \code{w} (Francis weight), \code{lo}, \code{hi} (95\\% bootstrap interval), \code{n}
+data.table by fleet: \code{w} (Francis weight), \code{lo}, \code{hi} (95\% bootstrap interval), \code{n}
 (number of compositions), \code{var_adj} (current SS3 variance adjustment, from the comp fit summary of the
 report) and \code{var_adj.new} (\code{var_adj * w}, the input for the next run; not meaningful for
 Dirichlet-multinomial fleets, whose weight is estimated); the mean lengths / ages with their intervals as attribute \code{"comps"} (for
@@ -43,7 +43,7 @@ Francis (2011), as \code{r4ss::SSMethod.TA1.8()} and \code{ss3diags::SScompsTA1.
 each composition is compared with its expected value, the standardised residuals use the variance implied by the
 adjusted sample size, and the weight is \eqn{w = 1/\mathrm{var}(\mathrm{std.res})}. \eqn{w < 1} means the
 compositions are overweighted (the mean lengths vary more than the sample sizes imply): multiply the SS3 variance
-adjustment of the fleet by \eqn{w}. The 95\\% interval is a bootstrap of the residuals.
+adjustment of the fleet by \eqn{w}. The 95\% interval is a bootstrap of the residuals.
 }
 \examples{
 data(ss3simple)

@@ -18,7 +18,7 @@ otherwise lognormal with the MLE standard error of SSB)}
 \item{blim}{Blim (default the \code{Blim} reference point of the stocks)}
 }
 \value{
-data.table with Basis, catch, F, SSB(year + 1), SSB change (\\%) and P(SSB < Blim)
+data.table with Basis, catch, F, SSB(year + 1), SSB change (\%) and P(SSB < Blim)
 }
 \description{
 Summary of forecast scenarios as in the GFCM / ICES advice tables: catch and F in the advice year, SSB at the
