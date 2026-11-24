@@ -252,6 +252,34 @@ rl <- ss3_resid(ss3simple)                   # length; ss3_resid(ss3simple, "age
 ss3plot_resid(rl, lhpar = lh)
 ss3plot_resid(rl, type = "qq")
 
+# ---- Testing the OSA residuals ---------------------------------------------------------------
+
+# ss3_osatest() tests, for each composition (fleet and sex, as the panels of the plots), whether
+# the OSA residuals follow their theoretical N(0, 1) distribution:
+
+# * the Anderson-Darling statistic against a fixed N(0, 1), with a Monte Carlo p-value: PASS when
+#   p >= 0.05;
+
+# * descriptive checks: the mean (near 0), the SD (near 1), the RMSE of the QQ plot from the 1:1
+#   line, and the share of residuals outside +-1.96 (about 5% expected).
+
+ss3_osatest(rl, nsim = 499)
+
+# test = TRUE shades each panel of the residual plots light green (PASS) or light red (FAIL). The
+# QQ plots have pointwise 95% envelopes of the order statistics of a standard normal sample
+# (envelope = TRUE, the default):
+
+ss3plot_resid(rl, lhpar = lh, test = TRUE, nsim = 199)
+ss3plot_resid(rl, type = "qq", test = TRUE, nsim = 199)
+
+# Reading the OSA tests. A FAIL means the residuals of that composition depart significantly from
+# N(0, 1). A shifted mean points to a bias (e.g. selectivity), an SD above 1 to too little
+# variance in the likelihood (data weighted too much), and an SD below 1 to too much. Treat the
+# results as flags, not as verdicts on the model. The Monte Carlo p-value and the QQ envelopes
+# assume independent residuals, so cohort or year effects make them too strict, and testing many
+# fleets and models raises the chance of false failures. Points outside the envelope in the tails
+# of a QQ plot show where the departures are.
+
 # Pacific hake uses the Dirichlet-multinomial for its age compositions:
 
 data(ss3phk)
@@ -345,6 +373,34 @@ ss3plot_hcxval(ss3_hindcast(retro.sma))
 # Check 5: prediction skill. MASE > 1 for an index means the model has no prediction skill for
 # it. With indices that vary little the naive error is small and MAE.base.adj (default 0.1)
 # limits the scaling.
+
+# ---- All checks at a glance: the model scorecard ---------------------------------------------
+
+# ss3_scorecard() collects the checks of this guide into one pass/fail table for one or more
+# models:
+
+# * runs tests of the index residuals (p >= 0.05);
+
+# * retrospective and forecast Mohn's rho of SSB, within [-0.15, 0.2] for long-lived species
+#   (Hurtado-Ferro et al.  2015; rho = c(-0.22, 0.3) for short-lived species);
+
+# * hindcast MASE of each index (< 1);
+
+# * the OSA tests of the compositions (quant = "len" or "age").
+
+# Criteria a model cannot provide (e.g. without retrospective runs) are left grey. Here the mako
+# shark and Pacific hake models are side by side, to show the layout:
+
+sc <- ss3_scorecard(list(mako = ss3sma, `Pacific hake` = ss3phk), retro = list(mako = retro.sma, `Pacific hake` = retro.phk),
+                    quant = "age", nsim = 199)
+sc$table
+
+ss3plot_scorecard(sc)
+
+# Using the scorecard. The scorecard summarises; it does not decide. A model that fails one check
+# is not necessarily worse than one that passes all, and the thresholds are conventions. For
+# ensembles, the scorecard helps to justify which models enter and how they are weighted, but the
+# weights should not be tuned to the advice.
 
 ####################################################################################################
 # CONDITIONAL AGE-LENGTH KEY EXAMPLE: EUROPEAN HAKE IN THE ADRIATIC SEA
@@ -674,11 +730,12 @@ ss3plot_fwd(fs, stk = stki)
 ss3_fwdtable(fs)
 
 # Reading the forecast plot. The black line and bands are the assessment, the coloured lines the
-# scenarios from the end year (2024, first dashed line) on. Between the dashed lines are the
-# intermediate years, in which all scenarios take the same catch, so they overlap; they separate
-# in the advice year (2027). SSB responds one year later (SSB at the start of 2028 reflects the
-# catch of 2027), which is why the table reports SSB of the year after the advice year. The
-# horizontal lines are the benchmarks (Btgt green, Bpa orange, Blim red; Ftgt green).
+# scenarios from the end year (2024, first dashed line) on. The second dashed line is the
+# implementation (advice) year (2027); between the lines are the intermediate years (2025-2026),
+# in which all scenarios take the same catch, so they overlap; they separate in the advice year.
+# SSB responds one year later (SSB at the start of 2028 reflects the catch of 2027), which is why
+# the table reports SSB of the year after the advice year. The horizontal lines are the
+# benchmarks (Btgt green, Bpa orange, Blim red; Ftgt green).
 
 ####################################################################################################
 # SEASON-, SEX- AND AREA-STRUCTURED MODELS
@@ -849,6 +906,9 @@ ss3plot_flqs(ss3_flqs(mp, c("SSB", "Rec", "B/Btgt", "F/Ftgt")), worms = 100, ci 
 # | Data weighting | ss3_francis(), ss3plot_francis() |
 # | Forecasts | ss3_fwd(), ss3plot_fwd(), ss3_fwdtable() |
 # | Ensembles | ss3_ensemble(), ss3plot_ensemble() |
+# | OSA residual tests | ss3_osatest(), ss3plot_resid(test = TRUE) |
+# | Model scorecard | ss3_scorecard(), ss3plot_scorecard() |
+# | Ensemble forecasts and advice | ss3_fwdensemble(), ss3_fwdrisk(), ss3_catchopts(), ss3_k2sm() |
 # | Status | ss3stk(), ss3mvln(), ss3_flqs(), ss3plot_flqs(), ss3plot(), ss3plot_trj(), ss3plot_kobe() |
 # | Production | ss3_eqcurve(), ss3_spm(), ss3plot_production() |
 # | Structure | ss3_sel(), ss3plot_sel(), ss3_byarea(), ss3plot_byarea(), ss3plot_sr() |
