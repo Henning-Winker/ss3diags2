@@ -71,17 +71,17 @@
 #'   \code{ss3_fwd(output = "iters")}
 #' @param year advice year (default: the first year in which the scenarios differ)
 #' @param bases catch options (see Details)
-#' @param btrigger MSY Btrigger as a fraction of Btgt (default 1: Btrigger = Btgt, e.g. B30\%)
+#' @param btrigger MSY Btrigger as a fraction of Btgt (default 1: Btrigger = Btgt, e.g. B30%)
 #' @param bpa Bpa as a fraction of Btgt (default \code{btrigger})
 #' @param flower,fupper,fpa F/Fmsy of the F range and of Fpa
 #' @param rule apply the advice rule (F reduced by SSB/Btrigger below Btrigger) to the Fmsy, Flower and Fupper options
 #' @param risk target risk for \code{"P(Blim)"}
-#' @param advice previous advice (catch) for the \% advice change: one value, or named by basis (e.g. the EU MAP
+#' @param advice previous advice (catch) for the % advice change: one value, or named by basis (e.g. the EU MAP
 #'   advice for Fmsy, Flower and Fupper)
-#' @param tac catch (TAC) of the intermediate year for the \% TAC change (default: the intermediate year's catch of
+#' @param tac catch (TAC) of the intermediate year for the % TAC change (default: the intermediate year's catch of
 #'   the scenarios)
-#' @return data.table: basis, catch, F/Fmsy, SSB (next year), SSB/Btrigger, \% SSB change, \% TAC change, \% advice
-#'   change, P(SSB < Blim) and P(SSB < Btrigger) (\%), with attributes \code{year} and \code{scenarios} (the summary
+#' @return data.table: basis, catch, F/Fmsy, SSB (next year), SSB/Btrigger, % SSB change, % TAC change, % advice
+#'   change, P(SSB < Blim) and P(SSB < Btrigger) (%), with attributes \code{year} and \code{scenarios} (the summary
 #'   of every scenario)
 #' @seealso \code{\link{ss3plot_catchopts}()}, \code{\link{ss3_fwdprobs}()}, \code{\link{ss3_fwdrisk}()}
 #' @examples
@@ -190,7 +190,7 @@ ss3plot_catchopts <- function(x, bases = NULL, risk = 0.05, text = TRUE){
 #' @param years years (default: the intermediate years, the advice year and the next year)
 #' @param btrigger Btrigger as a fraction of Btgt
 #' @param long return a long table instead of one wide table (scenario by year) per probability
-#' @return named list of data.tables (scenario x year, in \%), or a long data.table
+#' @return named list of data.tables (scenario x year, in %), or a long data.table
 #' @examples
 #' \donttest{
 #' fw <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18_fwd.rds", package = "ss3diags2"))
@@ -240,12 +240,12 @@ utils::globalVariables(c("Fratio", "B1ratio", "SSB0", "SSB1", "SSBchange", "pBli
 #' @param style \code{"iccat"}, \code{"iotc"}, \code{"ices"} or \code{"gfcm"}
 #' @param years projection years (default: all forecast years)
 #' @param scenarios scenarios (rows; default all)
-#' @param labels row labels (default the scenario names; e.g. the catch, or the catch as \% of the current catch)
+#' @param labels row labels (default the scenario names; e.g. the catch, or the catch as % of the current catch)
 #' @param flim Flim as a multiple of Ftgt (IOTC; e.g. 1.4 for IOTC tunas); default \code{refpts} "Flim" if present
 #' @param btrigger MSY Btrigger as a fraction of Btgt (ICES)
 #' @param bpa Bpa as a fraction of Btgt (GFCM; default \code{refpts} "Bpa", else \code{btrigger})
 #' @return named list of data.tables (rows: scenarios, with the catch of the first year in which the scenarios
-#'   differ; columns: years; values in \%), class \code{ss3k2sm}
+#'   differ; columns: years; values in %), class \code{ss3k2sm}
 #' @seealso \code{\link{ss3plot_k2sm}()}, \code{\link{ss3_fwdprobs}()}, \code{\link{ss3_catchopts}()}
 #' @examples
 #' \donttest{
@@ -304,11 +304,11 @@ ss3_k2sm <- function(x, style = c("iccat", "iotc", "ices", "gfcm"), years = NULL
 
 #' Plot a Kobe II strategy matrix
 #'
-#' Colour-coded Kobe II strategy matrix or risk matrix, always shown as the probability (\%) of meeting the reference
+#' Colour-coded Kobe II strategy matrix or risk matrix, always shown as the probability (%) of meeting the reference
 #' point: risk tables are converted (P(F > Ftgt) is shown as P(F <= Ftgt), P(SSB < Blim) as P(SSB >= Blim)). Targets
-#' (green quadrant, SSB >= Btgt, Btrigger or Bpa, F <= Ftgt), where the aim is a probability above 50\%: red < 20\%,
-#' light red 20-39\%, yellow 40-49\%, light green 50-79\%, green >= 80\%. Limits (Blim, Flim), where the aim is a
-#' probability of at least 95\%: red < 50\%, light red 50-79\%, light green 80-94\%, dark green >= 95\%.
+#' (green quadrant, SSB >= Btgt, Btrigger or Bpa, F <= Ftgt), where the aim is a probability above 50%: red < 20%,
+#' light red 20-39%, yellow 40-49%, light green 50-79%, green >= 80%. Limits (Blim, Flim), where the aim is a
+#' probability of at least 95%: red < 50%, light red 50-79%, light green 80-94%, dark green >= 95%.
 #'
 #' @param x output of \code{\link{ss3_k2sm}()}
 #' @param which table (name or number; default the first)

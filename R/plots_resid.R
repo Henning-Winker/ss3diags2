@@ -85,7 +85,7 @@
 #'   without these units are dropped (default: all)
 #' @param test shade the panel background by the Anderson-Darling test of N(0,1) (\code{\link{ss3_osatest}()}): light
 #'   green PASS, light red FAIL
-#' @param envelope QQ plots: pointwise 95\% envelope of the order statistics of a standard normal sample
+#' @param envelope QQ plots: pointwise 95% envelope of the order statistics of a standard normal sample
 #' @param nsim Monte Carlo simulations of the test
 #' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
 #' @return ggplot
