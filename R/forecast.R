@@ -221,7 +221,8 @@ ss3_fwdtable <- function(x, year = NULL, unc = NULL, blim = NULL){
     # Blim of each draw (ensembles: each model's own Blim), else one value
     bli <- if(is.null(blim) && !is.null(unc) && "Blim" %in% dimnames(FLCore::refpts(unc[[n]]))$params &&
               FLCore::dims(FLCore::refpts(unc[[n]]))$iter > 1) as.numeric(FLCore::refpts(unc[[n]])["Blim", ]) else bl
-    pb <- if(!is.null(unc) && all(is.finite(bli))) mean(as.numeric(FLCore::ssb(unc[[n]])[, y1]) < bli) else
+    pr <- .p_below(unc[[n]], y1, "Blim")
+    pb <- if(!is.null(unc) && is.finite(pr)) pr else if(!is.null(unc) && all(is.finite(bli))) mean(as.numeric(FLCore::ssb(unc[[n]])[, y1]) < bli) else
       if(!is.null(se) && is.finite(bl)) stats::pnorm((log(bl) - log(b1))/as.numeric(se$SSB[, y1])) else NA_real_
     d <- data.table(Basis = n, C = round(med(FLCore::catch(s)[, y]), 1), F = round(med(FLCore::fbar(s)[, y]), 3),
                     SSB = round(b1), SSB_change = round(100*(b1/b0 - 1), 1), P_Blim = round(pb, 3))
@@ -329,7 +330,10 @@ ss3_fwdensemble <- function(x, weights = NULL, iters = 1000, seed = 1, ...){
   bt <- .rp(s, "Btgt"); ft <- .rp(s, "Ftgt")
   mk <- function(x) long2flq(data.table(age = "1", year = rep(yrs, iters), iter = rep(seq_len(iters), each = length(yrs)),
                                         data = c(x)), quant = "age", units = "")
-  attr(out, "status") <- list(stock = mk(ssb/bt), harvest = mk(fb/ft))
+  # ratios to the targets with their own SEs (as SSdeltaMVLN: the SE of B/Btgt is smaller than that of SSB, as SSB
+  # and the benchmark are estimated together); the same deviates as SSB and F
+  br <- dr(v(FLCore::ssb(s))/bt, sev("stock"), z[, 1]); hr <- dr(v(FLCore::fbar(s))/ft, sev("harvest"), z[, 2])
+  attr(out, "status") <- list(stock = mk(br), harvest = mk(hr))
   out
 }
 
@@ -366,10 +370,11 @@ ss3_fwdrisk <- function(x, year = NULL, risk = 0.05, value = NULL){
       b <- as.numeric(FLCore::ssb(s)[, y1])
       rp <- FLCore::refpts(s)
       bl <- if("Blim" %in% dimnames(rp)$params) as.numeric(rp["Blim", ]) else NA_real_
+      pr <- .p_below(s, y1, "Blim")
       data.table(model = model, scenario = names(st)[i], value = val[i],
                  catch = stats::median(as.numeric(FLCore::catch(s)[, y])),
                  F = stats::median(as.numeric(FLCore::fbar(s)[, y])), SSB = stats::median(b),
-                 risk = if(all(is.finite(bl))) mean(b < bl) else NA_real_)
+                 risk = if(is.finite(pr)) pr else if(all(is.finite(bl))) mean(b < bl) else NA_real_)
     }))
   }
   mods <- attr(x, "models")
@@ -430,4 +435,27 @@ ss3plot_fwdrisk <- function(x, xvar = c("catch", "value"), colours = NULL, text 
   if(any(is.finite(at$xx))) p <- p + ggplot2::geom_vline(data = at[is.finite(xx)], ggplot2::aes(xintercept = xx, colour = model),
                                                           linetype = 3)
   .drop_text(p, text)
+}
+
+
+#' Probability of SSB below a biomass reference point
+#'
+#' From the draws of B/Btgt (\code{attr(s, "status")$stock}) and each draw's reference point relative to its Btgt, as
+#' SSdeltaMVLN (the ratio carries the joint uncertainty of SSB and the benchmark); NA without ratio draws
+#'
+#' @param s FLStockR with iterations
+#' @param y year
+#' @param ref reference point name (e.g. "Blim") or a fraction of Btgt
+#' @return probability, or NA
+#' @noRd
+.p_below <- function(s, y, ref = "Blim"){
+  if(is.null(s)) return(NA_real_)
+  st <- attr(s, "status")$stock
+  if(is.null(st) || !as.character(y) %in% dimnames(st)$year) return(NA_real_)
+  r <- as.numeric(st[, as.character(y)]); rp <- FLCore::refpts(s); n <- length(r)
+  f <- if(is.numeric(ref)) rep_len(ref, n) else {
+    if(!all(c(ref, "Btgt") %in% dimnames(rp)$params)) return(NA_real_)
+    rep_len(as.numeric(rp[ref, ])/as.numeric(rp["Btgt", ]), n) }
+  if(!all(is.finite(f))) return(NA_real_)
+  mean(r < f)
 }
