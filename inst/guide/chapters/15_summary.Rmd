@@ -24,6 +24,9 @@
 | Data weighting | `ss3_francis()`, `ss3plot_francis()` |
 | Forecasts | `ss3_fwd()`, `ss3plot_fwd()`, `ss3_fwdtable()` |
 | Ensembles | `ss3_ensemble()`, `ss3plot_ensemble()` |
+| OSA residual tests | `ss3_osatest()`, `ss3plot_resid(test = TRUE)` |
+| Model scorecard | `ss3_scorecard()`, `ss3plot_scorecard()` |
+| Ensemble forecasts and advice | `ss3_fwdensemble()`, `ss3_fwdrisk()`, `ss3_catchopts()`, `ss3_k2sm()` |
 | Status | `ss3stk()`, `ss3mvln()`, `ss3_flqs()`, `ss3plot_flqs()`, `ss3plot()`, `ss3plot_trj()`, `ss3plot_kobe()` |
 | Production | `ss3_eqcurve()`, `ss3_spm()`, `ss3plot_production()` |
 | Structure | `ss3_sel()`, `ss3plot_sel()`, `ss3_byarea()`, `ss3plot_byarea()`, `ss3plot_sr()` |
