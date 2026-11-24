@@ -9,7 +9,8 @@ ss3plot_hcxval(x, ci = 0.95, xmin = NULL, ncol = NULL, text = TRUE)
 \arguments{
 \item{x}{output of \code{\link{ss3_hindcast}()}, or a list of SS3 reports}
 
-\item{ci}{confidence level of the observation intervals (indices)}
+\item{ci}{confidence level of the observation intervals: indices from their log-scale SE; mean length / age
+from the SE of the mean (expected variance / effective sample size, Francis 2011 method TA1.8)}
 
 \item{xmin}{first year shown (default 5 years before the first peel end year)}
 

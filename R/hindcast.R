@@ -22,12 +22,20 @@
                  like = if(all(is.na(Like))) NA_real_ else 1), by = .(Fleet, Yr, Seas, Lbin_lo)]
     d <- lb[is.finite(o) & is.finite(e), .(obs = sum(o*n)/sum(n), exp = sum(e*n)/sum(n),
                                           like = if(all(is.na(like))) NA_real_ else 1), by = .(Fleet, Yr, Seas)]
-  } else
-    # mean length / age / size of each fleet x year x season (sexes and partitions pooled), as SScompsTA1.8
+  } else {
+    # mean length / age / size of each fleet x year x season (sexes and partitions pooled), as SScompsTA1.8, with
+    # the SE of the observed mean from the expected variance and the (adjusted or Dirichlet-multinomial) effective
+    # sample size (Francis 2011, method TA1.8)
+    if(!"DM_effN" %in% names(db)) db[, DM_effN := NA_real_]
+    db[, neff := ifelse(is.finite(DM_effN), DM_effN, Nsamp_adj)]
     d <- db[, .(obs = sum(Bin*Obs)/sum(Obs), exp = sum(Bin*Exp)/sum(Exp),
-                like = if(all(is.na(Like))) NA_real_ else 1, n = mean(Nsamp_adj)), by = .(Fleet, Yr, Seas)]
+                v = sum(Bin^2*Exp)/sum(Exp) - (sum(Bin*Exp)/sum(Exp))^2,
+                n = sum(unique(data.table(Sex = .col(.SD, "Sex", 1), Part, neff))$neff),
+                like = if(all(is.na(Like))) NA_real_ else 1), by = .(Fleet, Yr, Seas)]
+    d[, sd := sqrt(pmax(v, 0)/n)]
+  }
   data.table(fleet = d$Fleet, name = .fleetnames(ss3rep)[d$Fleet], year = d$Yr, season = d$Seas, obs = d$obs,
-             exp = d$exp, se = NA_real_, use = 1, like = d$like)
+             exp = d$exp, se = if(quant == "con") NA_real_ else d$sd/d$obs, use = 1, like = d$like)
 }
 
 # composition data base: len, age, con (conditional age-at-length) or size; ghost = TRUE adds the excluded
@@ -149,7 +157,8 @@ print.ss3hc <- function(x, ...){
 #' \code{JABBA3::jbplot_hcxval()}.
 #'
 #' @param x output of \code{\link{ss3_hindcast}()}, or a list of SS3 reports
-#' @param ci confidence level of the observation intervals (indices)
+#' @param ci confidence level of the observation intervals: indices from their log-scale SE; mean length / age
+#'   from the SE of the mean (expected variance / effective sample size, Francis 2011 method TA1.8)
 #' @param xmin first year shown (default 5 years before the first peel end year)
 #' @param ncol facet columns
 #' @param text show the title, subtitle and caption (\code{FALSE}: none; labels inside the plot and legends stay)
@@ -170,9 +179,10 @@ ss3plot_hcxval <- function(x, ci = 0.95, xmin = NULL, ncol = NULL, text = TRUE){
   d <- d[year >= xmin]
   pl <- c("Ref", as.character(x$endyrs[-1]))
   cols <- stats::setNames(c("black", ss3cols(length(pl) - 1)), pl)
-  o <- unique(d[, .(panel, year, obs, se)])
+  o <- unique(d[peel == "Ref", .(panel, year, obs, se)])   # intervals of the reference run (all observations)
   z <- stats::qnorm(1 - (1 - ci)/2)
-  o[, `:=`(lo = obs*exp(-z*se), hi = obs*exp(z*se))]
+  if(x$quant == "cpue") o[, `:=`(lo = obs*exp(-z*se), hi = obs*exp(z*se))] else
+    o[, `:=`(lo = obs*(1 - z*se), hi = obs*(1 + z*se))]   # normal: se is the CV of the observed mean
   pe <- d[peel != "Ref"][order(panel, peel, year)]
   fit <- pe[year <= endyr]; fc <- pe[year == endyr | year == endyr + 1][, if(.N == 2) .SD, by = .(panel, peel)]
   pp <- d[pred == TRUE]
@@ -194,4 +204,4 @@ ss3plot_hcxval <- function(x, ci = 0.95, xmin = NULL, ncol = NULL, text = TRUE){
 }
 
 utils::globalVariables(c("Bin", "Obs", "Exp", "Like", "Nsamp_adj", "like", "pred", "index", "MASE", "MASE.adj",
-                         "season", "lo", "hi"))
+                         "season", "lo", "hi", "DM_effN", "neff", "Part", "v", "sd"))

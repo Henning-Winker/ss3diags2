@@ -7,7 +7,7 @@
 ss3_scorecard(
   models,
   retro = NULL,
-  quant = "len",
+  quant = c("len", "age"),
   rho = c(-0.15, 0.2),
   runs.p = 0.05,
   mase = 1,
@@ -21,7 +21,9 @@ ss3_scorecard(
 \item{retro}{named list (same names as \code{models}) of retrospective runs (lists of reports or
 \code{SSsummarize()} output, reference run first); models without are skipped for the retro and MASE criteria}
 
-\item{quant}{composition data for the OSA test: \code{"len"}, \code{"age"} or \code{NULL} for none}
+\item{quant}{composition data for the OSA tests and the hindcast MASE of the mean length / age: any of
+\code{"len"}, \code{"age"}, \code{"con"}, \code{"size"}, or \code{NULL} for none; data types a model does not
+have are skipped (default both length and age)}
 
 \item{rho}{interval of Mohn's rho of SSB that passes; default \code{c(-0.15, 0.2)} for long-lived species
 (Hurtado-Ferro et al. 2015; \code{c(-0.22, 0.3)} for short-lived species)}
@@ -38,14 +40,14 @@ of the statistics and results), \code{osa} (the OSA tests) and \code{mohn}
 }
 \description{
 Pass/fail comparison of several models (Carvalho et al. 2021 diagnostic criteria): runs tests of the index
-residuals (p >= \code{runs.p}), the hindcast MASE of each index (< \code{mase}), the retrospective and forecast
+residuals (p >= \code{runs.p}), the hindcast MASE of each index and of the mean length / age (< \code{mase}), the retrospective and forecast
 Mohn's rho of SSB (within \code{rho}), and the Anderson-Darling test of the OSA residuals of the compositions
 (\code{\link{ss3_osatest}()}). Criteria that cannot be computed for a model (e.g. no retrospective runs) are NA.
 }
 \examples{
 \donttest{
 data(ss3sma); data(retro.sma)
-sc <- ss3_scorecard(list(sma = ss3sma), retro = list(sma = retro.sma), quant = "len", nsim = 199)
+sc <- ss3_scorecard(list(sma = ss3sma), retro = list(sma = retro.sma), nsim = 199)
 sc$table
 ss3plot_scorecard(sc)
 }
