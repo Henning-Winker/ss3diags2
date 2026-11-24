@@ -374,6 +374,33 @@ ss3plot_hcxval(ss3_hindcast(retro.sma))
 # it. With indices that vary little the naive error is small and MAE.base.adj (default 0.1)
 # limits the scaling.
 
+# ---- Hindcasts of mean length and mean age ---------------------------------------------------
+
+# Compositions carry information on stock dynamics too, so the hindcast can also be applied to
+# the mean length (quant = "len") or mean age (quant = "age") of each fleet, as in the Stock
+# Synthesis diagnostics cookbook (Carvalho et al. 2021). The observed and predicted compositions
+# are reduced to their annual means (sexes and partitions pooled) and the one-year-ahead
+# predictions of the peels are scored with MASE as for the indices. Conditional age-at-length
+# ("con") and generalised size compositions ("size") work the same way. Compositions need the
+# full reports of the retrospective runs (r4ss::SSgetoutput()), not their SSsummarize() summary.
+
+# The mako shark model has length compositions only:
+
+hc.len <- ss3_hindcast(retro.sma, quant = "len")
+hc.len$mase
+ss3plot_hcxval(hc.len)
+
+# The Pacific hake model has age compositions of the fishery and the acoustic survey:
+
+hc.age <- ss3_hindcast(retro.phk, quant = "age")
+hc.age$mase
+ss3plot_hcxval(hc.age)
+
+# Mean length and age. MASE < 1 means that the model predicts the mean length or age of the next
+# year better than last year's observed mean does. Fleets with few hindcast years (n.eval) give
+# unstable MASE: read them with the joint value. Mean lengths often vary little between years, so
+# MASE.adj (naive error at least MAE.base.adj) is the more robust measure for them.
+
 # ---- All checks at a glance: the model scorecard ---------------------------------------------
 
 # ss3_scorecard() collects the checks of this guide into one pass/fail table for one or more
