@@ -17,11 +17,11 @@ ss3plot_k2sm(x, which = 1, text = TRUE)
 ggplot
 }
 \description{
-Colour-coded Kobe II strategy matrix or risk matrix, always shown as the probability (\\%) of meeting the reference
+Colour-coded Kobe II strategy matrix or risk matrix, always shown as the probability (\%) of meeting the reference
 point: risk tables are converted (P(F > Ftgt) is shown as P(F <= Ftgt), P(SSB < Blim) as P(SSB >= Blim)). Targets
-(green quadrant, SSB >= Btgt, Btrigger or Bpa, F <= Ftgt), where the aim is a probability above 50\\%: red < 20\\%,
-light red 20-39\\%, yellow 40-49\\%, light green 50-79\\%, green >= 80\\%. Limits (Blim, Flim), where the aim is a
-probability of at least 95\\%: red < 50\\%, light red 50-79\\%, light green 80-94\\%, dark green >= 95\\%.
+(green quadrant, SSB >= Btgt, Btrigger or Bpa, F <= Ftgt), where the aim is a probability above 50\%: red < 20\%,
+light red 20-39\%, yellow 40-49\%, light green 50-79\%, green >= 80\%. Limits (Blim, Flim), where the aim is a
+probability of at least 95\%: red < 50\%, light red 50-79\%, light green 80-94\%, dark green >= 95\%.
 }
 \examples{
 \donttest{

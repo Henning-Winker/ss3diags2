@@ -28,7 +28,7 @@ ss3_catchopts(
 
 \item{bases}{catch options (see Details)}
 
-\item{btrigger}{MSY Btrigger as a fraction of Btgt (default 1: Btrigger = Btgt, e.g. B30\\%)}
+\item{btrigger}{MSY Btrigger as a fraction of Btgt (default 1: Btrigger = Btgt, e.g. B30\%)}
 
 \item{bpa}{Bpa as a fraction of Btgt (default \code{btrigger})}
 
@@ -38,15 +38,15 @@ ss3_catchopts(
 
 \item{risk}{target risk for \code{"P(Blim)"}}
 
-\item{advice}{previous advice (catch) for the \\% advice change: one value, or named by basis (e.g. the EU MAP
+\item{advice}{previous advice (catch) for the \% advice change: one value, or named by basis (e.g. the EU MAP
 advice for Fmsy, Flower and Fupper)}
 
-\item{tac}{catch (TAC) of the intermediate year for the \\% TAC change (default: the intermediate year's catch of
+\item{tac}{catch (TAC) of the intermediate year for the \% TAC change (default: the intermediate year's catch of
 the scenarios)}
 }
 \value{
-data.table: basis, catch, F/Fmsy, SSB (next year), SSB/Btrigger, \\% SSB change, \\% TAC change, \\% advice
-change, P(SSB < Blim) and P(SSB < Btrigger) (\\%), with attributes \code{year} and \code{scenarios} (the summary
+data.table: basis, catch, F/Fmsy, SSB (next year), SSB/Btrigger, \% SSB change, \% TAC change, \% advice
+change, P(SSB < Blim) and P(SSB < Btrigger) (\%), with attributes \code{year} and \code{scenarios} (the summary
 of every scenario)
 }
 \description{

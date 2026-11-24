@@ -48,7 +48,7 @@ without these units are dropped (default: all)}
 \item{test}{shade the panel background by the Anderson-Darling test of N(0,1) (\code{\link{ss3_osatest}()}): light
 green PASS, light red FAIL}
 
-\item{envelope}{QQ plots: pointwise 95\\% envelope of the order statistics of a standard normal sample}
+\item{envelope}{QQ plots: pointwise 95\% envelope of the order statistics of a standard normal sample}
 
 \item{nsim}{Monte Carlo simulations of the test}
 

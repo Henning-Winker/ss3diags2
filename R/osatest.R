@@ -34,7 +34,7 @@
 #' Tests whether the OSA residuals of each composition (fleet and unit, as the panels of
 #' \code{\link{ss3plot_resid}()}) follow their theoretical N(0,1) distribution: the Anderson-Darling statistic against a
 #' fixed N(0,1) with a Monte Carlo p-value, and descriptive checks (mean near 0, SD near 1, the root mean square
-#' distance of the QQ plot from the 1:1 line, and the share outside +-1.96, about 5\% expected).
+#' distance of the QQ plot from the 1:1 line, and the share outside +-1.96, about 5% expected).
 #'
 #' The Monte Carlo p-value assumes independent residuals; temporal or cohort dependence can make the nominal
 #' p-values too small, and testing many fleets and models raises the chance of false failures. Treat the results as
@@ -47,7 +47,7 @@
 #' @param alpha significance level (FAIL when p < alpha)
 #' @param seed random seed
 #' @param ... arguments to \code{\link{ss3_resid}()} when \code{x} is an SS3 report
-#' @return data.table: panel, N, mean, SD, QQ RMSE, AD statistic, p-value, result (PASS/FAIL), \% outside +-1.96
+#' @return data.table: panel, N, mean, SD, QQ RMSE, AD statistic, p-value, result (PASS/FAIL), % outside +-1.96
 #' @seealso \code{\link{ss3plot_resid}(test = TRUE)}, \code{\link{ss3_scorecard}()}
 #' @examples
 #' data(ss3simple)

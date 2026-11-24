@@ -17,7 +17,7 @@ ss3_fwdprobs(x, years = NULL, btrigger = 1, long = FALSE)
 \item{long}{return a long table instead of one wide table (scenario by year) per probability}
 }
 \value{
-named list of data.tables (scenario x year, in \\%), or a long data.table
+named list of data.tables (scenario x year, in \%), or a long data.table
 }
 \description{
 Probabilities by catch scenario and year, as the Kobe strategy matrices of ensemble advice (\code{kobe:::smry}):

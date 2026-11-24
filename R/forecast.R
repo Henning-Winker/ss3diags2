@@ -200,7 +200,7 @@ ss3plot_fwd <- function(x, stk = NULL, type = c("Rec", "SSB", "F", "Catch"), sta
 #' @param unc optional FLStocks with iterations for the probabilities (default \code{x} when it has iterations;
 #'   otherwise lognormal with the MLE standard error of SSB)
 #' @param blim Blim (default the \code{Blim} reference point of the stocks)
-#' @return data.table with Basis, catch, F, SSB(year + 1), SSB change (\%) and P(SSB < Blim)
+#' @return data.table with Basis, catch, F, SSB(year + 1), SSB change (%) and P(SSB < Blim)
 #' @examples
 #' fw <- readRDS(system.file("extdata", "hke.37.17-18", "hke.37.17-18_fwd.rds", package = "ss3diags2"))
 #' fs <- ss3_fwd(fw, Fref = "Btgt", bpa = 0.5, blim = 0.25)

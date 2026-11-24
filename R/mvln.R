@@ -296,7 +296,7 @@ print.ss3mvln <- function(x, ...){
 #' @param blim,bpa optional Blim and Bpa, added to the reference points: fractions (<= 1) of Btgt or B0 (see
 #'   \code{rpbase}), or absolute values (> 1, e.g. tonnes)
 #' @param rpbase reference of fractional \code{blim} and \code{bpa}: \code{"Btgt"} (default) or \code{"B0"} (e.g.
-#'   \code{blim = 0.1, rpbase = "B0"} for Blim = 10\% B0)
+#'   \code{blim = 0.1, rpbase = "B0"} for Blim = 10% B0)
 #' @param name stock name
 #' @param source \code{"auto"}, \code{"derived"} or \code{"timeseries"} (MLE only)
 #' @param btgt biomass target as a fraction of B0 for \code{source = "timeseries"} (default the SS3 \code{btarg})
